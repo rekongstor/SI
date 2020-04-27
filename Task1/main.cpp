@@ -46,7 +46,7 @@ inline void swap(int &first, int &second) {
 
 void gen(std::vector<int> &arr) {
    std::mt19937 rng(4221);
-   std::uniform_int_distribution dist;
+   std::uniform_int_distribution<int> dist;
    for (auto &el : arr)
       el = dist(rng);
 }
