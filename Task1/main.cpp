@@ -208,7 +208,7 @@ int main() {
       qsort(arr[i]);
 
    for (int i = 4; i < 8; ++i)
-      insertion(arr[i]);
+      qsort(arr[i]);
 
    std::vector<int> finalArray;
    {

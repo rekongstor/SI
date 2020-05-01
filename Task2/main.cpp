@@ -130,11 +130,14 @@ long brute() {
    Timer timer;
    int typeSize = sizeof(uint64_t) * 8;
    int keySize = sizeof(T) * 8; // key size in bits
+   std::vector<T> rev_map(1 << keySize);
+   for (T i = 0; i < rev_map.size(); ++i)
+       rev_map[i] = reverse(i);
    for (int i = 0; i < n; ++i) {
       for (int spl = 0; spl < typeSize / keySize; ++spl) {
          T mask = ~0;
          mask &= (mas[i] >> spl * 8);
-         rev_mas[i] = (rev_mas[i] << keySize) | reverse(mask);
+         rev_mas[i] = rev_map[mask];
       }
    }
    return timer.get();
@@ -147,36 +150,34 @@ int main() {
    for (int i = 0; i < n; ++i)
       mas[i] = dist(rng);
    auto pattern = " [%d] %08ld";
-   printf(" Map:");
-   {
-      printf(pattern, 8, map<uint8_t>());
-      printf(pattern, 16, map<uint16_t>());
-      printf(pattern, 32, map<uint32_t>());
-      printf(pattern, 64, map<uint64_t>());
-      printf("\n");
-   }
-   printf("UMap:");
-   {
-      printf(pattern, 8, umap<uint8_t>());
-      printf(pattern, 16, umap<uint16_t>());
-      printf(pattern, 32, umap<uint32_t>());
-      printf(pattern, 64, umap<uint64_t>());
-      printf("\n");
-   }
-   printf("Hash:");
-   {
-      printf(pattern, 8, hash<uint8_t>());
-      printf(pattern, 16, hash<uint16_t>());
-      printf(pattern, 32, hash<uint32_t>());
-      printf(pattern, 64, hash<uint64_t>());
-      printf("\n");
-   }
+   //printf(" Map:");
+   //{
+   //   printf(pattern, 8, map<uint8_t>());
+   //   printf(pattern, 16, map<uint16_t>());
+   //   printf(pattern, 32, map<uint32_t>());
+   //   printf(pattern, 64, map<uint64_t>());
+   //   printf("\n");
+   //}
+   //printf("UMap:");
+   //{
+   //   printf(pattern, 8, umap<uint8_t>());
+   //   printf(pattern, 16, umap<uint16_t>());
+   //   printf(pattern, 32, umap<uint32_t>());
+   //   printf(pattern, 64, umap<uint64_t>());
+   //   printf("\n");
+   //}
+   //printf("Hash:");
+   //{
+   //   printf(pattern, 8, hash<uint8_t>());
+   //   printf(pattern, 16, hash<uint16_t>());
+   //   printf(pattern, 32, hash<uint32_t>());
+   //   printf(pattern, 64, hash<uint64_t>());
+   //   printf("\n");
+   //}
    printf("Brut:");
    {
       printf(pattern, 8, brute<uint8_t>());
       printf(pattern, 16, brute<uint16_t>());
-      printf(pattern, 32, brute<uint32_t>());
-      printf(pattern, 64, brute<uint64_t>());
       printf("\n");
    }
 
