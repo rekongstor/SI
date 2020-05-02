@@ -1,8 +1,20 @@
 #include "ParticleFrame.h"
 #include <algorithm>
+#include <thread>
 
-ParticleFrame::ParticleFrame(const std::vector<Particle>& particles, int time) :
-   pixels(64 * 64 * 4)
+ParticleFrame::ParticleFrame(const std::vector<Particle>* particles, int time, uint8_t* pixels) :
+   particles(particles),
+   time(time),
+   pixels(pixels)
+{
+}
+
+ParticleFrame::ParticleFrame()
+{
+}
+
+
+void ParticleFrame::Process()
 {
    auto setPixel = [&](size_t posX, size_t posY, size_t offset, float value)
    {
@@ -10,7 +22,7 @@ ParticleFrame::ParticleFrame(const std::vector<Particle>& particles, int time) :
       pixels[index] = std::clamp(value * 255.f + static_cast<float>(pixels[index]), 0.f, 255.f);
    };
 
-   for (auto& p : particles)
+   for (auto& p : *particles)
    {
       long posX = 32 + p.velocityInit.x * time - p.velocityInit.x * p.velocityFade * time * time;
       long posY = 32 + p.velocityInit.y * time - p.velocityInit.y * p.velocityFade * time * time;
@@ -26,9 +38,4 @@ ParticleFrame::ParticleFrame(const std::vector<Particle>& particles, int time) :
       setPixel(posX, posY, 1, colorGreen);
       setPixel(posX, posY, 2, colorBlue);
    }
-}
-
-const uint8_t* ParticleFrame::data() const
-{
-   return pixels.data();
 }

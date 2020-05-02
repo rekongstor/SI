@@ -142,15 +142,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BasicJob.h" />
+    <ClInclude Include="GifWriterJob.h" />
+    <ClInclude Include="mpmc_bounded_queue.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleFrame.h" />
     <ClInclude Include="gif-h\gif.h" />
     <ClInclude Include="ParticleSequence.h" />
+    <ClInclude Include="ProcessFrameJob.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="UniqueTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GifWriterJob.cpp" />
     <ClCompile Include="ParticleFrame.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ParticleSequence.cpp" />
+    <ClCompile Include="ProcessFrameJob.cpp" />
+    <ClCompile Include="UniqueTimer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

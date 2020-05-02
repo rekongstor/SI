@@ -1,7 +1,9 @@
 #pragma once
-#include "ParticleFrame.h"
-#include "Particle.h"
 #include <vector>
+
+#include "mpmc_bounded_queue.h"
+#include "Particle.h"
+#include "ParticleFrame.h"
 
 class ParticleSequence
 {
@@ -12,7 +14,8 @@ class ParticleSequence
 		uint8_t blue;
 	};
 
-	std::vector<ParticleFrame> frames;
+	mpmc_bounded_queue<ParticleFrame> framesQueue;
+	std::vector<uint8_t> framesData;
 	std::vector<Particle> particles;
 public:
 	ParticleSequence(MAX_COLOR_VAL minColorValRGB, MAX_COLOR_VAL maxColorValRGB, float initialVelocity,
