@@ -17,19 +17,19 @@ ParticleSequence::ParticleSequence(MAX_COLOR_VAL minColorValRGB, MAX_COLOR_VAL m
    // Creating RNG
    std::mt19937 engine(4221);
    std::normal_distribution<float> distNormal;
-   const std::uniform_real_distribution<float> distUniform;
+   std::uniform_real_distribution<float> distUniform;
 
    // Creating Particles
    for (auto& p : particles)
    {
       p.velocityInit = {distNormal(engine) * initialVelocity, distNormal(engine) * initialVelocity};
-      p.velocityFade = distUniform(engine) * velocityFade;
+      p.velocityFade = abs(distNormal(engine)) * velocityFade;
       p.colorInit = {
          minColorValRGB.red + distUniform(engine) * (maxColorValRGB.red - minColorValRGB.red),
          minColorValRGB.green + distUniform(engine) * (maxColorValRGB.green - minColorValRGB.green),
          minColorValRGB.blue + distUniform(engine) * (maxColorValRGB.blue - minColorValRGB.blue)
       };
-      p.colorFade = distUniform(engine) * colorFade;
+      p.colorFade = abs(distNormal(engine)) * colorFade;
    }
 
    // Enqueue frames

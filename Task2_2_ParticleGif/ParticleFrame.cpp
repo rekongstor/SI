@@ -24,15 +24,18 @@ void ParticleFrame::Process()
 
    for (auto& p : *particles)
    {
-      long posX = 32 + p.velocityInit.x * time - p.velocityInit.x * p.velocityFade * time * time;
-      long posY = 32 + p.velocityInit.y * time - p.velocityInit.y * p.velocityFade * time * time;
+      float distanceFade = p.velocityFade * static_cast<float>(time) / (1 + 0.2f * abs(
+         p.velocityFade * static_cast<float>(time)));
+      float colorFade = p.colorFade * static_cast<float>(time) / (1 + abs(p.colorFade * static_cast<float>(time)));
+      long posX = 32 + p.velocityInit.x * distanceFade * 32;
+      long posY = 32 + p.velocityInit.y * distanceFade * 32;
       if (posX > 63 || posY > 63 ||
          posX < 0 || posY < 0)
          continue;
 
-      float colorRed = std::clamp(p.colorInit.r - p.colorInit.r * p.colorFade * static_cast<float>(time), 0.f, 1.f);
-      float colorGreen = std::clamp(p.colorInit.g - p.colorInit.g * p.colorFade * static_cast<float>(time), 0.f, 1.f);
-      float colorBlue = std::clamp(p.colorInit.b - p.colorInit.b * p.colorFade * static_cast<float>(time), 0.f, 1.f);
+      float colorRed = std::clamp(p.colorInit.r * (1.f - colorFade) / 255.f, 0.f, 1.f);
+      float colorGreen = std::clamp(p.colorInit.g * (1.f - colorFade) / 255.f, 0.f, 1.f);
+      float colorBlue = std::clamp(p.colorInit.b * (1.f - colorFade) / 255.f, 0.f, 1.f);
 
       setPixel(posX, posY, 0, colorRed);
       setPixel(posX, posY, 1, colorGreen);
