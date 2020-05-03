@@ -15,31 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gif-h\gif.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleSequence.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleFrame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Particle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mpmc_bounded_queue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BasicJob.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessFrameJob.h">
+    <ClInclude Include="GenerationJob.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GifWriterJob.h">
+    <ClInclude Include="Elements.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\UniqueTimer.h">
@@ -50,16 +32,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleSequence.cpp">
+    <ClCompile Include="GenerationJob.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleFrame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcessFrameJob.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GifWriterJob.cpp">
+    <ClCompile Include="Elements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\UniqueTimer.cpp">

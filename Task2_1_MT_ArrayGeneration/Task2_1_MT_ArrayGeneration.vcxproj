@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{B5A4680E-FC4D-492D-A1A6-113F81B63CA6}</ProjectGuid>
-    <RootNamespace>Task22ParticleGif</RootNamespace>
+    <ProjectGuid>{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}</ProjectGuid>
+    <RootNamespace>Task21MTArrayGeneration</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -144,22 +144,14 @@
   <ItemGroup>
     <ClInclude Include="..\UniqueTimer.h" />
     <ClInclude Include="BasicJob.h" />
-    <ClInclude Include="GifWriterJob.h" />
-    <ClInclude Include="mpmc_bounded_queue.h" />
-    <ClInclude Include="Particle.h" />
-    <ClInclude Include="ParticleFrame.h" />
-    <ClInclude Include="gif-h\gif.h" />
-    <ClInclude Include="ParticleSequence.h" />
-    <ClInclude Include="ProcessFrameJob.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="Elements.h" />
+    <ClInclude Include="GenerationJob.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\UniqueTimer.cpp" />
-    <ClCompile Include="GifWriterJob.cpp" />
-    <ClCompile Include="ParticleFrame.cpp" />
+    <ClCompile Include="Elements.cpp" />
+    <ClCompile Include="GenerationJob.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ParticleSequence.cpp" />
-    <ClCompile Include="ProcessFrameJob.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

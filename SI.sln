@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task1_3_Graph", "Task3\Task
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task2_2_ParticleGif", "Task2_2_ParticleGif\Task2_2_ParticleGif.vcxproj", "{B5A4680E-FC4D-492D-A1A6-113F81B63CA6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task2_1_MT_ArrayGeneration", "Task2_1_MT_ArrayGeneration\Task2_1_MT_ArrayGeneration.vcxproj", "{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{B5A4680E-FC4D-492D-A1A6-113F81B63CA6}.Release|x64.Build.0 = Release|x64
 		{B5A4680E-FC4D-492D-A1A6-113F81B63CA6}.Release|x86.ActiveCfg = Release|Win32
 		{B5A4680E-FC4D-492D-A1A6-113F81B63CA6}.Release|x86.Build.0 = Release|Win32
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Debug|x64.ActiveCfg = Debug|x64
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Debug|x64.Build.0 = Debug|x64
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Debug|x86.ActiveCfg = Debug|Win32
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Debug|x86.Build.0 = Debug|Win32
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Release|x64.ActiveCfg = Release|x64
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Release|x64.Build.0 = Release|x64
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Release|x86.ActiveCfg = Release|Win32
+		{52CE188C-BEB4-4B0B-90F7-02BCDDBAA906}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
