@@ -2,7 +2,7 @@
 #include <condition_variable>
 #include <vector>
 
-#include "BasicJob.h"
+#include "../Core/BasicJob.h"
 
 class GifWriterJob : public BasicJob
 {
@@ -18,6 +18,4 @@ public:
    void Notify();
 
    void Run() override;
-   void RunAsync() override;
-   void Wait() override;
 };

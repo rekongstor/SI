@@ -17,6 +17,8 @@ void GifWriterJob::Notify()
 
 void GifWriterJob::Run()
 {
+      std::unique_lock<std::mutex> lock(mutexCV);
+      while (!ready) conditionVariable.wait(lock);
    GifWriter gifWriter;
 
    GifBegin(&gifWriter, filename, 64, 64, delay);
@@ -24,19 +26,4 @@ void GifWriterJob::Run()
       GifWriteFrame(&gifWriter, &(framesData.data()[i * 64 * 64 * 4]), 64, 64, delay);
 
    GifEnd(&gifWriter);
-}
-
-void GifWriterJob::RunAsync()
-{
-   job = std::thread([&]()
-   {
-      std::unique_lock<std::mutex> lock(mutexCV);
-      while (!ready) conditionVariable.wait(lock);
-      Run();
-   });
-}
-
-void GifWriterJob::Wait()
-{
-   job.join();
 }

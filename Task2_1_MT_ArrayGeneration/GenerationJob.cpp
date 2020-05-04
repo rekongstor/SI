@@ -19,13 +19,3 @@ void GenerationJob::Run()
    for (auto i = 0; i < size; ++i)
       (*array)[i] = powf(sinf(i), cosf(i));
 }
-
-void GenerationJob::RunAsync()
-{
-   job = std::thread([&]() { this->Run(); });
-}
-
-void GenerationJob::Wait()
-{
-   job.join();
-}

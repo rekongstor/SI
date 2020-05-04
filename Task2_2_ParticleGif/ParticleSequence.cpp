@@ -4,7 +4,7 @@
 #include "ParticleSequence.h"
 #include "ProcessFrameJob.h"
 #include "GifWriterJob.h"
-#include "../UniqueTimer.h"
+#include "../Core/UniqueTimer.h"
 
 ParticleSequence::ParticleSequence(MAX_COLOR_VAL minColorValRGB, MAX_COLOR_VAL maxColorValRGB, float initialVelocity,
                                    float velocityFade, float colorFade, uint32_t particleCount, uint32_t delay,

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Particle.h"
-#include "BasicJob.h"
+#include "../Core/BasicJob.h"
 
 class ParticleFrame
 {

@@ -1,7 +1,7 @@
 #include "Elements.h"
 
 #include "GenerationJob.h"
-#include "../UniqueTimer.h"
+#include "../Core/UniqueTimer.h"
 
 
 Elements::Elements(size_t size, size_t partitions)
@@ -12,7 +12,7 @@ Elements::Elements(size_t size, size_t partitions)
    arrays.resize(partitions);
 
    // Each vector represents its job
-   std::vector<std::shared_ptr<GenerationJob>> jobs;
+   std::vector<std::shared_ptr<BasicJob>> jobs;
 
    // Creating jobs
    for (int i = 0; i < partitions - 1; ++i)

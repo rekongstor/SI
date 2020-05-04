@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
-
-#include "BasicJob.h"
+#include "../Core/BasicJob.h"
 
 class GenerationJob :
    public BasicJob
@@ -13,6 +12,4 @@ public:
    GenerationJob();
 
    void Run() override;
-   void RunAsync() override;
-   void Wait() override;
 };

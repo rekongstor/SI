@@ -18,16 +18,3 @@ void ProcessFrameJob::Run()
       particleFrame.Process();
    }
 }
-
-void ProcessFrameJob::RunAsync()
-{
-   job = std::thread([&]()
-      {
-         Run();
-      });
-}
-
-void ProcessFrameJob::Wait()
-{
-   job.join();
-}

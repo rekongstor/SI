@@ -30,16 +30,10 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BasicJob.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ProcessFrameJob.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GifWriterJob.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\UniqueTimer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mpmc_bounded_queue.hpp">
@@ -60,9 +54,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GifWriterJob.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\UniqueTimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
