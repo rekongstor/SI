@@ -145,7 +145,7 @@
     <ClInclude Include="..\UniqueTimer.h" />
     <ClInclude Include="BasicJob.h" />
     <ClInclude Include="GifWriterJob.h" />
-    <ClInclude Include="mpmc_bounded_queue.h" />
+    <ClInclude Include="mpmc_bounded_queue.hpp" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleFrame.h" />
     <ClInclude Include="gif-h\gif.h" />

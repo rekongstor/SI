@@ -12,7 +12,7 @@ void GifWriterJob::Notify()
 {
    std::unique_lock<std::mutex> lock(mutexCV);
    ready = true;
-   conditionVariable.notify_all();
+   conditionVariable.notify_one();
 }
 
 void GifWriterJob::Run()

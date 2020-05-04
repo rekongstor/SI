@@ -1,6 +1,6 @@
 #pragma once
 #include "BasicJob.h"
-#include "mpmc_bounded_queue.h"
+#include "mpmc_bounded_queue.hpp"
 #include "ParticleFrame.h"
 
 class ProcessFrameJob :

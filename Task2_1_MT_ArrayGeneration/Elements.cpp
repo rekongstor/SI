@@ -7,7 +7,11 @@
 Elements::Elements(size_t size, size_t partitions)
 {
    UniqueTimer timer(" parallel jobs");
+
+   // We suggest that we need to perform (partitions) different memory allocations (or vectors)
    arrays.resize(partitions);
+
+   // Each vector represents its job
    std::vector<std::shared_ptr<GenerationJob>> jobs;
 
    // Creating jobs
@@ -17,7 +21,7 @@ Elements::Elements(size_t size, size_t partitions)
       jobs.back()->RunAsync();
    }
 
-   // Creating job for size / partition with mod
+   // Creating job for (size / partition) + left elements
    GenerationJob(&arrays[partitions - 1], size / partitions + size % partitions).Run();
 
    // Wait for jobs to end

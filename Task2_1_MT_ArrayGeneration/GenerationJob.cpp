@@ -12,7 +12,10 @@ GenerationJob::GenerationJob()
 
 void GenerationJob::Run()
 {
+   // Allocating memory
    (*array).resize(size);
+
+   // Generating elements
    for (auto i = 0; i < size; ++i)
       (*array)[i] = powf(sinf(i), cosf(i));
 }

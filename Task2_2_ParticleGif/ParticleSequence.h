@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-#include "mpmc_bounded_queue.h"
+#include "mpmc_bounded_queue.hpp"
 #include "Particle.h"
 #include "ParticleFrame.h"
 
