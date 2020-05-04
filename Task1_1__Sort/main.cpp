@@ -21,38 +21,44 @@
 #define n 100000
 
 
-struct Timer {
-    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+struct Timer
+{
+   std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
 
-    Timer(const char *text) {
-       std::cout << text << std::endl;
-    }
+   Timer(const char* text)
+   {
+      std::cout << text << std::endl;
+   }
 
 
-    ~Timer() {
-       std::cout << "Time elapsed: " << std::chrono::duration_cast<std::chrono::microseconds>(
-               std::chrono::high_resolution_clock::now() - start).count() << std::endl;
-    }
+   ~Timer()
+   {
+      std::cout << "Time elapsed: " << std::chrono::duration_cast<std::chrono::microseconds>(
+         std::chrono::high_resolution_clock::now() - start).count() << std::endl;
+   }
 };
 
 
-inline void swap(int &first, int &second) {
+inline void swap(int& first, int& second)
+{
    int tmp = first;
    first = second;
    second = tmp;
 }
 
 
-void gen(std::vector<int> &arr) {
+void gen(std::vector<int>& arr)
+{
    std::mt19937 rng(4221);
    std::uniform_int_distribution<int> dist;
-   for (auto &el : arr)
+   for (auto& el : arr)
       el = dist(rng);
 }
 
 
-void debug_check_ascending_sorted(std::vector<int> &arr) {
+void debug_check_ascending_sorted(std::vector<int>& arr)
+{
 #ifndef NDEBUG
    for (auto it = arr.begin() + 1; it != arr.end(); ++it)
       if (*it < *(it - 1))
@@ -61,23 +67,28 @@ void debug_check_ascending_sorted(std::vector<int> &arr) {
 }
 
 
-void qsort(std::vector<int> &arr) {
+void qsort(std::vector<int>& arr)
+{
    Timer timer("QSorting:");
    int tmp;
    std::stack<std::pair<int, int>> tasks; // {arr.start; length}
    tasks.push({0, arr.size()});
-   while (!tasks.empty()) {
+   while (!tasks.empty())
+   {
       auto current = tasks.top();
       tasks.pop();
-      if (current.second > 1) {
+      if (current.second > 1)
+      {
          int end = current.first + current.second;
          int splitElemIndex = rand() % current.second;
          int splitElem = arr[current.first + splitElemIndex];
          swap(arr[end - 1], arr[current.first + splitElemIndex]);
          // Partition
          int arrSize = 0;
-         for (int i = current.first; i < end - 1; ++i) {
-            if (arr[i] <= splitElem) {
+         for (int i = current.first; i < end - 1; ++i)
+         {
+            if (arr[i] <= splitElem)
+            {
                swap(arr[i], arr[current.first + arrSize]);
                ++arrSize;
             }
@@ -96,11 +107,13 @@ void qsort(std::vector<int> &arr) {
 }
 
 
-void insertion(std::vector<int> &arr) {
+void insertion(std::vector<int>& arr)
+{
    Timer timer("InSorting:");
    for (int i = 1; i < arr.size(); ++i)
       for (int j = i - 1; j >= 0; --j)
-         if (arr[j] > arr[j + 1]) {
+         if (arr[j] > arr[j + 1])
+         {
             swap(arr[j], arr[j + 1]);
          }
 
@@ -108,42 +121,55 @@ void insertion(std::vector<int> &arr) {
 }
 
 
-void heap(std::vector<int> &arr) {
+void heap(std::vector<int>& arr)
+{
    Timer timer("Heap:");
    int heapSize = arr.size();
-   auto Parent = [](int x) {
-       return (x - 1) / 2;
+   auto Parent = [](int x)
+   {
+      return (x - 1) / 2;
    };
-   auto RightChild = [](int x) {
-       return x * 2 + 1;
+   auto RightChild = [](int x)
+   {
+      return x * 2 + 1;
    };
-   auto LeftChild = [](int x) {
-       return x * 2 + 2;
+   auto LeftChild = [](int x)
+   {
+      return x * 2 + 2;
    };
    // Building the heap
-   for (int i = 1; i < arr.size(); ++i) {
+   for (int i = 1; i < arr.size(); ++i)
+   {
       int x = i;
-      while (arr[Parent(x)] < arr[x]) {
+      while (arr[Parent(x)] < arr[x])
+      {
          swap(arr[Parent(x)], arr[x]);
          x = Parent(x);
       }
    }
 
    // Heap sort
-   for (int i = arr.size() - 1; i > 0; --i) {
+   for (int i = arr.size() - 1; i > 0; --i)
+   {
       swap(arr[i], arr[0]);
       --heapSize;
       int x = 0;
-      while (LeftChild(x) < heapSize) {
-         if (RightChild(x) < heapSize) {
-            if (arr[x] < arr[LeftChild(x)] || arr[x] < arr[RightChild(x)]) {
+      while (LeftChild(x) < heapSize)
+      {
+         if (RightChild(x) < heapSize)
+         {
+            if (arr[x] < arr[LeftChild(x)] || arr[x] < arr[RightChild(x)])
+            {
                x = arr[LeftChild(x)] > arr[RightChild(x)] ? LeftChild(x) : RightChild(x);
                swap(arr[Parent(x)], arr[x]);
                continue;
             }
             break;
-         } else {
-            if (arr[x] < arr[LeftChild(x)]) {
+         }
+         else
+         {
+            if (arr[x] < arr[LeftChild(x)])
+            {
                x = LeftChild(x);
                swap(arr[Parent(x)], arr[x]);
                continue;
@@ -157,23 +183,29 @@ void heap(std::vector<int> &arr) {
 }
 
 
-void recursiveMerge(std::vector<int> &arr, std::vector<int> &tmp, int start, int size1, int size2) {
+void recursiveMerge(std::vector<int>& arr, std::vector<int>& tmp, int start, int size1, int size2, int sortedSize = 2)
+{
+   std::cout << "Recursive merge..." << std::endl;
    if (size1 * size2 == 0)
       return;
-   if (size1 > 2)
+   if (size1 > sortedSize)
       recursiveMerge(arr, tmp, start, size1 / 2, size1 - size1 / 2);
-   if (size2 > 2)
+   if (size2 > sortedSize)
       recursiveMerge(arr, tmp, start + size1, size2 / 2, size2 - size2 / 2);
    int counter = -1;
    int arr1 = start;
    int arr2 = arr1 + size1;
    int s1 = size1;
    int s2 = size2;
-   while (s1 > 0 && s2 > 0) {
-      if (arr[arr1] < arr[arr2]) {
+   while (s1 > 0 && s2 > 0)
+   {
+      if (arr[arr1] < arr[arr2])
+      {
          tmp[++counter] = arr[arr1++];
          --s1;
-      } else {
+      }
+      else
+      {
          tmp[++counter] = arr[arr2++];
          --s2;
       }
@@ -186,20 +218,23 @@ void recursiveMerge(std::vector<int> &arr, std::vector<int> &tmp, int start, int
 }
 
 
-void merge(std::vector<int> &arr) {
+void merge(std::vector<int>& arr)
+{
    Timer timer("Merge:");
    std::vector<int> tmp_array(arr.size());
-   recursiveMerge(arr, tmp_array, 0, arr.size() / 2, arr.size() - arr.size() / 2);
+   recursiveMerge(arr, tmp_array, 0, arr.size() / 2, arr.size() - arr.size() / 2, n);
 
    debug_check_ascending_sorted(arr);
 }
 
 
-int main() {
+int main()
+{
    std::vector<int> arr[8];
    {
       Timer timer("Arrays generation:");
-      for (auto &v : arr) {
+      for (auto& v : arr)
+      {
          v.resize(n);
          gen(v);
       }
