@@ -1,8 +1,8 @@
 #include "UniqueTimer.h"
 
-UniqueTimer::UniqueTimer(std::string_view stringView)
+UniqueTimer::UniqueTimer(const char* text)
 {
-   std::cout << stringView << std::endl;
+   std::cout << text << std::endl;
 }
 
 
