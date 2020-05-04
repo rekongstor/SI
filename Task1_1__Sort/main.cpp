@@ -48,12 +48,13 @@ inline void swap(int& first, int& second)
 }
 
 
+std::mt19937 rng(4221);
+std::uniform_int_distribution<int> dist;
+
 void gen(std::vector<int>& arr)
 {
-   std::mt19937 rng(4221);
-   std::uniform_int_distribution<int> dist;
    for (auto& el : arr)
-      el = dist(rng);
+      el = dist(rng) % 100;
 }
 
 
@@ -120,78 +121,117 @@ void insertion(std::vector<int>& arr)
    debug_check_ascending_sorted(arr);
 }
 
+int Parent(int x)
+{
+   return (x - 1) / 2;
+}
+
+int RightChild(int x)
+{
+   return x * 2 + 1;
+}
+
+int LeftChild(int x)
+{
+   return x * 2 + 2;
+}
+
+void MaxHeapify(std::vector<std::pair<int, int>>& hArr, int x, int heapSize)
+{
+   int l = LeftChild(x);
+   int r = RightChild(x);
+   int largest;
+
+   if (l < heapSize && hArr[l].first > hArr[x].first)
+      largest = l;
+   else
+      largest = x;
+   if (r < heapSize && hArr[r].first > hArr[largest].first)
+      largest = r;
+
+   if (largest != x)
+   {
+      swap(hArr[x], hArr[largest]);
+      MaxHeapify(hArr, largest, heapSize);
+   }
+}
+
+auto HeapExtractMax(std::vector<std::pair<int, int>>& hArr, int heapSize)
+{
+   auto max = hArr[0];
+   hArr[0] = hArr[heapSize - 1];
+   MaxHeapify(hArr, 0, heapSize);
+   return max;
+}
+
+void HeapInsert(std::vector<std::pair<int, int>>& hArr, std::pair<int, int> key, int heapSize)
+{
+   int x = heapSize;
+   hArr[x] = key;
+   while (x && hArr[Parent(x)].first < hArr[x].first)
+   {
+      swap(hArr[Parent(x)], hArr[x]);
+      x = Parent(x);
+   }
+}
 
 void heap(std::vector<int>& arr)
 {
    Timer timer("Heap:");
-   int heapSize = arr.size();
-   auto Parent = [](int x)
-   {
-      return (x - 1) / 2;
-   };
-   auto RightChild = [](int x)
-   {
-      return x * 2 + 1;
-   };
-   auto LeftChild = [](int x)
-   {
-      return x * 2 + 2;
-   };
+   std::vector<int> tmp_array(arr.size());
+
+   // Creating initial heap array (1 first elements in 8 arrays)
+   std::vector<std::pair<int, int>> hArr(8);
+   for (int i = 0; i < 8; ++i)
+      hArr[i] = {arr[n * i + n - 1], i};
    // Building the heap
-   for (int i = 1; i < arr.size(); ++i)
+   for (int i = 1; i < 8; ++i)
    {
       int x = i;
-      while (arr[Parent(x)] < arr[x])
+      while (hArr[Parent(x)].first < hArr[x].first)
       {
-         swap(arr[Parent(x)], arr[x]);
+         swap(hArr[Parent(x)], hArr[x]);
          x = Parent(x);
       }
    }
 
-   // Heap sort
-   for (int i = arr.size() - 1; i > 0; --i)
+   // Counters
+   int counterOut = 0;
+   std::vector<int> countersArrays(8);
+
+   int heapSize = 8;
+   for (int i = 0; i < 8 * n; ++i)
    {
-      swap(arr[i], arr[0]);
+      // Extracting max
+      auto max = HeapExtractMax(hArr, heapSize);
       --heapSize;
-      int x = 0;
-      while (LeftChild(x) < heapSize)
+
+      // Inserting into resulting array
+      tmp_array[n * 8 - 1 - counterOut] = max.first;
+      ++counterOut;
+
+      ++countersArrays[max.second];
+      if (countersArrays[max.second] < n)
       {
-         if (RightChild(x) < heapSize)
-         {
-            if (arr[x] < arr[LeftChild(x)] || arr[x] < arr[RightChild(x)])
-            {
-               x = arr[LeftChild(x)] > arr[RightChild(x)] ? LeftChild(x) : RightChild(x);
-               swap(arr[Parent(x)], arr[x]);
-               continue;
-            }
-            break;
-         }
-         else
-         {
-            if (arr[x] < arr[LeftChild(x)])
-            {
-               x = LeftChild(x);
-               swap(arr[Parent(x)], arr[x]);
-               continue;
-            }
-            break;
-         }
+         HeapInsert(hArr, {arr[max.second * n + n - 1 - countersArrays[max.second]], max.second}, heapSize);
+         ++heapSize;
       }
    }
 
+   std::copy(tmp_array.begin(), tmp_array.end(), arr.begin());
    debug_check_ascending_sorted(arr);
 }
 
 
-void recursiveMerge(std::vector<int>& arr, std::vector<int>& tmp, int start, int size1, int size2, int sortedSize = 2)
+void recursiveMerge(std::vector<int>& arr, std::vector<int>& tmp, int start, int size1, int size2, int sortedSize)
 {
    std::cout << "Recursive merge..." << std::endl;
    if (size1 * size2 == 0)
       return;
    if (size1 > sortedSize)
-      recursiveMerge(arr, tmp, start, size1 / 2, size1 - size1 / 2);
+      recursiveMerge(arr, tmp, start, size1 / 2, size1 - size1 / 2, sortedSize);
    if (size2 > sortedSize)
-      recursiveMerge(arr, tmp, start + size1, size2 / 2, size2 - size2 / 2);
+      recursiveMerge(arr, tmp, start + size1, size2 / 2, size2 - size2 / 2, sortedSize);
    int counter = -1;
    int arr1 = start;
    int arr2 = arr1 + size1;
