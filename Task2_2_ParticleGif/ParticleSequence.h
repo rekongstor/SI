@@ -7,7 +7,7 @@
 
 class ParticleSequence
 {
-   struct MAX_COLOR_VAL
+   struct COLOR_VAL
    {
       uint8_t red;
       uint8_t green;
@@ -18,12 +18,12 @@ class ParticleSequence
    std::vector<uint8_t> framesData;
    std::vector<Particle> particles;
 public:
-   void execute(MAX_COLOR_VAL minColorValRGB, MAX_COLOR_VAL maxColorValRGB, float initialVelocity, float velocityFade,
+   void execute(COLOR_VAL minColorValRGB, COLOR_VAL maxColorValRGB, float initialVelocity, float velocityFade,
                 float colorFade, uint32_t delay, const char* filename);
    ParticleSequence(uint32_t particleCount);
 
 private:
-   void init(MAX_COLOR_VAL minColorValRGB, MAX_COLOR_VAL maxColorValRGB, float initialVelocity,
+   void init(COLOR_VAL minColorValRGB, COLOR_VAL maxColorValRGB, float initialVelocity,
              float velocityFade, float colorFade, const char* filename = "particle_sequence.gif");
 
    /*

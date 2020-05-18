@@ -12,12 +12,11 @@
 #include "GifWriterJob.h"
 #include "../Core/UniqueTimer.h"
 
-void ParticleSequence::execute(ParticleSequence::MAX_COLOR_VAL minColorValRGB,
-                               ParticleSequence::MAX_COLOR_VAL maxColorValRGB, float initialVelocity,
+void ParticleSequence::execute(ParticleSequence::COLOR_VAL minColorValRGB,
+                               ParticleSequence::COLOR_VAL maxColorValRGB, float initialVelocity,
                                float velocityFade, float colorFade, uint32_t delay, const char* filename)
 {
    init(minColorValRGB, maxColorValRGB, initialVelocity, velocityFade, colorFade, filename);
-
    runWork(delay, filename);
 }
 
@@ -65,7 +64,7 @@ void ParticleSequence::runWork(uint32_t delay, const char* filename)
 }
 
 
-void ParticleSequence::init(MAX_COLOR_VAL minColorValRGB, MAX_COLOR_VAL maxColorValRGB, float initialVelocity,
+void ParticleSequence::init(COLOR_VAL minColorValRGB, COLOR_VAL maxColorValRGB, float initialVelocity,
                             float velocityFade, float colorFade, const char* filename)
 {
    UniqueTimer ut(filename);
