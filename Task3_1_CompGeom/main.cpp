@@ -41,12 +41,18 @@ inline bool Left(Vertex v0, Vertex v1, Vertex v2)
 
 struct Edge
 {
+   Vertex* v0;
+   Vertex* v1;
+};
+
+struct EdgeAdj
+{
    Vertex* v0; // main
    Vertex* v1; // adj
    Vertex* v2; // main
    Vertex* v3; // adj
 
-   Edge(Vertex* v0, Vertex* v1, Vertex* v2) : v0(v0), v1(v1), v2(v2)
+   EdgeAdj(Vertex* v0, Vertex* v1, Vertex* v2) : v0(v0), v1(v1), v2(v2)
    {
    }
 
@@ -75,51 +81,80 @@ struct Edge
 };
 
 
-void Delone(std::vector<Vertex>& vertices, std::vector<Edge> edges)
+void Delaunay(std::vector<Vertex>& vertices, std::vector<EdgeAdj> edges)
 {
    std::sort(vertices.begin(), vertices.end(), [](const Vertex& a, const Vertex& b) -> bool
    {
       return a.x < b.x;
    });
-   edges.emplace_back(Edge(&vertices[0], &vertices[1], &vertices[2]));
-   edges.emplace_back(Edge(&vertices[1], &vertices[2], &vertices[0]));
-   edges.emplace_back(Edge(&vertices[2], &vertices[0], &vertices[1]));
+   edges.emplace_back(EdgeAdj(&vertices[0], &vertices[1], &vertices[2]));
+   edges.emplace_back(EdgeAdj(&vertices[1], &vertices[2], &vertices[0]));
+   edges.emplace_back(EdgeAdj(&vertices[2], &vertices[0], &vertices[1]));
 }
 
-void Graham(std::vector<Vertex>& vertices, std::vector<Edge> edges)
+void Graham(std::vector<Vertex>& vertices, std::vector<EdgeAdj> edges)
 {
    // Finding rightmost lowest point O(n)
-   Vertex* lowRight = &vertices.front();
+   Vertex* plowRight = &vertices.front();
+
    for (int i = 1; i < vertices.size(); ++i)
-      if (vertices[i].y < lowRight->y ||
-         (vertices[i].y == lowRight->y && vertices[i].x > lowRight->x))
-         lowRight = &vertices[i];
+      if (vertices[i].y < plowRight->y ||
+         (vertices[i].y == plowRight->y && vertices[i].x > plowRight->x))
+         plowRight = &vertices[i];
    // Sort by angle
-   std::swap(vertices.front(), *lowRight);
-   std::sort(vertices.begin() + 1, vertices.end(), [&](const Vertex& a, const Vertex& b) -> bool
+   Vertex lowRight = *plowRight;
+   std::swap(vertices.front(), *plowRight);
+
+   auto it = vertices.begin() + 1;
+   std::sort(it, vertices.end(), [&](const Vertex& a, const Vertex& b) -> bool
    {
-      if (Area2(*lowRight, a, b) > 0.f)
+      if (Area2(lowRight, a, b) > 0.f)
          return false;
       return true;
    });
 
    // Remove collinear
-   std::vector<Vertex> sortedVertices(vertices.size());
+   std::vector<Vertex*> sortedVertices;
+   sortedVertices.reserve(vertices.size());
    int cursor = 0;
    for (int i = 1; i < vertices.size() - 1; ++i)
    {
-      if (abs(Area2(*lowRight, vertices[i], vertices[i + 1])) <= std::numeric_limits<float>::epsilon())
+      if (abs(Area2(lowRight, vertices[i], vertices[i + 1])) <= std::numeric_limits<float>::epsilon())
          // area is almost 0
       {
-         if (Dist2(*lowRight, vertices[i]) < Dist2(*lowRight, vertices[i + 1]))
-            sortedVertices[cursor] = vertices[i + 1]; // if [i + 1] is more distant, then replace [cursor] with it
+         if (Dist2(lowRight, vertices[i]) < Dist2(lowRight, vertices[i + 1]))
+            sortedVertices.back() = &vertices[i + 1]; // if [i + 1] is more distant, then replace [cursor] with it
       }
       else
       {
-         sortedVertices[cursor++] = vertices[i];
+         sortedVertices.push_back(&vertices[i]);
       }
    }
 
+   // Initializing stack
+   std::stack<Vertex*> hullStack;
+   hullStack.push(&vertices.front());
+   hullStack.push(sortedVertices.front());
+   int i = 2;
+   while (i < sortedVertices.size())
+   {
+      if (hullStack.size() == 1)
+      {
+         hullStack.push(sortedVertices[i]);
+         ++i;
+         continue;
+      }
+      Vertex* p1 = hullStack.top();
+      hullStack.pop();
+      Vertex* p0 = hullStack.top();
+      if (!Left(*p0, *p1, *sortedVertices[i]))
+      {
+         hullStack.push(p1);
+         hullStack.push(sortedVertices[i]);
+         ++i;
+      }
+   }
+   return;
 }
 
 
@@ -134,11 +169,12 @@ int main()
 
 
    // Step 1: Convex hull
+   std::vector<EdgeAdj> edgesHull;
+   Graham(vertices, edgesHull);
 
-
-   // Step 2: Delone
-   std::vector<Edge> edges;
-   Delone(vertices, edges);
+   // Step 2: Delaunay
+   std::vector<EdgeAdj> edgesTriangulation;
+   Delaunay(vertices, edgesTriangulation);
 
    // Step 3: BMP
    return 0;
