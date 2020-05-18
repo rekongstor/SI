@@ -1,4 +1,4 @@
-#include "ParticleSequence.h"
+#include "ParticleSequenceJob.h"
 
 #define INIT_VELOCITY 20.f
 #define VELOCITY_FADE 0.1f
@@ -6,14 +6,37 @@
 #define MAX_COLOR {255,128,8}
 #define COLOR_FADE 0.1f
 
+#define SIZE 64
+#define TIME 600
+
 int main()
 {
-   ParticleSequence ps100(100);
-   ps100.execute(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE, 1, "ps100.gif");
-   ParticleSequence ps1000(1000);
-   ps1000.execute(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE, 1, "ps1000.gif");
-   ParticleSequence ps10000(10000);
-   ps10000.execute(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE, 1, "ps10000.gif");
-   ParticleSequence ps1000000(1000000);
-   ps1000000.execute(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE, 1, "ps1000000.gif");
+   {
+      ParticleSequence ps100(100,SIZE, TIME);
+      ps100.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
+      ParticleSequenceJob particleSequenceJob100(ps100, "ps100.gif");
+      BasicJob& basicJob = particleSequenceJob100;
+      basicJob.Run();
+   }
+   {
+      ParticleSequence ps1000(1000, SIZE, TIME);
+      ps1000.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
+      ParticleSequenceJob particleSequenceJob1000(ps1000, "ps1000.gif");
+      BasicJob& basicJob = particleSequenceJob1000;
+      basicJob.Run();
+   }
+   {
+      ParticleSequence ps10000(10000, SIZE, TIME);
+      ps10000.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
+      ParticleSequenceJob particleSequenceJob10000(ps10000, "ps10000.gif");
+      BasicJob& basicJob = particleSequenceJob10000;
+      basicJob.Run();
+   }
+   {
+      ParticleSequence ps1000000(1000000, SIZE, TIME);
+      ps1000000.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
+      ParticleSequenceJob particleSequenceJob1000000(ps1000000, "ps1000000.gif");
+      BasicJob& basicJob = particleSequenceJob1000000;
+      basicJob.Run();
+   }
 }

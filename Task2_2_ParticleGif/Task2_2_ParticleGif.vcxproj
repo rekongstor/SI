@@ -152,6 +152,7 @@
     <ClInclude Include="ParticleFrame.h" />
     <ClInclude Include="gif-h\gif.h" />
     <ClInclude Include="ParticleSequence.h" />
+    <ClInclude Include="ParticleSequenceJob.h" />
     <ClInclude Include="ProcessFrameJob.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -160,6 +161,7 @@
     <ClCompile Include="ParticleFrame.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ParticleSequence.cpp" />
+    <ClCompile Include="ParticleSequenceJob.cpp" />
     <ClCompile Include="ProcessFrameJob.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
