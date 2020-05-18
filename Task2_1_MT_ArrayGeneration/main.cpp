@@ -10,6 +10,7 @@ int main()
    {
       std::cout << "Generating array with " << i + 1;
       Elements elements(n, i + 1);
+      elements.execute();
    }
    return 0;
 }

@@ -4,13 +4,15 @@
 #include "../Core/UniqueTimer.h"
 
 
-Elements::Elements(size_t size, size_t partitions)
+Elements::Elements(size_t size, size_t partitions) : size(size), partitions(partitions)
+{
+   // We suggest that we need to perform [partitions] different memory allocations (or vectors)
+   arrays.resize(partitions);
+}
+
+void Elements::execute()
 {
    UniqueTimer timer(" parallel jobs");
-
-   // We suggest that we need to perform (partitions) different memory allocations (or vectors)
-   arrays.resize(partitions);
-
    // Each vector represents its job
    std::vector<std::shared_ptr<BasicJob>> jobs;
 
