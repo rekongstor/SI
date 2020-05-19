@@ -59,6 +59,8 @@ struct EdgeAdj
 
    void CheckAndFlip()
    {
+      if (right == nullptr)
+         return;
       // Edge
       Vertex V1 = *v1;
       Vertex V3 = *v0;
@@ -92,12 +94,15 @@ struct EdgeAdj
       Vertex V0 = *lVertex;
       Vertex V2 = *rVertex;
 
+      if (Left(V0, V1, V2) || Left(V0, V2, V3))
+         return;
+
       if (
-         ((V0.x - V1.x) * (V0.y - V3.y) - (V0.x - V3.x) * (V0.y - V1.y)) *
+         abs(((V0.x - V1.x) * (V0.y - V3.y) - (V0.x - V3.x) * (V0.y - V1.y))) *
          ((V2.x - V1.x) * (V2.x - V3.x) + (V2.y - V1.y) * (V2.y - V3.y))
          +
          ((V0.x - V1.x) * (V0.x - V3.x) + (V0.y - V1.y) * (V0.y - V3.y)) *
-         ((V2.x - V1.x) * (V2.y - V3.y) - (V2.x - V3.x) * (V2.y - V1.y))
+         abs(((V2.x - V1.x) * (V2.y - V3.y) - (V2.x - V3.x) * (V2.y - V1.y)))
          < 0.f)
       {
          // Flip this edge
@@ -227,12 +232,15 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
 
       // Adding vertices to visible edges
       EdgeAdj *first = nullptr, *second = nullptr;
+      bool singleEdge;
       for (auto it = start; it != end; ++it)
       {
          if (it == hull.end())
+         {
             it = hull.begin();
-         if (it == end)
-            break;
+            if (it == end)
+               break;
+         }
          auto& edge = *it;
          triangles.push_back({edge});
          edge->right = &triangles.back();
@@ -244,10 +252,14 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
          edges.push_back({&vertices[i], edge->v1, &triangles.back()});
          second = &edges.back();
          triangles.back().e2 = &edges.back();
+         // Check Delaunay condition
          edge->CheckAndFlip();
       }
-      hull.insert(start, first);
-      hull.insert(start, second);
+
+      // Update hull
+      auto eFirst = hull.insert(start, first);
+      auto eSecond = hull.insert(start, second);
+
       if (!endIsCycled)
          hull.erase(start, end);
       else
@@ -255,7 +267,11 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
          hull.erase(start, hull.end());
          hull.erase(hull.begin(), end);
       }
+
    }
+   for (int i = 0; i < 3; ++i)
+      for (auto& e : edges)
+         e.CheckAndFlip();
 }
 
 void Graham(std::vector<Vertex>& vertices, std::list<EdgeAdj>& hullEdges)
@@ -337,7 +353,7 @@ void Graham(std::vector<Vertex>& vertices, std::list<EdgeAdj>& hullEdges)
 int main()
 {
    // Step 0: Generation
-   std::mt19937 engine(4221);
+   std::mt19937 engine(4222);
    std::uniform_real_distribution<float> realDistribution;
    std::vector<Vertex> vertices(N);
    for (auto& v : vertices)
@@ -345,8 +361,8 @@ int main()
 
 
    // Step 1: Convex hull
-   std::list<EdgeAdj> hullStack;
-   Graham(vertices, hullStack);
+   std::list<EdgeAdj> hullEdges;
+   Graham(vertices, hullEdges);
 
    // Step 2: Delaunay
    std::list<EdgeAdj> edgesTriangulation;
