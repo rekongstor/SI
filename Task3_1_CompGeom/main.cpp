@@ -216,12 +216,16 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
       while (!Left(*(*end)->v0, *(*end)->v1, vertices[i]))
       {
          ++end;
+         if (end == hull.end())
+            end=hull.begin();
       }
 
       // Adding vertices to visible edges
       EdgeAdj* first = nullptr, * second;
       for (auto it = start; it != end; ++it)
       {
+         if (it == hull.end())
+            it = hull.begin();
          auto& edge = *it;
          triangles.push_back({edge});
          edge->right = &triangles.back();
