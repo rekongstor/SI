@@ -201,6 +201,8 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
       // Finding visible start and end
       auto start = hull.begin();
       bool counterClockwise = Left(*(*start)->v0, *(*start)->v1, vertices[i]);
+      if (!counterClockwise)
+         start = hull.end();
       do
       {
          if (counterClockwise)
@@ -211,9 +213,9 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
          }
          else
          {
+            --start;
             if (!Left(*(*start)->v0, *(*start)->v1, vertices[i]))
                break;
-            --start;
          }
       }
       while (start != hull.begin());
@@ -353,7 +355,7 @@ void Graham(std::vector<Vertex>& vertices, std::list<EdgeAdj>& hullEdges)
 int main()
 {
    // Step 0: Generation
-   std::mt19937 engine(4222);
+   std::mt19937 engine(4223);
    std::uniform_real_distribution<float> realDistribution;
    std::vector<Vertex> vertices(N);
    for (auto& v : vertices)
