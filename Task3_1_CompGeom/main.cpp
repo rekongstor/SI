@@ -1,15 +1,16 @@
 #include <random>
 #include <stack>
 #include <list>
+#include "Bitmap.h"
 
-#define N 20
-#define SIZE_X 100
-#define SIZE_Y 100
+#define N 1000
+#define SIZE_X 1600
+#define SIZE_Y 900
 
-#define MIN_X 0.f
-#define MAX_X 512
-#define MIN_Y 0.f
-#define MAX_Y 512
+#define MIN_X 50.f
+#define MAX_X 1550
+#define MIN_Y 50.f
+#define MAX_Y 850
 
 constexpr float DIST_X = MAX_X - MIN_X;
 constexpr float DIST_Y = MAX_Y - MIN_Y;
@@ -59,7 +60,7 @@ struct EdgeAdj
 
    void CheckAndFlip()
    {
-      if (right == nullptr)
+      if (right == nullptr || left == nullptr)
          return;
       // Edge
       Vertex V1 = *v1;
@@ -77,11 +78,14 @@ struct EdgeAdj
          lVertex = lv1;
       else
          lVertex = lv2;
+ 
+
 
       // Right triangle
       Vertex* rv0 = right->e0->v0;
       Vertex* rv1 = right->e0->v1;
       Vertex* rv2 = (right->e1->v0 != rv0 && right->e1->v0 != rv1) ? right->e1->v0 : right->e1->v1;
+
 
       Vertex* rVertex;
       if (rv0 != v0 && rv0 != v1)
@@ -152,11 +156,51 @@ struct EdgeAdj
          right->e1 = le2;
          right->e2 = re1;
 
-         le2->left = right;
-         re2->left = left;
+         if (le1->left == right)
+            le1->left = left;
+         if (le1->right == right)
+            le1->right = left;
+
+         if (le2->left == left)
+            le2->left = right;
+         if (le2->right == left)
+            le2->right = right;
+
+         if (re1->left == left)
+            re1->left = right;
+         if (re1->right == left)
+            re1->right = right;
+
+         if (re2->left == right)
+            re2->left = left;
+         if (re2->right == right)
+            re2->right = left;
+
+         left->e1->CheckAndFlip();
+         left->e2->CheckAndFlip();
+         right->e1->CheckAndFlip();
+         right->e2->CheckAndFlip();
       }
    }
 };
+
+void MakeBMP(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges, std::list<EdgeAdj*>& hull)
+{
+   Bitmap bmp(SIZE_X, SIZE_Y);
+   for (auto& e : edges)
+   {
+      bmp.DrawLine(e.v0->x, e.v0->y, e.v1->x, e.v1->y);
+   }
+   for (auto& e : hull)
+   {
+      bmp.DrawLine(e->v0->x, e->v0->y, e->v1->x, e->v1->y,0,255,255);
+   }
+   for (auto& v : vertices)
+   {
+      bmp.DrawPoint(v.x, v.y);
+   }
+   bmp.Save();
+}
 
 
 void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
@@ -214,23 +258,34 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
          else
          {
             --start;
-            if (!Left(*(*start)->v0, *(*start)->v1, vertices[i]))
+            if (Left(*(*start)->v0, *(*start)->v1, vertices[i]))
+            {
+               ++start;
+               if (start == hull.end())
+                  start = hull.begin();
                break;
+            }
          }
       }
-      while (start != hull.begin());
+      while (true);
 
       auto end = counterClockwise ? start : hull.begin();
-      bool endIsCycled = false;
       while (!Left(*(*end)->v0, *(*end)->v1, vertices[i]))
       {
          ++end;
          if (end == hull.end())
          {
             end = hull.begin();
-            endIsCycled = true;
          }
       }
+
+      bool endIsCycled = false;
+      for (auto it = start; it != end; ++it)
+         if (it == hull.end())
+         {
+            endIsCycled = true;
+            break;
+         }
 
       // Adding vertices to visible edges
       EdgeAdj *first = nullptr, *second = nullptr;
@@ -247,7 +302,9 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
          triangles.push_back({edge});
          edge->right = &triangles.back();
          if (second == nullptr)
-            edges.push_back({edge->v0, &vertices[i], &triangles.back()});
+            edges.push_back({ edge->v0, &vertices[i], &triangles.back() });
+         else
+            edges.back().right = &triangles.back();
          if (first == nullptr)
             first = &edges.back();
          triangles.back().e1 = &edges.back();
@@ -259,21 +316,26 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
       }
 
       // Update hull
-      auto eFirst = hull.insert(start, first);
-      auto eSecond = hull.insert(start, second);
 
       if (!endIsCycled)
+      {
+         hull.insert(start, first);
+         hull.insert(start, second);
          hull.erase(start, end);
+      }
       else
       {
+         hull.insert(start, first);
+         hull.insert(start, second);
          hull.erase(start, hull.end());
          hull.erase(hull.begin(), end);
       }
 
+      //for (int i = 0; i < 100; ++i)
+      //   for (auto& e : edges)
+      //      e.CheckAndFlip();
    }
-   for (int i = 0; i < 3; ++i)
-      for (auto& e : edges)
-         e.CheckAndFlip();
+   MakeBMP(vertices, edges, hull);
 }
 
 void Graham(std::vector<Vertex>& vertices, std::list<EdgeAdj>& hullEdges)
@@ -355,7 +417,7 @@ void Graham(std::vector<Vertex>& vertices, std::list<EdgeAdj>& hullEdges)
 int main()
 {
    // Step 0: Generation
-   std::mt19937 engine(4223);
+   std::mt19937 engine(1337);
    std::uniform_real_distribution<float> realDistribution;
    std::vector<Vertex> vertices(N);
    for (auto& v : vertices)
