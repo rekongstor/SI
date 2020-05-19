@@ -145,6 +145,9 @@ struct EdgeAdj
          right->e0 = this;
          right->e1 = le2;
          right->e2 = re1;
+
+         le2->left = right;
+         re2->left = left;
       }
    }
 };
@@ -216,17 +219,24 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
       }
 
       // Adding vertices to visible edges
+      EdgeAdj* first = nullptr, * second;
       for (auto it = start; it != end; ++it)
       {
          auto& edge = *it;
          triangles.push_back({edge});
          edge->right = &triangles.back();
          edges.push_back({edge->v0, &vertices[i], &triangles.back()});
+         if (first == nullptr)
+            first = &edges.back();
          triangles.back().e1 = &edges.back();
          edges.push_back({&vertices[i], edge->v1, &triangles.back()});
+         second = &edges.back();
          triangles.back().e2 = &edges.back();
          edge->CheckAndFlip();
       }
+      hull.insert(start, first);
+      hull.insert(start, second);
+      hull.erase(start, end);
    }
 }
 
