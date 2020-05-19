@@ -146,11 +146,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\3rd_party\gif-h\gif.h" />
     <ClInclude Include="GifWriterJob.h" />
     <ClInclude Include="mpmc_bounded_queue.hpp" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleFrame.h" />
-    <ClInclude Include="gif-h\gif.h" />
     <ClInclude Include="ParticleSequence.h" />
     <ClInclude Include="ParticleSequenceJob.h" />
     <ClInclude Include="ProcessFrameJob.h" />

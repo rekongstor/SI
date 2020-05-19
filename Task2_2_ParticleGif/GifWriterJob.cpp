@@ -1,5 +1,5 @@
 #include "GifWriterJob.h"
-#include "gif-h/gif.h"
+#include "../3rd_party/gif-h/gif.h"
 
 GifWriterJob::GifWriterJob(const char* filename, uint32_t delay, std::vector<uint8_t>& framesData): filename(filename),
                                                                                                     delay(delay),

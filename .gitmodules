@@ -1,6 +1,6 @@
-[submodule "Task2_2_ParticleGif/gif-h"]
-	path = Task2_2_ParticleGif/gif-h
-	url = https://github.com/charlietangora/gif-h
 [submodule "3rd_party/bitmap"]
 	path = 3rd_party/bitmap
 	url = https://github.com/ArashPartow/bitmap
+[submodule "3rd_party/gif-h"]
+	path = 3rd_party/gif-h
+	url = https://github.com/charlietangora/gif-h
