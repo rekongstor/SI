@@ -2,14 +2,14 @@
 #include <stack>
 #include <list>
 
-#define N 100
+#define N 20
 #define SIZE_X 100
 #define SIZE_Y 100
 
 #define MIN_X 0.f
-#define MAX_X 100.f
+#define MAX_X 512
 #define MIN_Y 0.f
-#define MAX_Y 100.f
+#define MAX_Y 512
 
 constexpr float DIST_X = MAX_X - MIN_X;
 constexpr float DIST_Y = MAX_Y - MIN_Y;
@@ -115,13 +115,14 @@ struct EdgeAdj
          {
             le1 = left->e2;
             le2 = left->e0;
-         } else
+         }
+         else
          {
             le1 = left->e0;
             le2 = left->e1;
          }
 
-         EdgeAdj* re1, * re2;
+         EdgeAdj *re1, *re2;
          if (right->e0 == this)
          {
             re1 = right->e1;
@@ -213,23 +214,30 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
       while (start != hull.begin());
 
       auto end = counterClockwise ? start : hull.begin();
+      bool endIsCycled = false;
       while (!Left(*(*end)->v0, *(*end)->v1, vertices[i]))
       {
          ++end;
          if (end == hull.end())
-            end=hull.begin();
+         {
+            end = hull.begin();
+            endIsCycled = true;
+         }
       }
 
       // Adding vertices to visible edges
-      EdgeAdj* first = nullptr, * second;
+      EdgeAdj *first = nullptr, *second = nullptr;
       for (auto it = start; it != end; ++it)
       {
          if (it == hull.end())
             it = hull.begin();
+         if (it == end)
+            break;
          auto& edge = *it;
          triangles.push_back({edge});
          edge->right = &triangles.back();
-         edges.push_back({edge->v0, &vertices[i], &triangles.back()});
+         if (second == nullptr)
+            edges.push_back({edge->v0, &vertices[i], &triangles.back()});
          if (first == nullptr)
             first = &edges.back();
          triangles.back().e1 = &edges.back();
@@ -240,11 +248,17 @@ void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
       }
       hull.insert(start, first);
       hull.insert(start, second);
-      hull.erase(start, end);
+      if (!endIsCycled)
+         hull.erase(start, end);
+      else
+      {
+         hull.erase(start, hull.end());
+         hull.erase(hull.begin(), end);
+      }
    }
 }
 
-void Graham(std::vector<Vertex>& vertices, std::stack<Vertex*>& hullStack)
+void Graham(std::vector<Vertex>& vertices, std::list<EdgeAdj>& hullEdges)
 {
    // Finding rightmost lowest point O(n)
    Vertex* plowRight = &vertices.front();
@@ -267,12 +281,12 @@ void Graham(std::vector<Vertex>& vertices, std::stack<Vertex*>& hullStack)
 
    // Remove collinear
    std::vector<Vertex*> sortedVertices;
+   sortedVertices.push_back(&vertices.front());
    sortedVertices.reserve(vertices.size());
    int cursor = 0;
    for (int i = 1; i < vertices.size() - 1; ++i)
    {
-      if (abs(Area2(lowRight, vertices[i], vertices[i + 1])) <= std::numeric_limits<float>::epsilon())
-         // area is almost 0
+      if (abs(Area2(lowRight, vertices[i], vertices[i + 1])) <= 0.0001f) // area is almost 0
       {
          if (Dist2(lowRight, vertices[i]) < Dist2(lowRight, vertices[i + 1]))
             sortedVertices.back() = &vertices[i + 1]; // if [i + 1] is more distant, then replace [cursor] with it
@@ -282,11 +296,13 @@ void Graham(std::vector<Vertex>& vertices, std::stack<Vertex*>& hullStack)
          sortedVertices.push_back(&vertices[i]);
       }
    }
+   if (abs(Area2(*sortedVertices[0], *sortedVertices[1], *sortedVertices.back())) > 0.0001f)
+      sortedVertices.push_back(&vertices.back());
 
    // Initializing stack
-   hullStack.push(&vertices.front());
+   std::stack<Vertex*> hullStack;
    hullStack.push(sortedVertices.front());
-   int i = 2;
+   int i = 1;
    while (i < sortedVertices.size())
    {
       if (hullStack.size() == 1)
@@ -305,13 +321,23 @@ void Graham(std::vector<Vertex>& vertices, std::stack<Vertex*>& hullStack)
          ++i;
       }
    }
+   Vertex* top = hullStack.top();
+   while (hullStack.size() > 1)
+   {
+      Vertex* v1 = hullStack.top();
+      hullStack.pop();
+      Vertex* v0 = hullStack.top();
+      hullEdges.push_back({v0, v1});
+   }
+   Vertex* bottom = hullStack.top();
+   hullEdges.push_back({top, bottom});
 }
 
 
 int main()
 {
    // Step 0: Generation
-   std::mt19937 engine;
+   std::mt19937 engine(4221);
    std::uniform_real_distribution<float> realDistribution;
    std::vector<Vertex> vertices(N);
    for (auto& v : vertices)
@@ -319,7 +345,7 @@ int main()
 
 
    // Step 1: Convex hull
-   std::stack<Vertex*> hullStack;
+   std::list<EdgeAdj> hullStack;
    Graham(vertices, hullStack);
 
    // Step 2: Delaunay
