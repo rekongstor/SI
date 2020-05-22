@@ -1,7 +1,7 @@
 #include <random>
-#include <stack>
 #include <list>
 #include "Bitmap.h"
+#include "Structures.h"
 
 #define N 1000
 #define SIZE_X 1600
@@ -16,175 +16,11 @@ constexpr float DIST_X = MAX_X - MIN_X;
 constexpr float DIST_Y = MAX_Y - MIN_Y;
 
 
-struct Vertex
-{
-   float x;
-   float y;
-};
+void Graham(std::vector<Vertex>& vertices, std::list<Edge>& hullEdges);
+void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges);
 
 
-inline float Dist2(Vertex v0, Vertex v1)
-{
-   float x = v0.x - v1.x;
-   float y = v0.y - v1.y;
-   return x * x + y * y;
-}
-
-inline float Area2(Vertex v0, Vertex v1, Vertex v2)
-{
-   return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y);
-}
-
-
-inline bool Left(Vertex v0, Vertex v1, Vertex v2)
-{
-   return Area2(v0, v1, v2) > 0;
-}
-
-struct EdgeAdj;
-
-struct Triangle
-{
-   EdgeAdj* e0;
-   EdgeAdj* e1;
-   EdgeAdj* e2;
-};
-
-struct EdgeAdj
-{
-   Vertex* v0;
-   Vertex* v1;
-   Triangle* left;
-   Triangle* right;
-
-
-   void CheckAndFlip()
-   {
-      if (right == nullptr || left == nullptr)
-         return;
-      // Edge
-      Vertex V1 = *v1;
-      Vertex V3 = *v0;
-
-      // Left triangle
-      Vertex* lv0 = left->e0->v0;
-      Vertex* lv1 = left->e0->v1;
-      Vertex* lv2 = (left->e1->v0 != lv0 && left->e1->v0 != lv1) ? left->e1->v0 : left->e1->v1;
-
-      Vertex* lVertex;
-      if (lv0 != v0 && lv0 != v1)
-         lVertex = lv0;
-      else if (lv1 != v0 && lv1 != v1)
-         lVertex = lv1;
-      else
-         lVertex = lv2;
- 
-
-
-      // Right triangle
-      Vertex* rv0 = right->e0->v0;
-      Vertex* rv1 = right->e0->v1;
-      Vertex* rv2 = (right->e1->v0 != rv0 && right->e1->v0 != rv1) ? right->e1->v0 : right->e1->v1;
-
-
-      Vertex* rVertex;
-      if (rv0 != v0 && rv0 != v1)
-         rVertex = rv0;
-      else if (rv1 != v0 && rv1 != v1)
-         rVertex = rv1;
-      else
-         rVertex = rv2;
-
-      Vertex V0 = *lVertex;
-      Vertex V2 = *rVertex;
-
-      if (Left(V0, V1, V2) || Left(V0, V2, V3))
-         return;
-
-      if (
-         abs(((V0.x - V1.x) * (V0.y - V3.y) - (V0.x - V3.x) * (V0.y - V1.y))) *
-         ((V2.x - V1.x) * (V2.x - V3.x) + (V2.y - V1.y) * (V2.y - V3.y))
-         +
-         ((V0.x - V1.x) * (V0.x - V3.x) + (V0.y - V1.y) * (V0.y - V3.y)) *
-         abs(((V2.x - V1.x) * (V2.y - V3.y) - (V2.x - V3.x) * (V2.y - V1.y)))
-         < 0.f)
-      {
-         // Flip this edge
-         v0 = lVertex;
-         v1 = rVertex;
-
-         // Flip triangles
-         EdgeAdj *le1, *le2;
-         if (left->e0 == this)
-         {
-            le1 = left->e1;
-            le2 = left->e2;
-         }
-         else if (left->e1 == this)
-         {
-            le1 = left->e2;
-            le2 = left->e0;
-         }
-         else
-         {
-            le1 = left->e0;
-            le2 = left->e1;
-         }
-
-         EdgeAdj *re1, *re2;
-         if (right->e0 == this)
-         {
-            re1 = right->e1;
-            re2 = right->e2;
-         }
-         else if (right->e1 == this)
-         {
-            re1 = right->e2;
-            re2 = right->e0;
-         }
-         else
-         {
-            re1 = right->e0;
-            re2 = right->e1;
-         }
-
-         left->e0 = this;
-         left->e1 = re2;
-         left->e2 = le1;
-
-         right->e0 = this;
-         right->e1 = le2;
-         right->e2 = re1;
-
-         if (le1->left == right)
-            le1->left = left;
-         if (le1->right == right)
-            le1->right = left;
-
-         if (le2->left == left)
-            le2->left = right;
-         if (le2->right == left)
-            le2->right = right;
-
-         if (re1->left == left)
-            re1->left = right;
-         if (re1->right == left)
-            re1->right = right;
-
-         if (re2->left == right)
-            re2->left = left;
-         if (re2->right == right)
-            re2->right = left;
-
-         left->e1->CheckAndFlip();
-         left->e2->CheckAndFlip();
-         right->e1->CheckAndFlip();
-         right->e2->CheckAndFlip();
-      }
-   }
-};
-
-void MakeBMP(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges, std::list<EdgeAdj*>& hull)
+void MakeBMP(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges, std::list<Edge>& hull)
 {
    Bitmap bmp(SIZE_X, SIZE_Y);
    for (auto& e : edges)
@@ -193,7 +29,7 @@ void MakeBMP(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges, std::list
    }
    for (auto& e : hull)
    {
-      bmp.DrawLine(e->v0->x, e->v0->y, e->v1->x, e->v1->y,0,255,255);
+      bmp.DrawLine(e.v0.x, e.v0.y, e.v1.x, e.v1.y,0,255,255);
    }
    for (auto& v : vertices)
    {
@@ -202,216 +38,6 @@ void MakeBMP(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges, std::list
    bmp.Save();
 }
 
-
-void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges)
-{
-   std::sort(vertices.begin(), vertices.end(), [](const Vertex& a, const Vertex& b) -> bool
-   {
-      return a.x < b.x;
-   });
-   std::list<Triangle> triangles;
-   std::list<EdgeAdj*> hull;
-
-   // Adding one triangle, its edges and its convex hull
-   if (Left(vertices[0], vertices[1], vertices[2]))
-   {
-      triangles.push_back({});
-      edges.push_back({&vertices[0], &vertices[1], &triangles.back()});
-      hull.push_back(&edges.back());
-      triangles.front().e0 = &edges.back();
-      edges.push_back({&vertices[1], &vertices[2], &triangles.back()});
-      hull.push_back(&edges.back());
-      triangles.front().e1 = &edges.back();
-      edges.push_back({&vertices[2], &vertices[0], &triangles.back()});
-      hull.push_back(&edges.back());
-      triangles.front().e2 = &edges.back();
-   }
-   else
-   {
-      triangles.push_back({});
-      edges.push_back({&vertices[1], &vertices[0], &triangles.back()});
-      hull.push_back(&edges.back());
-      triangles.front().e0 = &edges.back();
-      edges.push_back({&vertices[0], &vertices[2], &triangles.back()});
-      hull.push_back(&edges.back());
-      triangles.front().e1 = &edges.back();
-      edges.push_back({&vertices[2], &vertices[1], &triangles.back()});
-      hull.push_back(&edges.back());
-      triangles.front().e2 = &edges.back();
-   }
-
-   for (int i = 3; i < vertices.size(); ++i)
-   {
-      // Finding visible start and end
-      auto start = hull.begin();
-      bool counterClockwise = Left(*(*start)->v0, *(*start)->v1, vertices[i]);
-      if (!counterClockwise)
-         start = hull.end();
-      do
-      {
-         if (counterClockwise)
-         {
-            ++start;
-            if (!Left(*(*start)->v0, *(*start)->v1, vertices[i]))
-               break;
-         }
-         else
-         {
-            --start;
-            if (Left(*(*start)->v0, *(*start)->v1, vertices[i]))
-            {
-               ++start;
-               if (start == hull.end())
-                  start = hull.begin();
-               break;
-            }
-         }
-      }
-      while (true);
-
-      auto end = counterClockwise ? start : hull.begin();
-      while (!Left(*(*end)->v0, *(*end)->v1, vertices[i]))
-      {
-         ++end;
-         if (end == hull.end())
-         {
-            end = hull.begin();
-         }
-      }
-
-      bool endIsCycled = false;
-      for (auto it = start; it != end; ++it)
-         if (it == hull.end())
-         {
-            endIsCycled = true;
-            break;
-         }
-
-      // Adding vertices to visible edges
-      EdgeAdj *first = nullptr, *second = nullptr;
-      bool singleEdge;
-      for (auto it = start; it != end; ++it)
-      {
-         if (it == hull.end())
-         {
-            it = hull.begin();
-            if (it == end)
-               break;
-         }
-         auto& edge = *it;
-         triangles.push_back({edge});
-         edge->right = &triangles.back();
-         if (second == nullptr)
-            edges.push_back({ edge->v0, &vertices[i], &triangles.back() });
-         else
-            edges.back().right = &triangles.back();
-         if (first == nullptr)
-            first = &edges.back();
-         triangles.back().e1 = &edges.back();
-         edges.push_back({&vertices[i], edge->v1, &triangles.back()});
-         second = &edges.back();
-         triangles.back().e2 = &edges.back();
-         // Check Delaunay condition
-         edge->CheckAndFlip();
-      }
-
-      // Update hull
-
-      if (!endIsCycled)
-      {
-         hull.insert(start, first);
-         hull.insert(start, second);
-         hull.erase(start, end);
-      }
-      else
-      {
-         hull.insert(start, first);
-         hull.insert(start, second);
-         hull.erase(start, hull.end());
-         hull.erase(hull.begin(), end);
-      }
-
-      //for (int i = 0; i < 100; ++i)
-      //   for (auto& e : edges)
-      //      e.CheckAndFlip();
-   }
-   MakeBMP(vertices, edges, hull);
-}
-
-void Graham(std::vector<Vertex>& vertices, std::list<EdgeAdj>& hullEdges)
-{
-   // Finding rightmost lowest point O(n)
-   Vertex* plowRight = &vertices.front();
-
-   for (int i = 1; i < vertices.size(); ++i)
-      if (vertices[i].y < plowRight->y ||
-         (vertices[i].y == plowRight->y && vertices[i].x > plowRight->x))
-         plowRight = &vertices[i];
-   // Sort by angle
-   Vertex lowRight = *plowRight;
-   std::swap(vertices.front(), *plowRight);
-
-   auto it = vertices.begin() + 1;
-   std::sort(it, vertices.end(), [&](const Vertex& a, const Vertex& b) -> bool
-   {
-      if (Area2(lowRight, a, b) > 0.f)
-         return false;
-      return true;
-   });
-
-   // Remove collinear
-   std::vector<Vertex*> sortedVertices;
-   sortedVertices.push_back(&vertices.front());
-   sortedVertices.reserve(vertices.size());
-   int cursor = 0;
-   for (int i = 1; i < vertices.size() - 1; ++i)
-   {
-      if (abs(Area2(lowRight, vertices[i], vertices[i + 1])) <= 0.0001f) // area is almost 0
-      {
-         if (Dist2(lowRight, vertices[i]) < Dist2(lowRight, vertices[i + 1]))
-            sortedVertices.back() = &vertices[i + 1]; // if [i + 1] is more distant, then replace [cursor] with it
-      }
-      else
-      {
-         sortedVertices.push_back(&vertices[i]);
-      }
-   }
-   if (abs(Area2(*sortedVertices[0], *sortedVertices[1], *sortedVertices.back())) > 0.0001f)
-      sortedVertices.push_back(&vertices.back());
-
-   // Initializing stack
-   std::stack<Vertex*> hullStack;
-   hullStack.push(sortedVertices.front());
-   int i = 1;
-   while (i < sortedVertices.size())
-   {
-      if (hullStack.size() == 1)
-      {
-         hullStack.push(sortedVertices[i]);
-         ++i;
-         continue;
-      }
-      Vertex* p1 = hullStack.top();
-      hullStack.pop();
-      Vertex* p0 = hullStack.top();
-      if (!Left(*p0, *p1, *sortedVertices[i]))
-      {
-         hullStack.push(p1);
-         hullStack.push(sortedVertices[i]);
-         ++i;
-      }
-   }
-   Vertex* top = hullStack.top();
-   while (hullStack.size() > 1)
-   {
-      Vertex* v1 = hullStack.top();
-      hullStack.pop();
-      Vertex* v0 = hullStack.top();
-      hullEdges.push_back({v0, v1});
-   }
-   Vertex* bottom = hullStack.top();
-   hullEdges.push_back({top, bottom});
-}
 
 
 int main()
@@ -425,7 +51,7 @@ int main()
 
 
    // Step 1: Convex hull
-   std::list<EdgeAdj> hullEdges;
+   std::list<Edge> hullEdges;
    Graham(vertices, hullEdges);
 
    // Step 2: Delaunay
@@ -433,5 +59,6 @@ int main()
    Delaunay(vertices, edgesTriangulation);
 
    // Step 3: BMP
+   MakeBMP(vertices, edgesTriangulation, hullEdges);
    return 0;
 }
