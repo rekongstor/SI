@@ -11,32 +11,19 @@
 
 int main()
 {
+   std::pair<int, const char*> particleSequences[] =
    {
-      ParticleSequence ps100(100,SIZE, TIME);
-      ps100.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
-      ParticleSequenceJob particleSequenceJob100(ps100, "ps100.gif");
-      BasicJob& basicJob = particleSequenceJob100;
-      basicJob.Run();
-   }
+      {100, "ps100.gif"},
+      {1000, "ps1000.gif"},
+      {10000, "ps10000.gif"},
+      {1010000000, "ps1000000.gif"}
+   };
+   for (auto& ps : particleSequences)
    {
-      ParticleSequence ps1000(1000, SIZE, TIME);
-      ps1000.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
-      ParticleSequenceJob particleSequenceJob1000(ps1000, "ps1000.gif");
-      BasicJob& basicJob = particleSequenceJob1000;
-      basicJob.Run();
-   }
-   {
-      ParticleSequence ps10000(10000, SIZE, TIME);
-      ps10000.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
-      ParticleSequenceJob particleSequenceJob10000(ps10000, "ps10000.gif");
-      BasicJob& basicJob = particleSequenceJob10000;
-      basicJob.Run();
-   }
-   {
-      ParticleSequence ps1000000(1000000, SIZE, TIME);
-      ps1000000.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
-      ParticleSequenceJob particleSequenceJob1000000(ps1000000, "ps1000000.gif");
-      BasicJob& basicJob = particleSequenceJob1000000;
-      basicJob.Run();
+      auto [count, filename] = ps;
+      ParticleSequence sequence(count, SIZE, TIME);
+      sequence.init(MIN_COLOR, MAX_COLOR, INIT_VELOCITY, VELOCITY_FADE, COLOR_FADE);
+      ParticleSequenceJob sequenceJob(sequence, filename);
+      sequenceJob.Run();
    }
 }
