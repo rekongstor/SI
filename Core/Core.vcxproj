@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BasicJob.cpp" />
+    <ClCompile Include="Bitmap.cpp" />
     <ClCompile Include="UniqueTimer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicJob.h" />
+    <ClInclude Include="Bitmap.h" />
     <ClInclude Include="UniqueTimer.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

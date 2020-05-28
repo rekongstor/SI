@@ -6,10 +6,36 @@ Scene::Scene(const Camera& camera): camera(camera)
 {
 }
 
+Color Scene::getPixelColorPhong(Ray ray)
+{
+      std::pair<Point3D,float> closest;
+      std::tuple<Color, Color, float> color;
+   for (auto& obj : objects)
+   {
+      closest.second = std::numeric_limits<float>::infinity();
+      if (obj->anyHit(ray))
+      {
+         auto hit = obj->closestHit(ray);
+         if (hit.second < closest.second)
+         {
+            closest = hit;
+            color = obj->getColor();
+         }
+      }
+   }
+   if (closest.second != std::numeric_limits<float>::infinity())
+   {
+      auto [diffuseColor, specularColor, specularExp] = color;
+      return diffuseColor;
+   }
+   return {0.f, 0.f, 0.f};
+}
+
 void Scene::addObject(Object* object)
 {
    objects.push_back(object);
 }
+
 
 void Scene::renderScene(uint32_t width, uint32_t height, const char* filename)
 {
@@ -50,6 +76,8 @@ void Scene::renderScene(uint32_t width, uint32_t height, const char* filename)
    for (auto i = 0; i < width; ++i)
       for (auto j = 0; j < height; ++j)
       {
-         bitmap.SetPixel(i, j);
+         Color color = getPixelColorPhong(rays[i * width + j]);
+         bitmap.SetPixel(i, j, {static_cast<uint8_t>(color.r * 255.f), static_cast<uint8_t>(color.g * 255.f), static_cast<uint8_t>(color.b * 255.f)});
       }
+   bitmap.Save(filename);
 }

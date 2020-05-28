@@ -25,3 +25,8 @@ void Bitmap::Save(const char* filename)
 {
    bitmapImage.save_image(filename);
 }
+
+void Bitmap::SetPixel(uint32_t x, uint32_t y, rgb_t color)
+{
+   bitmapImage.set_pixel(x, y, color);
+}

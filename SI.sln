@@ -22,8 +22,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj", "{F54A3267-E19B-4E01-BA07-5B691A77C296}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task3_1_CompGeom", "Task3_1_CompGeom\Task3_1_CompGeom.vcxproj", "{0C5BB3CE-5C9B-4530-BC95-E9DB4366AF91}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F54A3267-E19B-4E01-BA07-5B691A77C296} = {F54A3267-E19B-4E01-BA07-5B691A77C296}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task4_1_CPU_Renderer", "Task4_1_CPU_Renderer\Task4_1_CPU_Renderer.vcxproj", "{F0019AFF-DC64-47D9-B098-51969ED6D91F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F54A3267-E19B-4E01-BA07-5B691A77C296} = {F54A3267-E19B-4E01-BA07-5B691A77C296}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

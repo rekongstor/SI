@@ -5,10 +5,10 @@
 int main()
 {
    Camera camera;
-   camera.position = {10.f, 10.f, 10.f};
+   camera.position = {5.f, 5.f, 5.f};
    camera.direction = {-1.f, -1.f, -1.f};
    camera.direction = normalize(camera.direction);
-   camera.fov = 90.f;
+   camera.fov = 45.f;
 
    {
       // Objects on stack

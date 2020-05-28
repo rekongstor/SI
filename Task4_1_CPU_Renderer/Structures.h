@@ -18,7 +18,7 @@ struct Ray
 
 struct Color
 {
-   float x, y, z;
+   float r, g, b;
 };
 
 struct Light
