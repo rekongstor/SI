@@ -21,7 +21,7 @@ void Bitmap::DrawPoint(float x, float y)
    draw.circle(x, bitmapImage.height()-y, 1);
 }
 
-void Bitmap::Save()
+void Bitmap::Save(const char* filename)
 {
-   bitmapImage.save_image("triangulation.bmp");
+   bitmapImage.save_image(filename);
 }

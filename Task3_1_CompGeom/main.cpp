@@ -1,6 +1,6 @@
 #include <random>
 #include <list>
-#include "Bitmap.h"
+#include "../Core/Bitmap.h"
 #include "Structures.h"
 
 #define N 1000
@@ -35,7 +35,7 @@ void MakeBMP(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges, std::list
    {
       bmp.DrawPoint(v.x, v.y);
    }
-   bmp.Save();
+   bmp.Save("triangulation.bmp");
 }
 
 
