@@ -2,14 +2,15 @@
 #include "Scene.h"
 #include "../Core/Bitmap.h"
 
-Scene::Scene(const Camera& camera): camera(camera)
+Scene::Scene(const Camera& camera, const Light& light): camera(camera), light(light)
 {
 }
 
-Color Scene::getPixelColorPhong(Ray ray)
+std::tuple<Color, Color, float, Point3D> Scene::getPixelColor(Ray ray)
 {
-      std::pair<Point3D,float> closest;
-      std::tuple<Color, Color, float> color;
+   // Finding closest pixel color
+   std::pair<Point3D, float> closest;
+   std::tuple<Color, Color, float> color;
    for (auto& obj : objects)
    {
       closest.second = std::numeric_limits<float>::infinity();
@@ -23,12 +24,26 @@ Color Scene::getPixelColorPhong(Ray ray)
          }
       }
    }
-   if (closest.second != std::numeric_limits<float>::infinity())
+   auto [diffuseColor, specularColor, specularExp] = color;
+   return {diffuseColor, specularColor, specularExp, closest.first};
+}
+
+Color Scene::getPixelColorPhong(Ray ray)
+{
+   // Implementing phong
+   auto [diffuseColor, specularColor, specularExp, normal] = getPixelColor(ray);
+   if (length(normal) < 0.9f)
+      return {0.5f, 0.5f, 0.5f};
+
+   float k = dot(normal, light.direction);
+   if (k > 0.f)
    {
-      auto [diffuseColor, specularColor, specularExp] = color;
-      return diffuseColor;
+      float spec = dot(normal,normalize(normal + light.direction));
+      Color color = diffuseColor * light.color * k + specularColor * light.color * powf(std::max(spec, 0.f), specularExp);
+      return color;
    }
-   return {0.f, 0.f, 0.f};
+   else
+      return {0.f, 0.f, 0.f};
 }
 
 void Scene::addObject(Object* object)
@@ -53,7 +68,7 @@ void Scene::renderScene(uint32_t width, uint32_t height, const char* filename)
    float side = -sqrtf(2.f / (1.f - cosf(camera.fov * M_PI * 0.5f)));
    left = left * side;
    right = right * side;
-   float planeDistance = length(mul(left, right)); // half area for triangle and another half for base (2.0)
+   float planeDistance = length(mul(left, right)) * 0.25;
    Point3D uwPosition = camera.position + (camera.direction * planeDistance);
    uwPosition = uwPosition - u - w; // moving to (-1;-1) uw coordinate
 
@@ -77,7 +92,10 @@ void Scene::renderScene(uint32_t width, uint32_t height, const char* filename)
       for (auto j = 0; j < height; ++j)
       {
          Color color = getPixelColorPhong(rays[i * width + j]);
-         bitmap.SetPixel(i, j, {static_cast<uint8_t>(color.r * 255.f), static_cast<uint8_t>(color.g * 255.f), static_cast<uint8_t>(color.b * 255.f)});
+         bitmap.SetPixel(j, height - i - 1, {
+                            static_cast<uint8_t>(color.r * 255.f), static_cast<uint8_t>(color.g * 255.f),
+                            static_cast<uint8_t>(color.b * 255.f)
+                         });
       }
    bitmap.Save(filename);
 }

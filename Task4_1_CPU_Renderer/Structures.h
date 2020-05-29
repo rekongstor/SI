@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 
 struct Point3D
 {
@@ -136,4 +137,24 @@ inline Point3D operator*(const Point3D& l, const float& r)
 inline Point3D operator/(const Point3D& l, const float& r)
 {
    return {l.x / r, l.y / r, l.z / r};
+}
+
+inline Color operator+(const Color& l, const Color& r)
+{
+   return { std::clamp(l.r + r.r,0.f,1.f), std::clamp(l.g + r.g,0.f,1.f), std::clamp(l.b + r.b,0.f,1.f) };
+}
+
+inline Color operator-(const Color& l, const Color& r)
+{
+   return { std::clamp(l.r + r.r,0.f,1.f), std::clamp(l.g + r.g,0.f,1.f), std::clamp(l.b + r.b,0.f,1.f) };
+}
+
+inline Color operator*(const Color& l, const Color& r)
+{
+   return { std::clamp(l.r * r.r,0.f,1.f), std::clamp(l.g * r.g,0.f,1.f), std::clamp(l.b * r.b,0.f,1.f) };
+}
+
+inline Color operator*(const Color& l, const float& r)
+{
+   return { std::clamp(l.r * r,0.f,1.f), std::clamp(l.g * r,0.f,1.f), std::clamp(l.b * r,0.f,1.f) };
 }
