@@ -1,4 +1,5 @@
 #include "Plane.h"
+#include "RendererPBR.h"
 #include "Scene.h"
 #include "Sphere.h"
 #include "RendererPhong.h"
@@ -45,7 +46,7 @@ int main()
             scene.addObject(&spheres[i][j]);
          }
 
-      RendererPhong renderer(camera, {0.01f, 0.01f, 0.02f});
+      RendererPBR renderer(camera, {0.01f, 0.01f, 0.02f});
       renderer.renderScene(scene, 1024, 1024, "pbr.bmp");
    }
    return 0;

@@ -1,11 +1,11 @@
-#include "RendererPhong.h"
+#include "RendererPBR.h"
 
 
-RendererPhong::RendererPhong(const Camera& camera, const Color& ambientColor): Renderer(camera, ambientColor)
+RendererPBR::RendererPBR(const Camera& camera, const Color& ambientColor): Renderer(camera, ambientColor)
 {
 }
 
-Color RendererPhong::pixelShader(std::tuple<Color, Color, float, Point3D> buffer, Light light, const Ray& ray)
+Color RendererPBR::pixelShader(std::tuple<Color, Color, float, Point3D> buffer, Light light, const Ray& ray)
 {
    // Implementing phong
    auto [diffuseColor, specularColor, specularExp, normal] = buffer;

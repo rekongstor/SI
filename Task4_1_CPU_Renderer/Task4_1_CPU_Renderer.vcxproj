@@ -150,6 +150,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RendererPBR.cpp" />
     <ClCompile Include="RendererPhong.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Sphere.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="Object.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RendererPBR.h" />
     <ClInclude Include="RendererPhong.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Sphere.h" />
