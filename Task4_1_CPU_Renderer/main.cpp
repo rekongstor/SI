@@ -11,14 +11,14 @@
 int main()
 {
    Camera camera;
-   camera.position = {3.5f, 0.f, 5.f};
-   camera.direction = {-1.f, 0.f, 2.2f};
+   camera.position = {0.0f, 0.f, 4.5f};
+   camera.direction = {0.f, 0.f, 1.0f};
    camera.direction = normalize(camera.direction);
-   camera.fov = 85.f;
+   camera.fov = 145.f;
 
    Light light;
    light.color = {1.0f, 1.0f, 1.0f};
-   light.direction = {0.0f, 0.0f, -1.0f};
+   light.direction = {0.5f, 0.0f, -1.0f};
    light.direction = normalize(light.direction);
 
    {
@@ -36,7 +36,7 @@ int main()
    {
       Scene scene(light);
 
-      Plane plane({0.f, 0.f, 1.f, 0.f}, {0.2f, 0.2f, 0.2f}, {0.3f, 0.3f, 0.3f}, 40.f, 0.0f, 1.0f);
+      Plane plane({0.f, 0.f, 1.f, 0.f}, {0.2f, 0.2f, 0.2f}, {0.3f, 0.3f, 0.3f}, 40.f, 0.11f, 1.0f);
       scene.addObject(&plane);
 
       Sphere spheres[SPHERES_X][SPHERES_Y];

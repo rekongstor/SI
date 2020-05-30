@@ -52,11 +52,15 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
 
    // Calculating basis
    Point3D up = {0.f, 0.f, 1.f};
-   Point3D u = mul(camera.direction, up);
-   if (length(up) > 0.001f)
-      u = normalize(u);
+   Point3D u;
+   if (length(up - camera.direction) > 0.01f)
+   {
+      u = normalize(mul(camera.direction, up));
+   }
    else
+   {
       u = {1.f, 0.f, 0.f};
+   }
    Point3D w = mul(u, camera.direction);
 
    // Calculating plane
