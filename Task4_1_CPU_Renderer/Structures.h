@@ -6,6 +6,11 @@ struct Point3D
    float x, y, z;
 };
 
+struct Point4D
+{
+   float x, y, z, w;
+};
+
 struct Quaternion
 {
    float w, x, y, z;
@@ -45,6 +50,10 @@ inline float dot(const Quaternion& q1, const Quaternion& q2)
    return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
 
+inline float dot(const Point4D v1, const Point4D& v2)
+{
+   return v1.w * v2.w + v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
 
 inline Point3D mul(const Point3D& v1, const Point3D& v2)
 {
@@ -141,20 +150,20 @@ inline Point3D operator/(const Point3D& l, const float& r)
 
 inline Color operator+(const Color& l, const Color& r)
 {
-   return { std::clamp(l.r + r.r,0.f,1.f), std::clamp(l.g + r.g,0.f,1.f), std::clamp(l.b + r.b,0.f,1.f) };
+   return {std::clamp(l.r + r.r, 0.f, 1.f), std::clamp(l.g + r.g, 0.f, 1.f), std::clamp(l.b + r.b, 0.f, 1.f)};
 }
 
 inline Color operator-(const Color& l, const Color& r)
 {
-   return { std::clamp(l.r + r.r,0.f,1.f), std::clamp(l.g + r.g,0.f,1.f), std::clamp(l.b + r.b,0.f,1.f) };
+   return {std::clamp(l.r + r.r, 0.f, 1.f), std::clamp(l.g + r.g, 0.f, 1.f), std::clamp(l.b + r.b, 0.f, 1.f)};
 }
 
 inline Color operator*(const Color& l, const Color& r)
 {
-   return { std::clamp(l.r * r.r,0.f,1.f), std::clamp(l.g * r.g,0.f,1.f), std::clamp(l.b * r.b,0.f,1.f) };
+   return {std::clamp(l.r * r.r, 0.f, 1.f), std::clamp(l.g * r.g, 0.f, 1.f), std::clamp(l.b * r.b, 0.f, 1.f)};
 }
 
 inline Color operator*(const Color& l, const float& r)
 {
-   return { std::clamp(l.r * r,0.f,1.f), std::clamp(l.g * r,0.f,1.f), std::clamp(l.b * r,0.f,1.f) };
+   return {std::clamp(l.r * r, 0.f, 1.f), std::clamp(l.g * r, 0.f, 1.f), std::clamp(l.b * r, 0.f, 1.f)};
 }

@@ -10,8 +10,7 @@ class Sphere :
    float specularExp;
 public:
    std::tuple<Color, Color, float> getColor() override;
-   Sphere(const Point3D& center, float r,
-          Color diffuseColor = {1.f, 0.f, 0.f}, Color specularColor = {0.5f, 0.9f, 0.9f}, float specularExp = 50.f);
+   Sphere(const Point3D& center, float r, const Color& diffuseColor, const Color& specularColor, float specularExp);
 
 private:
    float r;
