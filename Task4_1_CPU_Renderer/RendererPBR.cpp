@@ -17,7 +17,8 @@ Color RendererPBR::pixelShader(std::tuple<Color, Color, float, float, float, Poi
    float k = dot(normal, light.direction);
    if (k > 0.f)
    {
-      roughness = roughness * 0.99f + 0.01f; // ensure roughness is not 0
+      roughness = roughness * 0.3f + 0.01f; // ensure roughness is not 0
+      metalness = metalness * 0.6f + 0.f;
       const Point3D& L = light.direction;
       const Point3D& N = normal;
       const Point3D& V = ray.direction * -1.f;
