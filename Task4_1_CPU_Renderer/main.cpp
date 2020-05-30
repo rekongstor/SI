@@ -45,7 +45,7 @@ int main()
          {
             spheres[i][j] = Sphere({(static_cast<float>(i + 1) - (SPHERES_X + 1) / 2.f) * 2.f, (static_cast<float>(j + 1) - (SPHERES_Y + 1)/ 2.f) * 2.f, -1.f}, 0.8f,
                                    { static_cast<float>(i) / SPHERES_X + 0.1f, static_cast<float>(j) / SPHERES_Y + 0.1f, 0.f}, {0.2f, 0.2f, 0.2f}, 0.1f,
-                                   static_cast<float>(i) / SPHERES_X * 0.8f + 0.2f, static_cast<float>(j) / SPHERES_Y);
+                                   static_cast<float>(i) / SPHERES_X, static_cast<float>(j) / SPHERES_Y);
             scene.addObject(&spheres[i][j]);
          }
 
