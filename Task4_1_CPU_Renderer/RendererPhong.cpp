@@ -5,10 +5,11 @@ RendererPhong::RendererPhong(const Camera& camera, const Color& ambientColor): R
 {
 }
 
-Color RendererPhong::pixelShader(std::tuple<Color, Color, float, Point3D> buffer, Light light, const Ray& ray)
+Color RendererPhong::pixelShader(std::tuple<Color, Color, float, float, float, Point3D> buffer, Light light,
+                                 const Ray& ray)
 {
    // Implementing phong
-   auto [diffuseColor, specularColor, specularExp, normal] = buffer;
+   auto& [diffuseColor, specularColor, specularExp, metalness, roughness, normal] = buffer;
    if (length(normal) < 0.9f)
       return {0.5f, 0.5f, 0.5f};
    float k = dot(normal, light.direction);

@@ -1,19 +1,13 @@
 #include "Sphere.h"
 
-Sphere::Sphere(const Point3D& center, float r, const Color& diffuseColor, const Color& specularColor,
-               float specularExp) :
+
+Sphere::Sphere(const Point3D& center, float r, const Color& diffuseColor, const Color& specularColor, float specularExp,
+               float metalness, float roughness):
+   Object(diffuseColor, specularColor, specularExp, metalness, roughness),
    center(center),
-   diffuseColor(diffuseColor),
-   specularColor(specularColor),
-   specularExp(specularExp),
    r(r),
    r2(r * r)
 {
-}
-
-std::tuple<Color, Color, float> Sphere::getColor()
-{
-   return {diffuseColor, specularColor, specularExp};
 }
 
 std::pair<Point3D, float> Sphere::closestHit(Ray ray)

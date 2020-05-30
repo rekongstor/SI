@@ -10,12 +10,13 @@ Renderer::Renderer(const Camera& camera, const Color& ambientColor) : camera(cam
 }
 
 
-std::tuple<Color, Color, float, Point3D> Renderer::rayCast(Scene& scene, Ray ray)
+std::tuple<Color, Color, float, float, float, Point3D> Renderer::rayCast(Scene& scene, Ray ray)
 {
    // Finding closest pixel color
    std::pair<Point3D, float> closest;
    closest.second = std::numeric_limits<float>::infinity();
-   std::tuple<Color, Color, float> color;
+   Color diffuseColor, specularColor;
+   float specularExp, metalness, roughness;
    for (auto& obj : scene.objects)
    {
       if (obj->anyHit(ray))
@@ -24,21 +25,23 @@ std::tuple<Color, Color, float, Point3D> Renderer::rayCast(Scene& scene, Ray ray
          if (hit.second < closest.second)
          {
             closest = hit;
-            color = obj->getColor();
+            diffuseColor = obj->getDiffuseColor();
+            specularColor = obj->getSpecularColor();
+            specularExp = obj->getSpecularExp();
+            metalness = obj->getMetalness();
+            roughness = obj->getRoughness();
          }
       }
    }
-   auto [diffuseColor, specularColor, specularExp] = color;
    // Make shadow
-   Ray secondRay = { ray.origin + ray.direction * (closest.second - 0.001f),scene.light.direction };
-   Color black = { 0.f,0.f,0.f };
+   Ray secondRay = {ray.origin + ray.direction * (closest.second), scene.light.direction};
+   Color black = {0.f, 0.f, 0.f};
    for (auto& obj : scene.objects)
    {
       if (obj->anyHit(secondRay))
-         return { black, black, 1.f,closest.first };
-         
+         return {black, black, 1.f, 0.f, 0.f, closest.first};
    }
-   return {diffuseColor, specularColor, specularExp, closest.first};
+   return {diffuseColor, specularColor, specularExp, metalness, roughness, closest.first};
 }
 
 void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename)

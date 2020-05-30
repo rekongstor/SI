@@ -109,7 +109,7 @@ inline Quaternion normalize(Quaternion vector)
    return vector;
 }
 
-inline Point3D rotate(const Point3D& vector, const Point3D& axis, const float& angle)
+inline Point3D rotate(const Point3D& vector, const Point3D& axis, const float angle)
 {
    Quaternion q;
    q.w = cosf(angle / 2.f);
@@ -138,15 +138,47 @@ inline Point3D operator-(const Point3D& l, const Point3D& r)
    return {l.x - r.x, l.y - r.y, l.z - r.z};
 }
 
-inline Point3D operator*(const Point3D& l, const float& r)
+
+inline Point3D operator+(const Point3D& l, const float r)
+{
+   return {l.x + r, l.y + r, l.z + r};
+}
+
+inline Point3D operator+(const float l, const Point3D& r)
+{
+   return r + l;
+}
+
+inline Point3D operator-(const Point3D& l, const float r)
+{
+   return {l.x - r, l.y - r, l.z - r};
+}
+
+inline Point3D operator-(const float l, const Point3D& r)
+{
+   return r - l;
+}
+
+inline Point3D operator*(const Point3D& l, const float r)
 {
    return {l.x * r, l.y * r, l.z * r};
 }
 
-inline Point3D operator/(const Point3D& l, const float& r)
+inline Point3D operator*(const float l, const Point3D& r)
+{
+   return r * l;
+}
+
+inline Point3D operator/(const Point3D& l, const float r)
 {
    return {l.x / r, l.y / r, l.z / r};
 }
+
+inline Point3D operator/(const float l, const Point3D& r)
+{
+   return r / l;
+}
+
 
 inline Color operator+(const Color& l, const Color& r)
 {
@@ -163,7 +195,12 @@ inline Color operator*(const Color& l, const Color& r)
    return {std::clamp(l.r * r.r, 0.f, 1.f), std::clamp(l.g * r.g, 0.f, 1.f), std::clamp(l.b * r.b, 0.f, 1.f)};
 }
 
-inline Color operator*(const Color& l, const float& r)
+inline Color operator*(const Color& l, const float r)
 {
    return {std::clamp(l.r * r, 0.f, 1.f), std::clamp(l.g * r, 0.f, 1.f), std::clamp(l.b * r, 0.f, 1.f)};
+}
+
+inline Color operator/(const Color& l, const float r)
+{
+   return {std::clamp(l.r / r, 0.f, 1.f), std::clamp(l.g / r, 0.f, 1.f), std::clamp(l.b / r, 0.f, 1.f)};
 }

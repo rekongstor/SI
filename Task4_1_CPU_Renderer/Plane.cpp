@@ -1,11 +1,10 @@
 #include "Plane.h"
 
 
-Plane::Plane(Point4D L, const Color& diffuseColor, const Color& specularColor, float specularExp):
-   L(L),
-   diffuseColor(diffuseColor),
-   specularColor(specularColor),
-   specularExp(specularExp)
+Plane::Plane(const Point4D& l, const Color& diffuseColor, const Color& specularColor, float specularExp,
+             float metalness, float roughness):
+   Object(diffuseColor, specularColor, specularExp, metalness, roughness),
+   L(l)
 {
 }
 
@@ -27,9 +26,4 @@ bool Plane::anyHit(Ray ray)
    if (t < 0.f)
       return false;
    return true;
-}
-
-std::tuple<Color, Color, float> Plane::getColor()
-{
-   return {diffuseColor, specularColor, specularExp};
 }

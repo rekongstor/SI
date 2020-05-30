@@ -5,17 +5,16 @@ class Sphere :
    public Object
 {
    Point3D center;
-   Color diffuseColor;
-   Color specularColor;
-   float specularExp;
-public:
-   std::tuple<Color, Color, float> getColor() override;
-   Sphere(const Point3D& center, float r, const Color& diffuseColor, const Color& specularColor, float specularExp);
-   Sphere() = default;
-private:
    float r;
    float r2;
 public:
+   Sphere() = default;
+
+   Sphere(const Point3D& center, float r, const Color& diffuseColor, const Color& specularColor, float specularExp,
+          float metalness, float roughness);
+
    std::pair<Point3D, float> closestHit(Ray ray) override;
    bool anyHit(Ray ray) override;
+
+   virtual ~Sphere() = default;
 };
