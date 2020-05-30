@@ -44,7 +44,7 @@ std::tuple<Color, Color, float, float, float, Point3D> Renderer::rayCast(Scene& 
    return {diffuseColor, specularColor, specularExp, metalness, roughness, closest.first};
 }
 
-void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename)
+void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename, float gamma, float exposure)
 {
    camera.position.z = -camera.position.z;
    std::vector<Ray> rays;
@@ -64,9 +64,9 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
    Point3D w = mul(u, camera.direction);
 
    // Calculating plane
-   Point3D left = rotate(camera.direction, w, camera.fov * M_PI * 0.125f);
-   Point3D right = rotate(camera.direction, w, -camera.fov * M_PI * 0.125f);
-   float side = -sqrtf(2.f / (1.f - cosf(camera.fov * M_PI * 0.5f)));
+   Point3D left = rotate(camera.direction, w, camera.fov * M_PI / 180.f);
+   Point3D right = rotate(camera.direction, w, -camera.fov * M_PI / 180.f);
+   float side = -sqrtf(2.f / (1.f - cosf(camera.fov * M_PI / 180.f)));
    left = left * side;
    right = right * side;
    float planeDistance = length(mul(left, right)) * 0.25;
@@ -93,6 +93,12 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
       for (auto j = 0; j < height; ++j)
       {
          Color color = pixelShader(rayCast(scene, rays[i * width + j]), scene.light, rays[i * width + j]);
+         auto map = [&exposure, &gamma](const float hdrColor)
+         {
+            return std::clamp(powf(1.0f - expf(-hdrColor * exposure), 1.f / gamma), 0.f, 1.f);
+         };
+         color = {map(color.r), map(color.g), map(color.b)};
+
          bitmap.SetPixel(j, i, {
                             static_cast<uint8_t>(color.r * 255.f), static_cast<uint8_t>(color.g * 255.f),
                             static_cast<uint8_t>(color.b * 255.f)

@@ -182,25 +182,25 @@ inline Point3D operator/(const float l, const Point3D& r)
 
 inline Color operator+(const Color& l, const Color& r)
 {
-   return {std::clamp(l.r + r.r, 0.f, 1.f), std::clamp(l.g + r.g, 0.f, 1.f), std::clamp(l.b + r.b, 0.f, 1.f)};
+   return {l.r + r.r, l.g + r.g, l.b + r.b};
 }
 
 inline Color operator-(const Color& l, const Color& r)
 {
-   return {std::clamp(l.r + r.r, 0.f, 1.f), std::clamp(l.g + r.g, 0.f, 1.f), std::clamp(l.b + r.b, 0.f, 1.f)};
+   return { l.r - r.r, l.g - r.g, l.b - r.b };
 }
 
 inline Color operator*(const Color& l, const Color& r)
 {
-   return {std::clamp(l.r * r.r, 0.f, 1.f), std::clamp(l.g * r.g, 0.f, 1.f), std::clamp(l.b * r.b, 0.f, 1.f)};
+   return { l.r * r.r, l.g * r.g, l.b * r.b };
 }
 
 inline Color operator*(const Color& l, const float r)
 {
-   return {std::clamp(l.r * r, 0.f, 1.f), std::clamp(l.g * r, 0.f, 1.f), std::clamp(l.b * r, 0.f, 1.f)};
+   return { l.r * r, l.g * r, l.b * r };
 }
 
 inline Color operator/(const Color& l, const float r)
 {
-   return {std::clamp(l.r / r, 0.f, 1.f), std::clamp(l.g / r, 0.f, 1.f), std::clamp(l.b / r, 0.f, 1.f)};
+   return { l.r / r, l.g / r, l.b / r };
 }

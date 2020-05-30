@@ -23,5 +23,5 @@ Color RendererPhong::pixelShader(std::tuple<Color, Color, float, float, float, P
       return color;
    }
    else
-      return {0.f, 0.f, 0.f};
+      return ambientColor;
 }

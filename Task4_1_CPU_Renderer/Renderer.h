@@ -14,7 +14,7 @@ protected:
    virtual Color pixelShader(std::tuple<Color, Color, float, float, float, Point3D> buffer, Light light,
                              const Ray& ray) = 0;
 public:
-   void renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename);
+   void renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename, float gamma, float exposure);
 
 
    Renderer(const Camera& camera, const Color& ambientColor);
