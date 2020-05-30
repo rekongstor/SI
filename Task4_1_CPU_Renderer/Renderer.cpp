@@ -29,6 +29,15 @@ std::tuple<Color, Color, float, Point3D> Renderer::rayCast(Scene& scene, Ray ray
       }
    }
    auto [diffuseColor, specularColor, specularExp] = color;
+   // Make shadow
+   Ray secondRay = { ray.origin + ray.direction * (closest.second - 0.001f),scene.light.direction };
+   Color black = { 0.f,0.f,0.f };
+   for (auto& obj : scene.objects)
+   {
+      if (obj->anyHit(secondRay))
+         return { black, black, 1.f,closest.first };
+         
+   }
    return {diffuseColor, specularColor, specularExp, closest.first};
 }
 
