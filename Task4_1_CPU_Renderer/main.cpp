@@ -21,18 +21,18 @@ int main()
    light.direction = {0.5f, 0.0f, -1.0f};
    light.direction = normalize(light.direction);
 
-   //{
-   //   Scene scene(light);
+   {
+      Scene scene(light);
 
-   //   Plane plane({0.f, 0.f, 1.f, 0.f}, {0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f}, 20.f, 0.f, 0.f);
-   //   scene.addObject(&plane);
+      Plane plane({0.f, 0.f, 1.f, 0.f}, {0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f}, 20.f, 0.f, 0.f);
+      scene.addObject(&plane);
 
-   //   Sphere sphere({0.f, 0.f, -1.f}, 0.8f, {1.f, 0.f, 0.f}, {0.4f, 0.3f, 0.4f}, 100.f, 0.f, 0.f);
-   //   scene.addObject(&sphere);
+      Sphere sphere({0.f, 0.f, -1.f}, 0.8f, {1.f, 0.f, 0.f}, {0.4f, 0.3f, 0.4f}, 100.f, 0.f, 0.f);
+      scene.addObject(&sphere);
 
-   //   RendererPhong renderer(camera, {0.005f, 0.005f, 0.005f});
-   //   renderer.renderScene(scene, RESOLUTION, RESOLUTION, "phong.bmp", 1.2f, 2.f);
-   //}
+      RendererPhong renderer(camera, {0.005f, 0.005f, 0.005f});
+      renderer.renderScene(scene, RESOLUTION, RESOLUTION, "phong.bmp");
+   }
    {
       light.color = { 5.f, 5.f, 5.f };
       Scene scene(light);
@@ -46,12 +46,12 @@ int main()
          {
             spheres[i][j] = Sphere({(static_cast<float>(i + 1) - (SPHERES_X + 1) / 2.f) * 2.f, (static_cast<float>(j + 1) - (SPHERES_Y + 1)/ 2.f) * 2.f, -1.f}, 0.8f,
                                    { 1.0f, 0.07f, 0.07f}, {0.1f, 0.1f, 0.1f}, 0.1f,
-                                   static_cast<float>(i) / SPHERES_X, static_cast<float>(j) / (SPHERES_Y + 2));
+                                   static_cast<float>(i) / SPHERES_X, static_cast<float>(j) / (SPHERES_Y));
             scene.addObject(&spheres[i][j]);
          }
 
-      RendererPBR renderer(camera, {0.01f, 0.01f, 0.01f});
-      renderer.renderScene(scene, RESOLUTION, RESOLUTION, "pbr.bmp",2.2f,5.f);
+      RendererPBR renderer(camera, {0.04f, 0.05f, 0.05f});
+      renderer.renderScene(scene, RESOLUTION, RESOLUTION, "pbr.bmp");
    }
    return 0;
 }

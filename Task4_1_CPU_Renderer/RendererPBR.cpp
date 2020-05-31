@@ -7,8 +7,7 @@ RendererPBR::RendererPBR(const Camera& camera, const Color& ambientColor): Rende
 {
 }
 
-Color RendererPBR::pixelShader(std::tuple<Color, Color, float, float, float, Point3D, float> buffer, Light light,
-                               const Ray& ray)
+Color RendererPBR::pixelShader(constantBuffer buffer, Light light, const Ray& ray)
 {
    // Implementing phong
    auto& [diffuseColor, specularColor, specularExp, metalness, roughness, normal, dist] = buffer;
@@ -26,7 +25,8 @@ Color RendererPBR::pixelShader(std::tuple<Color, Color, float, float, float, Poi
       float dotNV = std::max(dot(N, V), 0.f);
       float dotNL = std::max(dot(N, L), 0.f);
 
-      diffuseColor = { powf(diffuseColor.r, 2.2f), powf(diffuseColor.g, 2.2f), powf(diffuseColor.b, 2.2f) };
+      // Calculating normalized diffuse 
+      Color normDiffuseColor = {powf(diffuseColor.r, 2.2f), powf(diffuseColor.g, 2.2f), powf(diffuseColor.b, 2.2f)};
 
       auto fresnelValue = [&dotLH](float metal) -> float
       {
@@ -50,18 +50,21 @@ Color RendererPBR::pixelShader(std::tuple<Color, Color, float, float, float, Poi
          return geomGGX(rough, dotNV) * geomGGX(dotNL, rough);
       };
 
-      metalness = metalness * 0.9f + 0.1f;
-      Color F = { fresnelValue(metalness * diffuseColor.r),fresnelValue(metalness * diffuseColor.g),fresnelValue(metalness * diffuseColor.b) };
+      float normMetalness = metalness * 0.9f + 0.1f;
+      Color F = {
+         fresnelValue(normMetalness * normDiffuseColor.r), fresnelValue(normMetalness * normDiffuseColor.g),
+         fresnelValue(normMetalness * normDiffuseColor.b)
+      };
 
-      roughness = roughness * 0.95f + 0.05f;
-      float NDF = distGGX(roughness);
-      float G = geomValue(roughness);
+      float normRoughness = roughness * 0.95f + 0.05f;
+      float NDF = distGGX(normRoughness);
+      float G = geomValue(normRoughness);
 
       Color specular = F * NDF * G / std::max(4.f * dotNV * dot(N, L), 0.001f);
       Color kS = F * -1.f;
-      Color kD = (kS + 1.f) * (1.f - metalness);
-      Color color = ambientColor * diffuseColor +
-         (diffuseColor * kD / M_PI + specular) * light.color * dotNL;;
+      Color kD = (kS + 1.f) * (1.f - normMetalness);
+      Color color = ambientColor * normDiffuseColor +
+         (normDiffuseColor * kD / M_PI + specular) * light.color * dotNL;;
 
       color = color / (color + 1.f);
       color = {powf(color.r, 1.f / 2.2f), powf(color.g, 1.f / 2.2f), powf(color.b, 1.f / 2.2f)};

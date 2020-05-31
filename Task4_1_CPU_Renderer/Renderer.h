@@ -5,16 +5,26 @@
 
 class Scene;
 
+struct constantBuffer
+{
+   const Color diffuseColor;
+   const Color specularColor;
+   const float specularExp;
+   const float metalness;
+   const float roughness;
+   const Point3D normal;
+   const float distance;
+};
+
 class Renderer
 {
-   std::tuple<Color, Color, float, float, float, Point3D, float> rayCast(Scene& scene, Ray ray);
+   static constantBuffer rayCast(Scene& scene, Ray ray);
 protected:
    Camera camera;
    Color ambientColor;
-   virtual Color pixelShader(std::tuple<Color, Color, float, float, float, Point3D, float> buffer, Light light,
-                             const Ray& ray) = 0;
+   virtual Color pixelShader(constantBuffer buffer, Light light, const Ray& ray) = 0;
 public:
-   void renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename, float gamma, float exposure);
+   void renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename);
 
 
    Renderer(const Camera& camera, const Color& ambientColor);
