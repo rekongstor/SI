@@ -1,7 +1,7 @@
 #include "RendererPBR.h"
 
 #include <corecrt_math_defines.h>
-
+#define GAMMA 2.2f
 
 RendererPBR::RendererPBR(const Camera& camera, const Color& ambientColor): Renderer(camera, ambientColor)
 {
@@ -26,7 +26,7 @@ Color RendererPBR::pixelShader(constantBuffer buffer, Light light, const Ray& ra
       float dotNL = std::max(dot(N, L), 0.f);
 
       // Calculating normalized diffuse 
-      Color normDiffuseColor = {powf(diffuseColor.r, 2.2f), powf(diffuseColor.g, 2.2f), powf(diffuseColor.b, 2.2f)};
+      Color normDiffuseColor = {powf(diffuseColor.r, GAMMA), powf(diffuseColor.g, GAMMA), powf(diffuseColor.b, GAMMA)};
 
       auto fresnelValue = [&dotLH](float metal) -> float
       {
@@ -67,7 +67,7 @@ Color RendererPBR::pixelShader(constantBuffer buffer, Light light, const Ray& ra
          (normDiffuseColor * kD / M_PI + specular) * light.color * dotNL;;
 
       color = color / (color + 1.f);
-      color = {powf(color.r, 1.f / 2.2f), powf(color.g, 1.f / 2.2f), powf(color.b, 1.f / 2.2f)};
+      color = {powf(color.r, 1.f / GAMMA), powf(color.g, 1.f / GAMMA), powf(color.b, 1.f / GAMMA)};
       return color;
    }
    return ambientColor;
