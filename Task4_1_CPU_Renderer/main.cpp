@@ -11,8 +11,8 @@
 int main()
 {
    Camera camera;
-   camera.position = {0.0f, 0.f, 15.0f};
-   camera.direction = {0.f, 0.f, 1.0f};
+   camera.position = {-5.0f, 0.f, 15.0f};
+   camera.direction = {0.2f, 0.f, 1.0f};
    camera.direction = normalize(camera.direction);
    camera.fov = 45.f;
 
@@ -21,18 +21,18 @@ int main()
    light.direction = {0.5f, 0.0f, -1.0f};
    light.direction = normalize(light.direction);
 
-   {
-      Scene scene(light);
+   //{
+   //   Scene scene(light);
 
-      Plane plane({0.f, 0.f, 1.f, 0.f}, {0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f}, 20.f, 0.f, 0.f);
-      scene.addObject(&plane);
+   //   Plane plane({0.f, 0.f, 1.f, 0.f}, {0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f}, 20.f, 0.f, 0.f);
+   //   scene.addObject(&plane);
 
-      Sphere sphere({0.f, 0.f, -1.f}, 0.8f, {1.f, 0.f, 0.f}, {0.4f, 0.3f, 0.4f}, 100.f, 0.f, 0.f);
-      scene.addObject(&sphere);
+   //   Sphere sphere({0.f, 0.f, -1.f}, 0.8f, {1.f, 0.f, 0.f}, {0.4f, 0.3f, 0.4f}, 100.f, 0.f, 0.f);
+   //   scene.addObject(&sphere);
 
-      RendererPhong renderer(camera, {0.005f, 0.005f, 0.005f});
-      renderer.renderScene(scene, RESOLUTION, RESOLUTION, "phong.bmp", 1.2f, 2.f);
-   }
+   //   RendererPhong renderer(camera, {0.005f, 0.005f, 0.005f});
+   //   renderer.renderScene(scene, RESOLUTION, RESOLUTION, "phong.bmp", 1.2f, 2.f);
+   //}
    {
       light.color = { 5.f, 5.f, 5.f };
       Scene scene(light);

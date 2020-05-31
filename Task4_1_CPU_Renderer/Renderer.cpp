@@ -10,7 +10,7 @@ Renderer::Renderer(const Camera& camera, const Color& ambientColor) : camera(cam
 }
 
 
-std::tuple<Color, Color, float, float, float, Point3D> Renderer::rayCast(Scene& scene, Ray ray)
+std::tuple<Color, Color, float, float, float, Point3D, float> Renderer::rayCast(Scene& scene, Ray ray)
 {
    // Finding closest pixel color
    std::pair<Point3D, float> closest;
@@ -39,9 +39,9 @@ std::tuple<Color, Color, float, float, float, Point3D> Renderer::rayCast(Scene& 
    for (auto& obj : scene.objects)
    {
       if (obj->anyHit(secondRay))
-         return {black, black, 1.f, 0.f, 0.f, closest.first};
+         return {black, black, 1.f, 0.f, 0.f, closest.first, closest.second};
    }
-   return {diffuseColor, specularColor, specularExp, metalness, roughness, closest.first};
+   return {diffuseColor, specularColor, specularExp, metalness, roughness, closest.first, closest.second };
 }
 
 void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename, float gamma,
@@ -93,7 +93,24 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
    for (auto i = 0; i < width; ++i)
       for (auto j = 0; j < height; ++j)
       {
-         Color color = pixelShader(rayCast(scene, rays[i * width + j]), scene.light, rays[i * width + j]);
+         // First ray
+         Ray ray = rays[i * width + j];
+         auto [diff, spec, spExp, met, rough, normal, distance] = rayCast(scene, ray);
+         Color firstColor = pixelShader({ diff, spec, spExp, met, rough, normal, distance }, scene.light, ray);
+         Color secondColor;
+         if (length(normal) > 0.9f)
+         {
+            Point3D L = ray.direction * -1.f;
+            Point3D R = normal * 2.f * dot(normal, L) - L;
+            //mix = std::max(0.f,-dot(normal, L));
+            // Second ray
+            Ray secondRay = { ray.origin + ray.direction * (distance), R };
+            secondColor = pixelShader(rayCast(scene, secondRay), scene.light, secondRay);
+         }
+         else
+            secondColor = firstColor;
+         float mix = (1.f - rough) * met;
+         Color color = firstColor * (1.f - mix) + secondColor * mix;
          color = { std::clamp(color.r, 0.f, 1.f) ,std::clamp(color.g, 0.f, 1.f) ,std::clamp(color.b, 0.f, 1.f) };
          bitmap.SetPixel(j, i, {
                             static_cast<uint8_t>(color.r * 255.f), static_cast<uint8_t>(color.g * 255.f),

@@ -7,13 +7,13 @@ RendererPBR::RendererPBR(const Camera& camera, const Color& ambientColor): Rende
 {
 }
 
-Color RendererPBR::pixelShader(std::tuple<Color, Color, float, float, float, Point3D> buffer, Light light,
+Color RendererPBR::pixelShader(std::tuple<Color, Color, float, float, float, Point3D, float> buffer, Light light,
                                const Ray& ray)
 {
    // Implementing phong
-   auto& [diffuseColor, specularColor, specularExp, metalness, roughness, normal] = buffer;
+   auto& [diffuseColor, specularColor, specularExp, metalness, roughness, normal, dist] = buffer;
    if (length(normal) < 0.9f)
-      return {0.2f, 0.2f, 0.2f};
+      return {0.8f, 1.0f, 1.0f};
    float k = dot(normal, light.direction);
    if (k > 0.f)
    {
