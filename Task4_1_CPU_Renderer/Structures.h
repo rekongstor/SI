@@ -187,20 +187,36 @@ inline Color operator+(const Color& l, const Color& r)
 
 inline Color operator-(const Color& l, const Color& r)
 {
-   return { l.r - r.r, l.g - r.g, l.b - r.b };
+   return {l.r - r.r, l.g - r.g, l.b - r.b};
 }
 
 inline Color operator*(const Color& l, const Color& r)
 {
-   return { l.r * r.r, l.g * r.g, l.b * r.b };
+   return {l.r * r.r, l.g * r.g, l.b * r.b};
+}
+
+inline Color operator/(const Color& l, const Color& r)
+{
+   return {l.r / r.r, l.g / r.g, l.b / r.b};
+}
+
+
+inline Color operator+(const Color& l, const float r)
+{
+   return {l.r + r, l.g + r, l.b + r};
+}
+
+inline Color operator-(const Color& l, const float r)
+{
+   return {l.r - r, l.g - r, l.b - r};
 }
 
 inline Color operator*(const Color& l, const float r)
 {
-   return { l.r * r, l.g * r, l.b * r };
+   return {l.r * r, l.g * r, l.b * r};
 }
 
 inline Color operator/(const Color& l, const float r)
 {
-   return { l.r / r, l.g / r, l.b / r };
+   return {l.r / r, l.g / r, l.b / r};
 }

@@ -13,63 +13,59 @@ Color RendererPBR::pixelShader(std::tuple<Color, Color, float, float, float, Poi
    // Implementing phong
    auto& [diffuseColor, specularColor, specularExp, metalness, roughness, normal] = buffer;
    if (length(normal) < 0.9f)
-      return {0.5f, 0.5f, 0.5f};
+      return {0.2f, 0.2f, 0.2f};
    float k = dot(normal, light.direction);
    if (k > 0.f)
    {
-      roughness = roughness * 0.35f + 0.01f; // ensure roughness is not 0
       const Point3D& L = light.direction;
       const Point3D& N = normal;
       const Point3D& V = ray.direction * -1.f;
       const Point3D H = normalize(L + V);
-      float dotLH = dot(L, H);
-      float dotNH = dot(N, H);
-      float dotNV = dot(N, V);
-      float dotNL = dot(N, L);
+      float dotLH = std::max(dot(L, H), 0.f);
+      float dotNH = std::max(dot(N, H), 0.f);
+      float dotNV = std::max(dot(N, V), 0.f);
+      float dotNL = std::max(dot(N, L), 0.f);
 
-      auto getRefractIndex = [](const float specularValue)
+      diffuseColor = { powf(diffuseColor.r, 2.2f), powf(diffuseColor.g, 2.2f), powf(diffuseColor.b, 2.2f) };
+
+      auto fresnelValue = [&dotLH](float metal) -> float
       {
-         return (1.f + sqrtf(specularValue)) / (1.f - sqrtf(specularValue));
+         return metal + (1.f - metal) * powf(1.f - dotLH, 5.f);
       };
-      auto getG = [&dotLH](const float refractValue)
+      auto distGGX = [&dotNH](float rough) -> float
       {
-         return sqrtf(refractValue * refractValue - 1.f + dotLH * dotLH);;
+         float a4 = rough * rough * rough * rough;
+         float denom = dotNH * dotNH * (a4 - 1.f) + 1.f;
+
+         return a4 / (M_PI * denom * denom);
       };
-      auto getFresnelValue = [&dotLH](const float gValue)
+      auto geomGGX = [](float dotNV, float rough) -> float
       {
-         return 0.5f *
-            ((gValue - dotLH) * (gValue - dotLH)) / ((gValue + dotLH) * (gValue + dotLH)) *
-            ((dotLH * (gValue + dotLH) - 1.f) * (dotLH * (gValue + dotLH) - 1.f) / (dotLH * (gValue - dotLH) + 1.f) * (
-               dotLH * (gValue - dotLH) + 1.f) + 1.f);
+         float r = rough + 1.f;
+         float k = r * r / 8.f;
+         return dotNV / (dotNV * (1.f - k) + k);
+      };
+      auto geomValue = [&geomGGX, &dotNV, &dotNL](float rough) -> float
+      {
+         return geomGGX(rough, dotNV) * geomGGX(dotNL, rough);
       };
 
-      float refractRed = getRefractIndex(specularColor.r);
-      float refractGreen = getRefractIndex(specularColor.g);
-      float refractBlue = getRefractIndex(specularColor.b);
-      float gRed = getG(refractRed);
-      float gGreen = getG(refractGreen);
-      float gBlue = getG(refractBlue);
-      Color fresnelFactor = {getFresnelValue(gRed), getFresnelValue(gGreen), getFresnelValue(gBlue)};
+      metalness = metalness * 0.9f + 0.1f;
+      Color F = { fresnelValue(metalness * diffuseColor.r),fresnelValue(metalness * diffuseColor.g),fresnelValue(metalness * diffuseColor.b) };
 
-      float isotropicMicroFacet = 1.f / (4.f * roughness * roughness * dotNH * dotNH * dotNH * dotNH) *
-         expf((dotNH * dotNH - 1.f) / (roughness * roughness * dotNH * dotNH));
-      float geometricalAttenuationFactor = std::min(
-         {
-            1.f,
-            2.f * dotNH * dotNV / dotLH,
-            2.f * dotNH * dotNL / dotLH
-         }
-      );
+      roughness = roughness * 0.95f + 0.05f;
+      float NDF = distGGX(roughness);
+      float G = geomValue(roughness);
 
-      Color specularPBR = fresnelFactor * isotropicMicroFacet * geometricalAttenuationFactor /
-         (M_PI * dotNV * dotNL);
+      Color specular = F * NDF * G / std::max(4.f * dotNV * dot(N, L), 0.001f);
+      Color kS = F * -1.f;
+      Color kD = (kS + 1.f) * (1.f - metalness);
+      Color color = ambientColor * diffuseColor +
+         (diffuseColor * kD / M_PI + specular) * light.color * dotNL;;
 
-      Color color = ambientColor +
-         diffuseColor * (1.f - metalness) * light.color * k +
-         specularPBR * (metalness) * light.color;
-      //return { abs(normal.x), abs(normal.y), abs(normal.z) };
+      color = color / (color + 1.f);
+      color = {powf(color.r, 1.f / 2.2f), powf(color.g, 1.f / 2.2f), powf(color.b, 1.f / 2.2f)};
       return color;
    }
-   else
-      return ambientColor;
+   return ambientColor;
 }
