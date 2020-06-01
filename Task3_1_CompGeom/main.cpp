@@ -3,7 +3,7 @@
 #include "../Core/Bitmap.h"
 #include "Structures.h"
 
-#define N 1000
+#define N 100
 #define SIZE_X 1600
 #define SIZE_Y 900
 
@@ -16,7 +16,7 @@ constexpr float DIST_X = MAX_X - MIN_X;
 constexpr float DIST_Y = MAX_Y - MIN_Y;
 
 
-void Graham(std::vector<Vertex>& vertices, std::list<Edge>& hullEdges);
+void Graham(std::vector<Vertex>& vertices, std::list<Edge>& hullEdges, std::vector<Vertex>& hullVertices);
 void Delaunay(std::vector<Vertex>& vertices, std::list<EdgeAdj>& edges);
 
 
@@ -52,11 +52,12 @@ int main()
 
    // Step 1: Convex hull
    std::list<Edge> hullEdges;
-   Graham(vertices, hullEdges);
+   std::vector<Vertex> hullVertices;
+   Graham(vertices, hullEdges, hullVertices);
 
    // Step 2: Delaunay
    std::list<EdgeAdj> edgesTriangulation;
-   Delaunay(vertices, edgesTriangulation);
+   Delaunay(hullVertices, edgesTriangulation);
 
    // Step 3: BMP
    MakeBMP(vertices, edgesTriangulation, hullEdges);

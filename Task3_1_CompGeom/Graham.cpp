@@ -6,7 +6,7 @@
 #include "Structures.h"
 
 
-void Graham(std::vector<Vertex>& vertices, std::list<Edge>& hullEdges)
+void Graham(std::vector<Vertex>& vertices, std::list<Edge>& hullEdges, std::vector<Vertex>& hullVertices)
 {
    // Finding rightmost lowest point O(n)
    Vertex* plowRight = &vertices.front();
@@ -73,10 +73,12 @@ void Graham(std::vector<Vertex>& vertices, std::list<Edge>& hullEdges)
    while (hullStack.size() > 1)
    {
       Vertex* v1 = hullStack.top();
+      hullVertices.push_back(*v1);
       hullStack.pop();
       Vertex* v0 = hullStack.top();
       hullEdges.push_back({ *v0, *v1 });
    }
    Vertex* bottom = hullStack.top();
+   hullVertices.push_back(*bottom);
    hullEdges.push_back({ *top, *bottom });
 }
