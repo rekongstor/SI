@@ -70,6 +70,11 @@ inline Quaternion mul(const Quaternion& a, const Point3D& b)
    };
 }
 
+inline float length2(const Point3D& v)
+{
+   return dot(v, v);
+}
+
 inline float length(const Point3D& v)
 {
    return sqrtf(dot(v, v));

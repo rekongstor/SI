@@ -6,6 +6,6 @@ class RendererPBR :
 {
    Color pixelShader(constantBuffer buffer, Light light, const Ray& ray) override;
 public:
-   RendererPBR(const Camera& camera, const Color& ambientColor);
+   RendererPBR(const Camera& camera, const Color& ambientColor, const Color& voidColor);
    ~RendererPBR() = default;
 };

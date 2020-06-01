@@ -3,7 +3,8 @@
 #include <corecrt_math_defines.h>
 #define GAMMA 2.2f
 
-RendererPBR::RendererPBR(const Camera& camera, const Color& ambientColor): Renderer(camera, ambientColor)
+RendererPBR::RendererPBR(const Camera& camera, const Color& ambientColor, const Color& voidColor):
+   Renderer(camera, ambientColor, voidColor)
 {
 }
 
@@ -11,8 +12,8 @@ Color RendererPBR::pixelShader(constantBuffer buffer, Light light, const Ray& ra
 {
    // Implementing phong
    auto& [diffuseColor, specularColor, specularExp, metalness, roughness, normal, dist] = buffer;
-   if (length(normal) < 0.9f)
-      return {0.8f, 1.0f, 1.0f};
+   if (length2(normal) < 0.9f)
+      return voidColor;
    float k = dot(normal, light.direction);
    if (k > 0.f)
    {
@@ -50,13 +51,15 @@ Color RendererPBR::pixelShader(constantBuffer buffer, Light light, const Ray& ra
          return geomGGX(rough, dotNV) * geomGGX(dotNL, rough);
       };
 
-      float normMetalness = metalness * 0.9f + 0.1f;
+      // Normalizing given metalness
+      float normMetalness = std::clamp(metalness, 0.f, 1.f) * 0.96f + 0.04f;
       Color F = {
          fresnelValue(normMetalness * normDiffuseColor.r), fresnelValue(normMetalness * normDiffuseColor.g),
          fresnelValue(normMetalness * normDiffuseColor.b)
       };
 
-      float normRoughness = roughness * 0.95f + 0.05f;
+      // Normalizing given roughness
+      float normRoughness = std::clamp(roughness, 0.f, 1.f) * 0.95f + 0.05f;
       float NDF = distGGX(normRoughness);
       float G = geomValue(normRoughness);
 

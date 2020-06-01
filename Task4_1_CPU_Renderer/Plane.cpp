@@ -1,10 +1,10 @@
 #include "Plane.h"
 
 
-Plane::Plane(const Point4D& l, const Color& diffuseColor, const Color& specularColor, float specularExp,
+Plane::Plane(const Point4D& L, const Color& diffuseColor, const Color& specularColor, float specularExp,
              float metalness, float roughness):
    Object(diffuseColor, specularColor, specularExp, metalness, roughness),
-   L(l)
+   L(L)
 {
 }
 

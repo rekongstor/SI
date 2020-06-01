@@ -4,8 +4,10 @@
 #include "../Core/Bitmap.h"
 
 
-Renderer::Renderer(const Camera& camera, const Color& ambientColor) : camera(camera),
-                                                                      ambientColor(ambientColor)
+Renderer::Renderer(const Camera& camera, const Color& ambientColor, const Color& voidColor) :
+   camera(camera),
+   ambientColor(ambientColor),
+   voidColor(voidColor)
 {
 }
 
@@ -15,8 +17,8 @@ constantBuffer Renderer::rayCast(Scene& scene, Ray ray)
    // Finding closest pixel color
    std::pair<Point3D, float> closest;
    closest.second = std::numeric_limits<float>::infinity();
-   Color diffuseColor, specularColor;
-   float specularExp, metalness, roughness;
+   Color diffuseColor = Color(), specularColor = Color();
+   float specularExp = 0.f, metalness = 0.f, roughness = 0.f;
    for (auto& obj : scene.objects)
    {
       if (obj->anyHit(ray))
@@ -41,7 +43,7 @@ constantBuffer Renderer::rayCast(Scene& scene, Ray ray)
       if (obj->anyHit(secondRay))
          return {black, specularColor, specularExp, metalness, roughness, closest.first, closest.second};
    }
-   return {diffuseColor, specularColor, specularExp, metalness, roughness, closest.first, closest.second };
+   return {diffuseColor, specularColor, specularExp, metalness, roughness, closest.first, closest.second};
 }
 
 void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename)
@@ -53,7 +55,7 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
    // Calculating basis
    Point3D up = {0.f, 0.f, 1.f};
    Point3D u;
-   if (length(up - camera.direction) > 0.01f)
+   if (length2(up - camera.direction) > 0.01f)
    {
       u = normalize(mul(camera.direction, up));
    }
@@ -71,7 +73,8 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
    right = right * side;
    float planeDistance = length(mul(left, right)) * 0.25;
    Point3D uwPosition = camera.position + (camera.direction * planeDistance);
-   uwPosition = uwPosition - u - w * (static_cast<float>(height) / static_cast<float>(width)); // moving to (-1;-1) uw coordinate
+   uwPosition = uwPosition - u - w * (static_cast<float>(height) / static_cast<float>(width));
+   // moving to (-1;-1) uw coordinate
 
    Point3D deltaX = u * 2.f / static_cast<float>(width);
    Point3D deltaY = w * 2.f / static_cast<float>(height);
@@ -96,17 +99,15 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
          Ray firstRay = rays[i * width + j];
          auto rayBuffer = rayCast(scene, firstRay);
          Color firstColor = pixelShader(rayBuffer, scene.light, firstRay);
-         Color secondColor;
-         if (length(rayBuffer.normal) > 0.9f)
+         Color secondColor = firstColor;
+         if (length2(rayBuffer.normal) > 0.9f)
          {
             Point3D L = firstRay.direction * -1.f;
             Point3D R = rayBuffer.normal * 2.f * dot(rayBuffer.normal, L) - L;
             // Second ray for reflection
-            Ray secondRay = { firstRay.origin + firstRay.direction * (rayBuffer.distance), R };
+            Ray secondRay = {firstRay.origin + firstRay.direction * (rayBuffer.distance), R};
             secondColor = pixelShader(rayCast(scene, secondRay), scene.light, secondRay);
          }
-         else
-            secondColor = firstColor;
 
          // Reflection mixing factor 
          float mix = (1.f - rayBuffer.roughness) * rayBuffer.metalness;
@@ -114,7 +115,7 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
          Color color = firstColor * (1.f - mix) + secondColor * mix;
 
          // Clamping color and writing the pixel
-         color = { std::clamp(color.r, 0.f, 1.f) ,std::clamp(color.g, 0.f, 1.f) ,std::clamp(color.b, 0.f, 1.f) };
+         color = {std::clamp(color.r, 0.f, 1.f), std::clamp(color.g, 0.f, 1.f), std::clamp(color.b, 0.f, 1.f)};
          bitmap.SetPixel(j, i, {
                             static_cast<uint8_t>(color.r * 255.f), static_cast<uint8_t>(color.g * 255.f),
                             static_cast<uint8_t>(color.b * 255.f)

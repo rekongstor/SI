@@ -6,6 +6,6 @@ class RendererPhong :
 {
    Color pixelShader(constantBuffer buffer, Light light, const Ray& ray) override;
 public:
-   RendererPhong(const Camera& camera, const Color& ambientColor);
+   RendererPhong(const Camera& camera, const Color& ambientColor, const Color& voidColor);
    ~RendererPhong() = default;
 };
