@@ -28,14 +28,13 @@ std::pair<Point3D, float> Sphere::closestHit(Ray ray)
 
 bool Sphere::anyHit(Ray ray)
 {
-   Point3D direction = ray.direction;
-   Point3D origin = ray.origin - center;
-   if (dot(origin - center, origin - center) < r2)
-      return false;
+   // True check whether the ray is inside the sphere.
+   //if (length2(ray.origin - center - center) < r2)
+   //   return false;
 
-   float a = dot(direction, direction);
-   float b = 2.f * dot(origin, direction);
-   float c = dot(origin, origin) - r2;
+   float a = dot(ray.direction, ray.direction);
+   float b = 2.f * dot(ray.origin - center, ray.direction);
+   float c = dot(ray.origin - center, ray.origin - center) - r2;
 
    float D = b * b - 4 * a * c;
    if (D < 0.f)
