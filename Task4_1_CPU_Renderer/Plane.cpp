@@ -4,7 +4,7 @@
 Plane::Plane(const Point4D& L, const Color& diffuseColor, const Color& specularColor, float specularExp,
              float metalness, float roughness):
    Object(diffuseColor, specularColor, specularExp, metalness, roughness),
-   L(L)
+   L({L.x, L.y, -L.z, L.w})
 {
 }
 

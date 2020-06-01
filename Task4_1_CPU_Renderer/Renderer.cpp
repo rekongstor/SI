@@ -48,7 +48,6 @@ constantBuffer Renderer::rayCast(Scene& scene, Ray ray)
 
 void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const char* filename)
 {
-   camera.position.z = -camera.position.z;
    std::vector<Ray> rays;
    rays.resize(width * height);
 
@@ -63,7 +62,7 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
    {
       u = {1.f, 0.f, 0.f};
    }
-   Point3D w = mul(u, camera.direction);
+   Point3D w = mul(camera.direction, u);
 
    // Calculating plane
    Point3D left = rotate(camera.direction, w, camera.fov * M_PI / 180.f);
@@ -71,32 +70,34 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
    float side = -sqrtf(2.f / (1.f - cosf(camera.fov * M_PI / 180.f)));
    left = left * side;
    right = right * side;
+   side = -side;
    float planeDistance = length(mul(left, right)) * 0.25;
    Point3D uwPosition = camera.position + (camera.direction * planeDistance);
-   uwPosition = uwPosition - u - w * (static_cast<float>(height) / static_cast<float>(width));
-   // moving to (-1;-1) uw coordinate
+   uwPosition = uwPosition - (u + w * (static_cast<float>(height) / static_cast<float>(width)));
+   // moving to (-1;-a) uw coordinate where a is an aspect ratio
 
-   Point3D deltaX = u * 2.f / static_cast<float>(width);
-   Point3D deltaY = w * 2.f / static_cast<float>(height);
+   float delta = 2.f / static_cast<float>(width);
+   Point3D deltaX = u * delta;
+   Point3D deltaY = w * delta;
 
    // Creating rays
-   for (auto i = 0; i < width; ++i)
+   for (auto j = 0; j < height; ++j)
    {
-      for (auto j = 0; j < height; ++j)
+      for (auto i = 0; i < width; ++i)
       {
-         rays[i * width + j] = {{uwPosition}, {normalize(uwPosition - camera.position)}};
+         rays[j * width + i] = {{uwPosition}, {normalize(uwPosition - camera.position)}};
          uwPosition = uwPosition + deltaX;
       }
-      uwPosition = uwPosition - u - u + deltaY;
+      uwPosition = uwPosition - (deltaX) * width + deltaY;
    }
 
    // Calculating rays
    Bitmap bitmap(width, height);
-   for (auto i = 0; i < width; ++i)
-      for (auto j = 0; j < height; ++j)
+   for (auto j = 0; j < height; ++j)
+      for (auto i = 0; i < width; ++i)
       {
          // First ray
-         Ray firstRay = rays[i * width + j];
+         Ray firstRay = rays[j * width + i];
          auto rayBuffer = rayCast(scene, firstRay);
          Color firstColor = pixelShader(rayBuffer, scene.light, firstRay);
          Color secondColor = firstColor;
@@ -116,7 +117,7 @@ void Renderer::renderScene(Scene& scene, uint32_t width, uint32_t height, const 
 
          // Clamping color and writing the pixel
          color = {std::clamp(color.r, 0.f, 1.f), std::clamp(color.g, 0.f, 1.f), std::clamp(color.b, 0.f, 1.f)};
-         bitmap.SetPixel(j, i, {
+         bitmap.SetPixel(i, j, {
                             static_cast<uint8_t>(color.r * 255.f), static_cast<uint8_t>(color.g * 255.f),
                             static_cast<uint8_t>(color.b * 255.f)
                          });

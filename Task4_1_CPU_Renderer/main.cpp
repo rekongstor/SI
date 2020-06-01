@@ -11,14 +11,14 @@
 int main()
 {
    Camera camera;
-   camera.position = {-5.0f, 0.f, 15.0f};
-   camera.direction = {0.2f, 0.f, 1.0f};
+   camera.position = {0.0f, 5.f, 15.0f};
+   camera.direction = {0.0f, -0.3f, -1.0f};
    camera.direction = normalize(camera.direction);
    camera.fov = 45.f;
 
    Light light;
    light.color = {1.f, 1.f, 1.f};
-   light.direction = {0.5f, 0.0f, -1.0f};
+   light.direction = {0.5f, 0.0f, 1.0f};
    light.direction = normalize(light.direction);
 
    // Phong
@@ -35,7 +35,7 @@ int main()
       scene.addObject(&plane);
 
       Sphere sphere(
-         {0.f, 0.f, -1.f},
+         {0.f, 0.f, 1.f},
          0.8f,
          {1.f, 0.f, 0.f},
          {0.4f, 0.3f, 0.4f},
@@ -57,7 +57,7 @@ int main()
       Scene scene(light);
 
       Plane plane(
-         {0.f, 0.f, 1.f, 0.f},
+         {0.f, 0.f, 1.f, -1.f},
          {0.1f, 0.1f, 0.1f},
          {0.0f, 0.0f, 0.0f},
          40.f,
@@ -73,7 +73,7 @@ int main()
                {
                   (static_cast<float>(i + 1) - (SPHERES_X + 1) / 2.f) * 2.f,
                   (static_cast<float>(j + 1) - (SPHERES_Y + 1) / 2.f) * 2.f,
-                  -1.f
+                  1.f
                },
                0.8f,
                {1.0f, 0.07f, 0.07f},
