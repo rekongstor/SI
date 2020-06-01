@@ -38,8 +38,9 @@ bool Sphere::anyHit(Ray ray)
    float c = dot(origin, origin) - r2;
 
    float D = b * b - 4 * a * c;
-   float t = (-b - sqrtf(D)) / (2.f * a);
-   if (D < 0 || t < 0)
+   if (D < 0.f)
       return false;
-   return true;
+
+   float t = (-b - sqrtf(D)) / (2.f * a);
+   return t > 0.f;
 }
