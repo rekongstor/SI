@@ -31,6 +31,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task4_1_CPU_Renderer", "Tas
 		{F54A3267-E19B-4E01-BA07-5B691A77C296} = {F54A3267-E19B-4E01-BA07-5B691A77C296}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task5_1_DirectX12", "Task5_1_DirectX12\Task5_1_DirectX12.vcxproj", "{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -103,6 +105,14 @@ Global
 		{F0019AFF-DC64-47D9-B098-51969ED6D91F}.Release|x64.Build.0 = Release|x64
 		{F0019AFF-DC64-47D9-B098-51969ED6D91F}.Release|x86.ActiveCfg = Release|Win32
 		{F0019AFF-DC64-47D9-B098-51969ED6D91F}.Release|x86.Build.0 = Release|Win32
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Debug|x64.ActiveCfg = Debug|x64
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Debug|x64.Build.0 = Debug|x64
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Debug|x86.ActiveCfg = Debug|Win32
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Debug|x86.Build.0 = Debug|Win32
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Release|x64.ActiveCfg = Release|x64
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Release|x64.Build.0 = Release|x64
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Release|x86.ActiveCfg = Release|Win32
+		{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
