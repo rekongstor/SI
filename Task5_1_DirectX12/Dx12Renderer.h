@@ -9,6 +9,7 @@ using namespace DirectX; // I know it's bad
 struct Vertex
 {
    XMFLOAT3 pos;
+   XMFLOAT3 color;
 };
 
 class Window;
@@ -40,6 +41,8 @@ class Dx12Renderer
    D3D12_RECT scissorRect;
    ID3D12Resource* vertexBuffer;
    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+   ID3D12Resource* indexBuffer;
+   D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
    void Update();
    void UpdatePipeline();

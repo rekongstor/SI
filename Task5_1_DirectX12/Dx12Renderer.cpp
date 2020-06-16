@@ -51,7 +51,8 @@ void Dx12Renderer::UpdatePipeline()
    commandList->RSSetScissorRects(1, &scissorRect);
    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-   commandList->DrawInstanced(3, 1, 0, 0);
+   commandList->IASetIndexBuffer(&indexBufferView);
+   commandList->DrawIndexedInstanced(6, 1,0, 0, 0);
 
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                    renderTargets[currentFrame],
@@ -107,6 +108,7 @@ void Dx12Renderer::Cleanup()
    SAFE_RELEASE(pipelineStateObject);
    SAFE_RELEASE(rootSignature);
    SAFE_RELEASE(vertexBuffer);
+   SAFE_RELEASE(indexBuffer);
 }
 
 void Dx12Renderer::WaitForPreviousFrame()
@@ -329,7 +331,14 @@ void Dx12Renderer::OnInit()
       D3D12_SHADER_BYTECODE pixelShaderByteCode = {pixelShader->GetBufferPointer(), pixelShader->GetBufferSize()};
 
       D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
-         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+         {
+            "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,
+            0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+         },
+         {
+            "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT,
+            0,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+         }
       };
       D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {inputElementDesc,_countof(inputElementDesc)};
 
@@ -351,12 +360,14 @@ void Dx12Renderer::OnInit()
       ASSERT(hr, "Failed to create PSO");
    }
 
-   // Vertex buffer
+   // Vertex and Index buffers
    {
+      // Vertex buffer
       Vertex vertices[] = {
-         {{0.0f, 0.5f, 0.5f}},
-         {{0.5f, -0.5f, 0.5f}},
-         {{-0.5f, -0.5f, 0.5f}}
+         {{-0.5f, 0.5f, 0.5f}, {1.f, 0.f, 0.f}},
+         {{0.5f, -0.5f, 0.5f}, {0.f, 1.f, 0.f}},
+         {{-0.5f, -0.5f, 0.5f}, {0.f, 0.f, 1.f}},
+         {{0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}}
       };
 
       hr = device->CreateCommittedResource(
@@ -370,13 +381,14 @@ void Dx12Renderer::OnInit()
       vertexBuffer->SetName(L"Vertex buffer default heap");
 
       ID3D12Resource* vBufferUploadHeap;
-      device->CreateCommittedResource(
+      hr = device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
          D3D12_HEAP_FLAG_NONE,
          &CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices)),
          D3D12_RESOURCE_STATE_GENERIC_READ,
          nullptr,
          IID_PPV_ARGS(&vBufferUploadHeap));
+      ASSERT(hr, "Failed to create vertex buffer upload heap");
       vBufferUploadHeap->SetName(L"Vertex buffer upload heap");
 
       D3D12_SUBRESOURCE_DATA vertexData = {vertices, sizeof(vertices), sizeof(vertices)};
@@ -386,14 +398,56 @@ void Dx12Renderer::OnInit()
                                    &CD3DX12_RESOURCE_BARRIER::Transition(
                                       vertexBuffer,
                                       D3D12_RESOURCE_STATE_COPY_DEST,
-                                      D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+                                      D3D12_RESOURCE_STATE_INDEX_BUFFER));
+
+      // Index buffer
+      DWORD indices[] = {
+         0, 1, 2,
+         0, 3, 1
+      };
+
+
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+         D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices)),
+         D3D12_RESOURCE_STATE_COPY_DEST,
+         nullptr,
+         IID_PPV_ARGS(&indexBuffer));
+      ASSERT(hr, "Failed to create index buffer default heap");
+      indexBuffer->SetName(L"Index buffer default heap");
+
+      ID3D12Resource* iBufferUploadHeap;
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+         D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices)),
+         D3D12_RESOURCE_STATE_GENERIC_READ,
+         nullptr,
+         IID_PPV_ARGS(&iBufferUploadHeap));
+      ASSERT(hr, "Failed to create index buffer upload heap");
+      iBufferUploadHeap->SetName(L"Index buffer upload heap");
+
+      D3D12_SUBRESOURCE_DATA indexData = { indices, sizeof(indices), sizeof(indices) };
+      UpdateSubresources(commandList, indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
+
+      commandList->ResourceBarrier(1,
+         &CD3DX12_RESOURCE_BARRIER::Transition(
+            indexBuffer,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
       commandList->Close();
-      ID3D12CommandList* ppCommandLists[] = {commandList};
+      ID3D12CommandList* ppCommandLists[] = { commandList };
       commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
       ++fenceValue[currentFrame];
       hr = commandQueue->Signal(fence[currentFrame], fenceValue[currentFrame]);
-      ASSERT(hr, "Couldn't signal command queue");
+      if (FAILED(hr))
+         active = false;
+
+      indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+      indexBufferView.SizeInBytes = sizeof(indices);
+      indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
       vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
       vertexBufferView.SizeInBytes = sizeof(vertices);

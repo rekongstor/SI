@@ -28,7 +28,7 @@ int main()
 #endif
       if (window.getWindow())
       {
-         Dx12Renderer renderer(&window, 2);
+         Dx12Renderer renderer(&window, 3);
          renderer.OnInit();
 
          MSG msg;
