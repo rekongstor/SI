@@ -2,6 +2,14 @@
 #include <cstdint>
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <DirectXMath.h>
+
+using namespace DirectX; // I know it's bad
+
+struct Vertex
+{
+   XMFLOAT3 pos;
+};
 
 class Window;
 
@@ -24,6 +32,14 @@ class Dx12Renderer
    ID3D12Fence* fence[maxFrameBufferCount];
    HANDLE fenceEvent;
    UINT64 fenceValue[maxFrameBufferCount];
+
+
+   ID3D12PipelineState* pipelineStateObject;
+   ID3D12RootSignature* rootSignature;
+   D3D12_VIEWPORT viewport;
+   D3D12_RECT scissorRect;
+   ID3D12Resource* vertexBuffer;
+   D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
    void Update();
    void UpdatePipeline();

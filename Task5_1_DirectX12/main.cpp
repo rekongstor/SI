@@ -17,6 +17,10 @@ WinProc winProc(HWND window, unsigned msg, WPARAM wp, LPARAM lp)
 
 int main()
 {
+   // This should depend on localization
+   setlocale(LC_ALL, "Russian");
+
+
    Window window(L"SI", 640, 480);
    window.OnInit();
 #ifdef _DEBUG
@@ -45,7 +49,7 @@ int main()
       }
 #ifdef _DEBUG
    }
-   catch (std::exception e)
+   catch (std::exception& e)
    {
       std::cout << e.what() << std::endl;
    }
