@@ -5,9 +5,25 @@
 #include "d3dcompiler.h"
 #include <exception>
 #include <iostream>
+#include <algorithm>
+#include <chrono>
 
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
 #define ASSERT(hr, msg) { if (FAILED(hr)) { std::cout << std::system_category().message(hr) << std::endl; throw std::exception(msg); }}
+
+static Vertex vertices[] = {
+   {{-0.5f, 0.5f, 0.5f}, {1.f, 0.f, 0.f}},
+   {{0.5f, -0.5f, 0.5f}, {0.f, 1.f, 0.f}},
+   {{-0.5f, -0.5f, 0.5f}, {0.f, 0.f, 1.f}},
+   {{0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}},
+};
+
+static DWORD indices[] = {
+   0, 1, 2,
+   0, 3, 1
+};
+
+static ConstantBuffer cbColorMultiplierData;
 
 
 bool Dx12Renderer::isActive() const
@@ -17,6 +33,22 @@ bool Dx12Renderer::isActive() const
 
 void Dx12Renderer::Update()
 {
+   static auto clock = std::chrono::system_clock::now();
+   auto clockNow = std::chrono::system_clock::now();
+   auto deltaTime = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(clockNow - clock).count());
+   float rIncrement = 0.00002f;
+   float gIncrement = 0.00006f;
+   float bIncrement = 0.00009f;
+
+   cbColorMultiplierData.colorMultiplier.x = std::clamp(cbColorMultiplierData.colorMultiplier.x + rIncrement, 0.f, 1.f);
+   cbColorMultiplierData.colorMultiplier.y = std::clamp(cbColorMultiplierData.colorMultiplier.y + gIncrement, 0.f, 1.f);
+   cbColorMultiplierData.colorMultiplier.z = std::clamp(cbColorMultiplierData.colorMultiplier.z + bIncrement, 0.f, 1.f);
+
+   cbColorMultiplierData.colorMultiplier.x = cbColorMultiplierData.colorMultiplier.x == 1.f ? 0.f : cbColorMultiplierData.colorMultiplier.x;
+   cbColorMultiplierData.colorMultiplier.y = cbColorMultiplierData.colorMultiplier.y == 1.f ? 0.f : cbColorMultiplierData.colorMultiplier.y;
+   cbColorMultiplierData.colorMultiplier.z = cbColorMultiplierData.colorMultiplier.z == 1.f ? 0.f : cbColorMultiplierData.colorMultiplier.z;
+
+   memcpy(cbColorMultiplierGPUAddress[currentFrame], &cbColorMultiplierData, sizeof(cbColorMultiplierData));
 }
 
 void Dx12Renderer::UpdatePipeline()
@@ -38,10 +70,12 @@ void Dx12Renderer::UpdatePipeline()
                                    D3D12_RESOURCE_STATE_PRESENT,
                                    D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-   CD3DX12_CPU_DESCRIPTOR_HANDLE nsvHandle(nsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentFrame,
+   CD3DX12_CPU_DESCRIPTOR_HANDLE nsvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentFrame,
                                            rtvDescriptorSize);
-
-   commandList->OMSetRenderTargets(1, &nsvHandle, FALSE, nullptr);
+   CD3DX12_CPU_DESCRIPTOR_HANDLE dsHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+   commandList->OMSetRenderTargets(1, &nsvHandle, FALSE, &dsHandle);
+   commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH,
+                                      1.f, 0, 0, nullptr);
 
    const float clearColor[] = {0.f, 0.2f, 0.4f, 1.f};
    commandList->ClearRenderTargetView(nsvHandle, clearColor, 0, nullptr);
@@ -52,7 +86,14 @@ void Dx12Renderer::UpdatePipeline()
    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
    commandList->IASetIndexBuffer(&indexBufferView);
-   commandList->DrawIndexedInstanced(6, 1,0, 0, 0);
+
+   ID3D12DescriptorHeap* descriptorHeaps[] = {mainDescriptorHeap[currentFrame]};
+   commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+   commandList->SetGraphicsRootDescriptorTable(
+      0, mainDescriptorHeap[currentFrame]->GetGPUDescriptorHandleForHeapStart());
+
+
+   commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                    renderTargets[currentFrame],
@@ -95,7 +136,7 @@ void Dx12Renderer::Cleanup()
    SAFE_RELEASE(device);
    SAFE_RELEASE(swapChain);
    SAFE_RELEASE(commandQueue);
-   SAFE_RELEASE(nsvDescriptorHeap);
+   SAFE_RELEASE(rtvDescriptorHeap);
    SAFE_RELEASE(commandList);
 
    for (uint32_t i = 0; i < frameBufferCount; ++i)
@@ -109,6 +150,15 @@ void Dx12Renderer::Cleanup()
    SAFE_RELEASE(rootSignature);
    SAFE_RELEASE(vertexBuffer);
    SAFE_RELEASE(indexBuffer);
+
+   SAFE_RELEASE(depthStencilBuffer);
+   SAFE_RELEASE(dsDescriptorHeap);
+
+   for (uint32_t i = 0; i < frameBufferCount; ++i)
+   {
+      SAFE_RELEASE(mainDescriptorHeap[i]);
+      SAFE_RELEASE(constantBufferUploadHeap[i]);
+   }
 }
 
 void Dx12Renderer::WaitForPreviousFrame()
@@ -220,10 +270,10 @@ void Dx12Renderer::OnInit()
          D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
          0
       };
-      device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&nsvDescriptorHeap));
+      device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
 
       rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-      CD3DX12_CPU_DESCRIPTOR_HANDLE nsvHandle(nsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+      CD3DX12_CPU_DESCRIPTOR_HANDLE nsvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
       for (uint32_t i = 0; i < frameBufferCount; ++i)
       {
          hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
@@ -233,6 +283,50 @@ void Dx12Renderer::OnInit()
          nsvHandle.Offset(1, rtvDescriptorSize);
       }
    }
+
+   // Depth/stencil descriptor heap, DSV
+   {
+      D3D12_DESCRIPTOR_HEAP_DESC dsHeapDesc = {
+         (D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV),
+         1,
+         (D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE),
+         0
+      };
+
+      hr = device->CreateDescriptorHeap(&dsHeapDesc, IID_PPV_ARGS(&dsDescriptorHeap));
+      ASSERT(hr, "Failed to create descriptor heap");
+
+      D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+      ZeroMemory(&depthStencilViewDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
+      depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+      depthStencilViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+      depthStencilViewDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+      D3D12_CLEAR_VALUE depthStencilClearValue;
+      ZeroMemory(&depthStencilClearValue, sizeof(D3D12_CLEAR_VALUE));
+      depthStencilClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+      depthStencilClearValue.DepthStencil = {1.f, 0};
+
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+         D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_D32_FLOAT,
+            window->getWidth(),
+            window->getHeight(),
+            1, 0, 1, 0,
+            D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+         D3D12_RESOURCE_STATE_DEPTH_WRITE,
+         &depthStencilClearValue,
+         IID_PPV_ARGS(&depthStencilBuffer)
+      );
+      ASSERT(hr, "Failed to create depth/stencil resource");
+      dsDescriptorHeap->SetName(L"Depth/Stencil Resource Heap");
+
+      device->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc,
+                                     dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+   }
+
 
    // Command Allocator
    for (uint32_t i = 0; i < frameBufferCount; ++i)
@@ -281,13 +375,34 @@ void Dx12Renderer::OnInit()
 
    // Root signature
    {
-      CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-      rootSignatureDesc.Init(
+      D3D12_DESCRIPTOR_RANGE descriptorRanges[] = {
+         {
+            D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
+            1,
+            0,
+            0,
+            D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND
+         }
+      };
+
+      D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable = {
+         _countof(descriptorRanges), descriptorRanges
+      };
+
+      D3D12_ROOT_PARAMETER rootParameters[] = {
+         {D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE, descriptorTable, D3D12_SHADER_VISIBILITY_VERTEX}
+      };
+
+      CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(
+         _countof(rootParameters),
+         rootParameters,
          0,
          nullptr,
-         0,
-         nullptr,
-         (D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT)
+         D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+         D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+         D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+         D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+         D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS
       );
 
       ID3DBlob* signature;
@@ -301,8 +416,9 @@ void Dx12Renderer::OnInit()
       ASSERT(hr, "Failed to create root signature");
    }
 
-   // Shaders, Input layout and PSO
+   // Shaders, Input layout, Depth/Stencil and PSO
    {
+      ID3DBlob* errorBlob;
       ID3DBlob* vertexShader;
       hr = D3DCompileFromFile(L"sample_vs.hlsl",
                               nullptr,
@@ -312,7 +428,7 @@ void Dx12Renderer::OnInit()
                               D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
                               NULL,
                               &vertexShader,
-                              nullptr);
+                              &errorBlob);
       ASSERT(hr, "Failed to create vertex shader");
 
       ID3DBlob* pixelShader;
@@ -324,7 +440,7 @@ void Dx12Renderer::OnInit()
                               D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
                               NULL,
                               &pixelShader,
-                              nullptr);
+                              &errorBlob);
       ASSERT(hr, "Failed to create pixel shader");
 
       D3D12_SHADER_BYTECODE vertexShaderByteCode = {vertexShader->GetBufferPointer(), vertexShader->GetBufferSize()};
@@ -342,6 +458,7 @@ void Dx12Renderer::OnInit()
       };
       D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {inputElementDesc,_countof(inputElementDesc)};
 
+
       D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
       ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
       psoDesc.InputLayout = inputLayoutDesc;
@@ -355,6 +472,7 @@ void Dx12Renderer::OnInit()
       psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
       psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
       psoDesc.NumRenderTargets = 1;
+      psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 
       hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
       ASSERT(hr, "Failed to create PSO");
@@ -363,12 +481,6 @@ void Dx12Renderer::OnInit()
    // Vertex and Index buffers
    {
       // Vertex buffer
-      Vertex vertices[] = {
-         {{-0.5f, 0.5f, 0.5f}, {1.f, 0.f, 0.f}},
-         {{0.5f, -0.5f, 0.5f}, {0.f, 1.f, 0.f}},
-         {{-0.5f, -0.5f, 0.5f}, {0.f, 0.f, 1.f}},
-         {{0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}}
-      };
 
       hr = device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -401,10 +513,6 @@ void Dx12Renderer::OnInit()
                                       D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
       // Index buffer
-      DWORD indices[] = {
-         0, 1, 2,
-         0, 3, 1
-      };
 
 
       hr = device->CreateCommittedResource(
@@ -428,16 +536,16 @@ void Dx12Renderer::OnInit()
       ASSERT(hr, "Failed to create index buffer upload heap");
       iBufferUploadHeap->SetName(L"Index buffer upload heap");
 
-      D3D12_SUBRESOURCE_DATA indexData = { indices, sizeof(indices), sizeof(indices) };
+      D3D12_SUBRESOURCE_DATA indexData = {indices, sizeof(indices), sizeof(indices)};
       UpdateSubresources(commandList, indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
 
       commandList->ResourceBarrier(1,
-         &CD3DX12_RESOURCE_BARRIER::Transition(
-            indexBuffer,
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+                                   &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      indexBuffer,
+                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                      D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
       commandList->Close();
-      ID3D12CommandList* ppCommandLists[] = { commandList };
+      ID3D12CommandList* ppCommandLists[] = {commandList};
       commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
       ++fenceValue[currentFrame];
@@ -468,8 +576,49 @@ void Dx12Renderer::OnInit()
       scissorRect.right = window->getWidth();
       scissorRect.bottom = window->getHeight();
    }
-}
 
+   // CB
+   {
+      D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {
+         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+         1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+         0
+      };
+      ZeroMemory(&cbColorMultiplierData, sizeof(cbColorMultiplierData));
+      for (uint32_t i = 0; i < frameBufferCount; ++i)
+      {
+         // Descriptor heap
+         hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap[i]));
+         ASSERT(hr, "Failed to create CB descriptor heap");
+
+         // Upload heap
+         hr = device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr, IID_PPV_ARGS(&constantBufferUploadHeap[i])
+         );
+         ASSERT(hr, "Failed to create CB upload heap");
+         constantBufferUploadHeap[i]->SetName(L"CB upload resource heap");
+
+         // CBV
+
+         D3D12_CONSTANT_BUFFER_VIEW_DESC constantBufferViewDesc = {
+            constantBufferUploadHeap[i]->GetGPUVirtualAddress(), (sizeof(ConstantBuffer) + 255) & ~255
+         };
+         device->CreateConstantBufferView(&constantBufferViewDesc,
+                                          mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+         hr = constantBufferUploadHeap[i]->Map(
+            0,
+            &CD3DX12_RANGE(0, 0),
+            reinterpret_cast<void**>(&cbColorMultiplierGPUAddress[i])
+         );
+         ASSERT(hr, "Failed mapping CB");
+         memcpy(cbColorMultiplierGPUAddress[i], &cbColorMultiplierData, sizeof(cbColorMultiplierData));
+      }
+   }
+}
 
 void Dx12Renderer::OnUpdate()
 {

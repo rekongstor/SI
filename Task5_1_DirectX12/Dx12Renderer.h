@@ -12,6 +12,10 @@ struct Vertex
    XMFLOAT3 color;
 };
 
+struct ConstantBuffer {
+   XMFLOAT4 colorMultiplier;
+};
+
 class Window;
 
 class Dx12Renderer
@@ -25,8 +29,10 @@ class Dx12Renderer
    ID3D12Device* device;
    IDXGISwapChain3* swapChain;
    ID3D12CommandQueue* commandQueue;
-   ID3D12DescriptorHeap* nsvDescriptorHeap; // non-shader visible
+   ID3D12DescriptorHeap* rtvDescriptorHeap; // non-shader visible
    ID3D12Resource* renderTargets[maxFrameBufferCount];
+   ID3D12Resource* depthStencilBuffer;
+   ID3D12DescriptorHeap* dsDescriptorHeap;
    ID3D12CommandAllocator* commandAllocator[maxFrameBufferCount];
    ID3D12GraphicsCommandList* commandList;
 
@@ -43,6 +49,11 @@ class Dx12Renderer
    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
    ID3D12Resource* indexBuffer;
    D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+
+   ID3D12DescriptorHeap* mainDescriptorHeap[maxFrameBufferCount];
+   ID3D12Resource* constantBufferUploadHeap[maxFrameBufferCount];
+   UINT8* cbColorMultiplierGPUAddress[maxFrameBufferCount];
 
    void Update();
    void UpdatePipeline();
@@ -61,4 +72,3 @@ public:
    void OnUpdate();
    void OnDestroy();
 };
-
