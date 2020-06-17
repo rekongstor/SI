@@ -1,20 +1,16 @@
 #pragma once
+#include "stdafx.h"
 #include <cstdint>
 #include <d3d12.h>
 #include <dxgi1_4.h>
-#include <DirectXMath.h>
-
-using namespace DirectX; // I know it's bad
-
-struct Vertex
-{
-   XMFLOAT3 pos;
-   XMFLOAT3 color;
-};
+#include "Camera.h"
+#include "Mesh.h"
 
 struct ConstantBuffer {
-   XMFLOAT4 colorMultiplier;
+   XMFLOAT4X4 wvpMatrix;
 };
+const int ConstantBufferAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
+const int MultipleAlignedSize = ConstantBufferAlignedSize >> 8;
 
 class Window;
 
@@ -51,9 +47,12 @@ class Dx12Renderer
    D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 
-   ID3D12DescriptorHeap* mainDescriptorHeap[maxFrameBufferCount];
-   ID3D12Resource* constantBufferUploadHeap[maxFrameBufferCount];
-   UINT8* cbColorMultiplierGPUAddress[maxFrameBufferCount];
+   ID3D12Resource* constantBufferUploadHeaps[maxFrameBufferCount];
+   UINT8* cbvGPUAddress[maxFrameBufferCount];
+   Camera camera;
+
+   std::vector<Mesh> meshes; // would be instanced
+
 
    void Update();
    void UpdatePipeline();

@@ -1,6 +1,20 @@
 #include "Window.h"
 #include "stdafx.h"
 
+
+WinProc winProc(HWND window, unsigned msg, WPARAM wp, LPARAM lp)
+{
+   switch (msg)
+   {
+   case WM_DESTROY:
+      PostQuitMessage(0);
+      return 0;
+   default:
+      return DefWindowProc(window, msg, wp, lp);
+   }
+}
+
+
 int Window::getWidth() const
 {
    return width;

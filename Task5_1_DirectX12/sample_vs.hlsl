@@ -1,7 +1,7 @@
 struct inputVertex
 {
-   float3 position : POSITION;
-   float3 color : COLOR;
+   float4 position : POSITION;
+   float4 color : COLOR;
 };
 
 struct outputVertex
@@ -12,13 +12,14 @@ struct outputVertex
 
 cbuffer ConstantBuffer : register(b0)
 {
-   float4 colorMultiplier;
+   float4x4 wvpMat;
 }
 
 outputVertex main(inputVertex input)
 {
    outputVertex output;
-   output.position = float4(input.position, 1.f);
-   output.color = float4(input.color, 1.f) * colorMultiplier;
+   output.position = mul(input.position, wvpMat);
+   output.position = output.position / output.position.w;
+   output.color = input.color;
    return output;
 }

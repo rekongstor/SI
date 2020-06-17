@@ -11,20 +11,7 @@
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
 #define ASSERT(hr, msg) { if (FAILED(hr)) { std::cout << std::system_category().message(hr) << std::endl; throw std::exception(msg); }}
 
-static Vertex vertices[] = {
-   {{-0.5f, 0.5f, 0.5f}, {1.f, 0.f, 0.f}},
-   {{0.5f, -0.5f, 0.5f}, {0.f, 1.f, 0.f}},
-   {{-0.5f, -0.5f, 0.5f}, {0.f, 0.f, 1.f}},
-   {{0.5f, 0.5f, 0.5f}, {1.f, 1.f, 1.f}},
-};
-
-static DWORD indices[] = {
-   0, 1, 2,
-   0, 3, 1
-};
-
-static ConstantBuffer cbColorMultiplierData;
-
+static ConstantBuffer cbPerObject;
 
 bool Dx12Renderer::isActive() const
 {
@@ -33,22 +20,21 @@ bool Dx12Renderer::isActive() const
 
 void Dx12Renderer::Update()
 {
-   static auto clock = std::chrono::system_clock::now();
-   auto clockNow = std::chrono::system_clock::now();
-   auto deltaTime = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(clockNow - clock).count());
-   float rIncrement = 0.00002f;
-   float gIncrement = 0.00006f;
-   float bIncrement = 0.00009f;
 
-   cbColorMultiplierData.colorMultiplier.x = std::clamp(cbColorMultiplierData.colorMultiplier.x + rIncrement, 0.f, 1.f);
-   cbColorMultiplierData.colorMultiplier.y = std::clamp(cbColorMultiplierData.colorMultiplier.y + gIncrement, 0.f, 1.f);
-   cbColorMultiplierData.colorMultiplier.z = std::clamp(cbColorMultiplierData.colorMultiplier.z + bIncrement, 0.f, 1.f);
+   meshes[0].Rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.001f, 0.f, 0.f));
+   //meshes[0].Move({ -0.1f,0.f,0.f,0.f });
+   XMMATRIX wvpMat = meshes[0].worldMatrix * camera.viewMatrix * camera.projMatrix;
+   Vertex v = {{-0.5f, 0.5f, -0.5f, 1.f}, {1.0f, 0.0f, 0.0f, 1.0f}};
+   auto m = camera.viewMatrix * camera.projMatrix;
+   XMStoreFloat4x4(&cbPerObject.wvpMatrix, XMMatrixTranspose(wvpMat));
 
-   cbColorMultiplierData.colorMultiplier.x = cbColorMultiplierData.colorMultiplier.x == 1.f ? 0.f : cbColorMultiplierData.colorMultiplier.x;
-   cbColorMultiplierData.colorMultiplier.y = cbColorMultiplierData.colorMultiplier.y == 1.f ? 0.f : cbColorMultiplierData.colorMultiplier.y;
-   cbColorMultiplierData.colorMultiplier.z = cbColorMultiplierData.colorMultiplier.z == 1.f ? 0.f : cbColorMultiplierData.colorMultiplier.z;
 
-   memcpy(cbColorMultiplierGPUAddress[currentFrame], &cbColorMultiplierData, sizeof(cbColorMultiplierData));
+   meshes[1].Rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.0f, 0.001f, 0.f));
+   memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
+
+   wvpMat = meshes[1].worldMatrix * camera.viewMatrix * camera.projMatrix;
+   XMStoreFloat4x4(&cbPerObject.wvpMatrix, XMMatrixTranspose(wvpMat));
+   memcpy(cbvGPUAddress[currentFrame] + ConstantBufferAlignedSize, &cbPerObject, sizeof(cbPerObject));
 }
 
 void Dx12Renderer::UpdatePipeline()
@@ -70,15 +56,16 @@ void Dx12Renderer::UpdatePipeline()
                                    D3D12_RESOURCE_STATE_PRESENT,
                                    D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-   CD3DX12_CPU_DESCRIPTOR_HANDLE nsvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentFrame,
+   CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), currentFrame,
                                            rtvDescriptorSize);
    CD3DX12_CPU_DESCRIPTOR_HANDLE dsHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-   commandList->OMSetRenderTargets(1, &nsvHandle, FALSE, &dsHandle);
-   commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH,
-                                      1.f, 0, 0, nullptr);
+   commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsHandle);
 
    const float clearColor[] = {0.f, 0.2f, 0.4f, 1.f};
-   commandList->ClearRenderTargetView(nsvHandle, clearColor, 0, nullptr);
+   commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+   commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH,
+                                      1.f, 0, 0, nullptr);
 
    commandList->SetGraphicsRootSignature(rootSignature);
    commandList->RSSetViewports(1, &viewport);
@@ -87,13 +74,12 @@ void Dx12Renderer::UpdatePipeline()
    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
    commandList->IASetIndexBuffer(&indexBufferView);
 
-   ID3D12DescriptorHeap* descriptorHeaps[] = {mainDescriptorHeap[currentFrame]};
-   commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-   commandList->SetGraphicsRootDescriptorTable(
-      0, mainDescriptorHeap[currentFrame]->GetGPUDescriptorHandleForHeapStart());
-
-
-   commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+   for (size_t i = 0; i < meshes.size(); ++i)
+   {
+      commandList->SetGraphicsRootConstantBufferView(
+         0, constantBufferUploadHeaps[currentFrame]->GetGPUVirtualAddress() + ConstantBufferAlignedSize * i);
+      commandList->DrawIndexedInstanced(meshes[i].indices.size(), 1, 0, 0, 0);
+   }
 
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                    renderTargets[currentFrame],
@@ -156,8 +142,7 @@ void Dx12Renderer::Cleanup()
 
    for (uint32_t i = 0; i < frameBufferCount; ++i)
    {
-      SAFE_RELEASE(mainDescriptorHeap[i]);
-      SAFE_RELEASE(constantBufferUploadHeap[i]);
+      SAFE_RELEASE(constantBufferUploadHeaps[i]);
    }
 }
 
@@ -184,12 +169,25 @@ void Dx12Renderer::OnDestroy()
    Cleanup();
 }
 
-Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount): window(window),
-                                                                       frameBufferCount(
-                                                                          frameBufferCount > maxFrameBufferCount
-                                                                             ? maxFrameBufferCount
-                                                                             : frameBufferCount)
+Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
+   window(window),
+   frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
+   camera(
+      {0.f, 4.f, -4.f, 0.f},
+      {0.f, 0.f, 0.f, 0.f},
+      {0.f, 1.f, 0.f, 0.f},
+      45.f,
+      static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
+   // Adding meshes
+   {
+      meshes.emplace_back(Mesh(
+         { 0.f, 0.f, 0.f, 0.f },
+         DirectX::XMQuaternionRotationRollPitchYaw(0.f, 0.f, 0.f)));
+      meshes.emplace_back(Mesh(
+         { 3.f, 2.f, 1.f, 0.f },
+         DirectX::XMQuaternionRotationRollPitchYaw(1.f, 1.f, 1.f)));
+   }
 }
 
 void Dx12Renderer::OnInit()
@@ -375,23 +373,13 @@ void Dx12Renderer::OnInit()
 
    // Root signature
    {
-      D3D12_DESCRIPTOR_RANGE descriptorRanges[] = {
-         {
-            D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
-            1,
-            0,
-            0,
-            D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND
-         }
-      };
+      D3D12_ROOT_DESCRIPTOR rootDescriptor = {0, 0};
 
-      D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable = {
-         _countof(descriptorRanges), descriptorRanges
-      };
 
-      D3D12_ROOT_PARAMETER rootParameters[] = {
-         {D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE, descriptorTable, D3D12_SHADER_VISIBILITY_VERTEX}
-      };
+      D3D12_ROOT_PARAMETER rootParameters[1];
+      rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+      rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+      rootParameters[0].Descriptor = rootDescriptor;
 
       CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(
          _countof(rootParameters),
@@ -448,11 +436,11 @@ void Dx12Renderer::OnInit()
 
       D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
          {
-            "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,
+            "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,
             0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
          },
          {
-            "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT,
+            "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,
             0,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
          }
       };
@@ -478,14 +466,38 @@ void Dx12Renderer::OnInit()
       ASSERT(hr, "Failed to create PSO");
    }
 
+
+   // Constant buffer
+   {
+      for (uint32_t i = 0; i < frameBufferCount; ++i)
+      {
+         hr = device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64 * MultipleAlignedSize),
+            D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&constantBufferUploadHeaps[i])
+         );
+         ASSERT(hr, "Failed to create upload heap for CB");
+         constantBufferUploadHeaps[i]->SetName(L"Constant Buffer Upload Resource Heap");
+
+         ZeroMemory(&cbPerObject, sizeof(cbPerObject));
+         CD3DX12_RANGE readRange(0, 0);
+
+         hr = constantBufferUploadHeaps[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
+
+         memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject));
+         memcpy(cbvGPUAddress[i] + ConstantBufferAlignedSize, &cbPerObject, sizeof(cbPerObject));
+      }
+   }
    // Vertex and Index buffers
    {
       // Vertex buffer
-
       hr = device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
          D3D12_HEAP_FLAG_NONE,
-         &CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices)),
+         &CD3DX12_RESOURCE_DESC::Buffer(meshes[0].vertices.size() * sizeof(Vertex)),
          D3D12_RESOURCE_STATE_COPY_DEST,
          nullptr,
          IID_PPV_ARGS(&vertexBuffer));
@@ -496,14 +508,16 @@ void Dx12Renderer::OnInit()
       hr = device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
          D3D12_HEAP_FLAG_NONE,
-         &CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertices)),
+         &CD3DX12_RESOURCE_DESC::Buffer(meshes[0].vertices.size() * sizeof(Vertex)),
          D3D12_RESOURCE_STATE_GENERIC_READ,
          nullptr,
          IID_PPV_ARGS(&vBufferUploadHeap));
       ASSERT(hr, "Failed to create vertex buffer upload heap");
       vBufferUploadHeap->SetName(L"Vertex buffer upload heap");
 
-      D3D12_SUBRESOURCE_DATA vertexData = {vertices, sizeof(vertices), sizeof(vertices)};
+      D3D12_SUBRESOURCE_DATA vertexData = {
+         meshes[0].vertices.data(), meshes[0].vertices.size() * sizeof(Vertex), meshes[0].vertices.size() * sizeof(Vertex)
+      };
       UpdateSubresources(commandList, vertexBuffer, vBufferUploadHeap, 0, 0, 1, &vertexData);
 
       commandList->ResourceBarrier(1,
@@ -518,7 +532,7 @@ void Dx12Renderer::OnInit()
       hr = device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
          D3D12_HEAP_FLAG_NONE,
-         &CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices)),
+         &CD3DX12_RESOURCE_DESC::Buffer(meshes[0].indices.size() * sizeof(DWORD)),
          D3D12_RESOURCE_STATE_COPY_DEST,
          nullptr,
          IID_PPV_ARGS(&indexBuffer));
@@ -529,14 +543,16 @@ void Dx12Renderer::OnInit()
       hr = device->CreateCommittedResource(
          &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
          D3D12_HEAP_FLAG_NONE,
-         &CD3DX12_RESOURCE_DESC::Buffer(sizeof(indices)),
+         &CD3DX12_RESOURCE_DESC::Buffer(meshes[0].indices.size() * sizeof(DWORD)),
          D3D12_RESOURCE_STATE_GENERIC_READ,
          nullptr,
          IID_PPV_ARGS(&iBufferUploadHeap));
       ASSERT(hr, "Failed to create index buffer upload heap");
       iBufferUploadHeap->SetName(L"Index buffer upload heap");
 
-      D3D12_SUBRESOURCE_DATA indexData = {indices, sizeof(indices), sizeof(indices)};
+      D3D12_SUBRESOURCE_DATA indexData = {
+         meshes[0].indices.data(), meshes[0].indices.size() * sizeof(DWORD), meshes[0].indices.size() * sizeof(DWORD)
+      };
       UpdateSubresources(commandList, indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
 
       commandList->ResourceBarrier(1,
@@ -554,11 +570,11 @@ void Dx12Renderer::OnInit()
          active = false;
 
       indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-      indexBufferView.SizeInBytes = sizeof(indices);
+      indexBufferView.SizeInBytes = meshes[0].indices.size() * sizeof(DWORD);
       indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
       vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-      vertexBufferView.SizeInBytes = sizeof(vertices);
+      vertexBufferView.SizeInBytes = meshes[0].vertices.size() * sizeof(Vertex);
       vertexBufferView.StrideInBytes = sizeof(Vertex);
    }
 
@@ -575,48 +591,6 @@ void Dx12Renderer::OnInit()
       scissorRect.right = 0;
       scissorRect.right = window->getWidth();
       scissorRect.bottom = window->getHeight();
-   }
-
-   // CB
-   {
-      D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {
-         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-         1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-         0
-      };
-      ZeroMemory(&cbColorMultiplierData, sizeof(cbColorMultiplierData));
-      for (uint32_t i = 0; i < frameBufferCount; ++i)
-      {
-         // Descriptor heap
-         hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap[i]));
-         ASSERT(hr, "Failed to create CB descriptor heap");
-
-         // Upload heap
-         hr = device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr, IID_PPV_ARGS(&constantBufferUploadHeap[i])
-         );
-         ASSERT(hr, "Failed to create CB upload heap");
-         constantBufferUploadHeap[i]->SetName(L"CB upload resource heap");
-
-         // CBV
-
-         D3D12_CONSTANT_BUFFER_VIEW_DESC constantBufferViewDesc = {
-            constantBufferUploadHeap[i]->GetGPUVirtualAddress(), (sizeof(ConstantBuffer) + 255) & ~255
-         };
-         device->CreateConstantBufferView(&constantBufferViewDesc,
-                                          mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
-         hr = constantBufferUploadHeap[i]->Map(
-            0,
-            &CD3DX12_RANGE(0, 0),
-            reinterpret_cast<void**>(&cbColorMultiplierGPUAddress[i])
-         );
-         ASSERT(hr, "Failed mapping CB");
-         memcpy(cbColorMultiplierGPUAddress[i], &cbColorMultiplierData, sizeof(cbColorMultiplierData));
-      }
    }
 }
 

@@ -147,13 +147,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Dx12Renderer.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="Dx12Renderer.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
