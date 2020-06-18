@@ -5,6 +5,7 @@
 #include "d3dcompiler.h"
 #include <exception>
 #include <iostream>
+#include <chrono>
 
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
 #define ASSERT(hr, msg) { if (FAILED(hr)) { std::cout << std::system_category().message(hr) << std::endl; throw std::exception(msg); }}
@@ -18,8 +19,12 @@ bool Dx12Renderer::isActive() const
 
 void Dx12Renderer::Update()
 {
+   static auto timer = std::chrono::system_clock::now();
+   auto timerNow = std::chrono::system_clock::now();
+   float delta = static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(timerNow - timer).count()) / 1000.f;
+   timer = timerNow;
    for (auto& i : instances[&meshes[0]])
-      i.rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.002f, 0.001f, 0.003f));
+      i.rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.002f * delta, 0.001f * delta, 0.003f * delta));
 
    XMMATRIX wvpMat = instances[&meshes[0]][0].worldMatrix * camera.viewMatrix * camera.projMatrix;
    XMStoreFloat4x4(&cbPerObject.wvpMatrix, XMMatrixTranspose(wvpMat));
@@ -190,7 +195,7 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
          for (int j = -5; j <= 5; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
-               { (float)i, (float)j, 0.f, 0.f },
+               {(float)i, (float)j, 0.f, 0.f},
                DirectX::XMQuaternionRotationRollPitchYaw(0.f, 0.f, 0.f),
                0.2f));
          }
