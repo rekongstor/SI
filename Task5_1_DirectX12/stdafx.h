@@ -23,6 +23,7 @@ using DirectX::XMMatrixTranslationFromVector;
 using DirectX::XMMatrixRotationQuaternion;
 using DirectX::XMMatrixTranspose;
 using DirectX::XMMatrixIdentity;
+using DirectX::XMMatrixScaling;
 
 struct Vertex
 {

@@ -10,16 +10,23 @@ struct outputVertex
    float4 color : COLOR;
 };
 
-cbuffer ConstantBuffer : register(b0)
+cbuffer cbPass : register(b0)
 {
    float4x4 wvpMat;
 }
 
-outputVertex main(inputVertex input)
+struct InstanceData
+{
+   float4x4 world;
+};
+StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);
+
+outputVertex main(inputVertex input, uint instanceID : SV_InstanceID)
 {
    outputVertex output;
-   output.position = mul(input.position, wvpMat);
-   output.position = output.position / output.position.w;
+   InstanceData instanceData = gInstanceData[instanceID];
+   output.position = mul(input.position, instanceData.world);
+   output.position = output.position;
    output.color = input.color;
    return output;
 }

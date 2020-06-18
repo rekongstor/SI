@@ -5,13 +5,11 @@
 #include "d3dcompiler.h"
 #include <exception>
 #include <iostream>
-#include <algorithm>
-#include <chrono>
 
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
 #define ASSERT(hr, msg) { if (FAILED(hr)) { std::cout << std::system_category().message(hr) << std::endl; throw std::exception(msg); }}
 
-static ConstantBuffer cbPerObject;
+static WVPMatrix cbPerObject;
 
 bool Dx12Renderer::isActive() const
 {
@@ -20,21 +18,25 @@ bool Dx12Renderer::isActive() const
 
 void Dx12Renderer::Update()
 {
+   for (auto& i : instances[&meshes[0]])
+      i.rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.002f, 0.001f, 0.003f));
 
-   meshes[0].Rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.001f, 0.f, 0.f));
-   //meshes[0].Move({ -0.1f,0.f,0.f,0.f });
-   XMMATRIX wvpMat = meshes[0].worldMatrix * camera.viewMatrix * camera.projMatrix;
-   Vertex v = {{-0.5f, 0.5f, -0.5f, 1.f}, {1.0f, 0.0f, 0.0f, 1.0f}};
-   auto m = camera.viewMatrix * camera.projMatrix;
+   XMMATRIX wvpMat = instances[&meshes[0]][0].worldMatrix * camera.viewMatrix * camera.projMatrix;
    XMStoreFloat4x4(&cbPerObject.wvpMatrix, XMMatrixTranspose(wvpMat));
-
-
-   meshes[1].Rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.0f, 0.001f, 0.f));
    memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
 
-   wvpMat = meshes[1].worldMatrix * camera.viewMatrix * camera.projMatrix;
-   XMStoreFloat4x4(&cbPerObject.wvpMatrix, XMMatrixTranspose(wvpMat));
-   memcpy(cbvGPUAddress[currentFrame] + ConstantBufferAlignedSize, &cbPerObject, sizeof(cbPerObject));
+   //meshes[1].Rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.0f, 0.001f, 0.f));
+   //wvpMat = meshes[1].worldMatrix * camera.viewMatrix * camera.projMatrix;
+   //XMStoreFloat4x4(&cbPerObject.wvpMatrix, XMMatrixTranspose(wvpMat));
+   //memcpy(cbvGPUAddress[currentFrame] + ConstantBufferAlignedSize, &cbPerObject, sizeof(cbPerObject));
+
+   XMFLOAT4X4 tmp;
+   for (size_t i = 0; i < instances[&meshes[0]].size(); ++i)
+   {
+      wvpMat = instances[&meshes[0]][i].worldMatrix * camera.viewMatrix * camera.projMatrix;
+      XMStoreFloat4x4(&tmp, XMMatrixTranspose(wvpMat));
+      memcpy(instanceDataGPUAddress + i * sizeof(WVPMatrix), &tmp, sizeof(WVPMatrix));
+   }
 }
 
 void Dx12Renderer::UpdatePipeline()
@@ -76,9 +78,10 @@ void Dx12Renderer::UpdatePipeline()
 
    for (size_t i = 0; i < meshes.size(); ++i)
    {
+      commandList->SetGraphicsRootShaderResourceView(1, instanceBuffer->GetGPUVirtualAddress());
       commandList->SetGraphicsRootConstantBufferView(
          0, constantBufferUploadHeaps[currentFrame]->GetGPUVirtualAddress() + ConstantBufferAlignedSize * i);
-      commandList->DrawIndexedInstanced(meshes[i].indices.size(), 1, 0, 0, 0);
+      commandList->DrawIndexedInstanced(meshes[i].indices.size(), instances[&meshes[i]].size(), 0, 0, 0);
    }
 
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
@@ -173,7 +176,7 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      {0.f, 4.f, -4.f, 0.f},
+      {0.f, -1.0f, 7.f, 0.f},
       {0.f, 0.f, 0.f, 0.f},
       {0.f, 1.f, 0.f, 0.f},
       45.f,
@@ -181,12 +184,17 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
 {
    // Adding meshes
    {
-      meshes.emplace_back(Mesh(
-         { 0.f, 0.f, 0.f, 0.f },
-         DirectX::XMQuaternionRotationRollPitchYaw(0.f, 0.f, 0.f)));
-      meshes.emplace_back(Mesh(
-         { 3.f, 2.f, 1.f, 0.f },
-         DirectX::XMQuaternionRotationRollPitchYaw(1.f, 1.f, 1.f)));
+      meshes.emplace_back(Mesh());
+      for (int i = -5; i <= 5; ++i)
+      {
+         for (int j = -5; j <= 5; ++j)
+         {
+            instances[&meshes[0]].emplace_back(Instance(
+               { (float)i, (float)j, 0.f, 0.f },
+               DirectX::XMQuaternionRotationRollPitchYaw(0.f, 0.f, 0.f),
+               0.2f));
+         }
+      }
    }
 }
 
@@ -376,10 +384,13 @@ void Dx12Renderer::OnInit()
       D3D12_ROOT_DESCRIPTOR rootDescriptor = {0, 0};
 
 
-      D3D12_ROOT_PARAMETER rootParameters[1];
+      CD3DX12_ROOT_PARAMETER rootParameters[2];
       rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
       rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
       rootParameters[0].Descriptor = rootDescriptor;
+
+      rootParameters[1].InitAsShaderResourceView(0, 1, D3D12_SHADER_VISIBILITY_VERTEX);
+
 
       CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(
          _countof(rootParameters),
@@ -412,7 +423,7 @@ void Dx12Renderer::OnInit()
                               nullptr,
                               nullptr,
                               "main",
-                              "vs_5_0",
+                              "vs_5_1",
                               D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
                               NULL,
                               &vertexShader,
@@ -424,7 +435,7 @@ void Dx12Renderer::OnInit()
                               nullptr,
                               nullptr,
                               "main",
-                              "ps_5_0",
+                              "ps_5_1",
                               D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
                               NULL,
                               &pixelShader,
@@ -481,16 +492,29 @@ void Dx12Renderer::OnInit()
          );
          ASSERT(hr, "Failed to create upload heap for CB");
          constantBufferUploadHeaps[i]->SetName(L"Constant Buffer Upload Resource Heap");
-
          ZeroMemory(&cbPerObject, sizeof(cbPerObject));
          CD3DX12_RANGE readRange(0, 0);
-
          hr = constantBufferUploadHeaps[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
-
+         ASSERT(hr, "Failed to map CB");
          memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject));
-         memcpy(cbvGPUAddress[i] + ConstantBufferAlignedSize, &cbPerObject, sizeof(cbPerObject));
       }
    }
+
+   // Instance buffer
+   {
+      for (uint32_t i = 0; i < frameBufferCount; ++i)
+      {
+         hr = device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(instances[&meshes[0]].size() * sizeof(WVPMatrix)),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr, IID_PPV_ARGS(&instanceBuffer));
+         ASSERT(hr, "Failed to create instance buffer");
+         hr = instanceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instanceDataGPUAddress));
+      }
+   }
+
    // Vertex and Index buffers
    {
       // Vertex buffer
@@ -516,7 +540,8 @@ void Dx12Renderer::OnInit()
       vBufferUploadHeap->SetName(L"Vertex buffer upload heap");
 
       D3D12_SUBRESOURCE_DATA vertexData = {
-         meshes[0].vertices.data(), meshes[0].vertices.size() * sizeof(Vertex), meshes[0].vertices.size() * sizeof(Vertex)
+         meshes[0].vertices.data(), meshes[0].vertices.size() * sizeof(Vertex),
+         meshes[0].vertices.size() * sizeof(Vertex)
       };
       UpdateSubresources(commandList, vertexBuffer, vBufferUploadHeap, 0, 0, 1, &vertexData);
 

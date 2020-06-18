@@ -3,13 +3,17 @@
 #include <cstdint>
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <map>
 #include "Camera.h"
+#include "Instance.h"
 #include "Mesh.h"
 
-struct ConstantBuffer {
+struct WVPMatrix
+{
    XMFLOAT4X4 wvpMatrix;
 };
-const int ConstantBufferAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
+
+const int ConstantBufferAlignedSize = (sizeof(WVPMatrix) + 255) & ~255;
 const int MultipleAlignedSize = ConstantBufferAlignedSize >> 8;
 
 class Window;
@@ -46,12 +50,16 @@ class Dx12Renderer
    ID3D12Resource* indexBuffer;
    D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
+   ID3D12Resource* instanceBuffer;
+   UINT8* instanceDataGPUAddress;
 
    ID3D12Resource* constantBufferUploadHeaps[maxFrameBufferCount];
    UINT8* cbvGPUAddress[maxFrameBufferCount];
+
    Camera camera;
 
-   std::vector<Mesh> meshes; // would be instanced
+   std::vector<Mesh> meshes;
+   std::map<Mesh*, std::vector<Instance>> instances;
 
 
    void Update();

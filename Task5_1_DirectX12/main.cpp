@@ -10,7 +10,7 @@ int main()
    setlocale(LC_ALL, "Russian");
 
 
-   Window window(L"SI", 640, 480);
+   Window window(L"SI", 1280, 720);
    window.OnInit();
 #ifdef _DEBUG
    try {
