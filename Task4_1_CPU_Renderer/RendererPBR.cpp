@@ -48,7 +48,7 @@ Color RendererPBR::pixelShader(constantBuffer buffer, Light light, const Ray& ra
       };
       auto geomValue = [&geomGGX, &dotNV, &dotNL](float rough) -> float
       {
-         return geomGGX(rough, dotNV) * geomGGX(dotNL, rough);
+         return geomGGX(dotNV, rough) * geomGGX(dotNL, rough);
       };
 
       // Normalizing given metalness
@@ -63,7 +63,7 @@ Color RendererPBR::pixelShader(constantBuffer buffer, Light light, const Ray& ra
       float NDF = distGGX(normRoughness);
       float G = geomValue(normRoughness);
 
-      Color specular = F * NDF * G / std::max(4.f * dotNV * dot(N, L), 0.001f);
+      Color specular = F * NDF * G / std::max(4.f * dotNV * dotNL, 0.001f);
       Color kS = F * -1.f;
       Color kD = (kS + 1.f) * (1.f - normMetalness);
       Color color = ambientColor * normDiffuseColor +

@@ -26,10 +26,11 @@ void Dx12Renderer::Update()
    timer = timerNow;
 
    for (auto& i : instances[&meshes[0]])
-      i.rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.002f * delta, 0.001f * delta, 0.003f * delta));
+      i.rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.001f * delta, 0.001f * delta, 0.001f * delta));
 
    XMMATRIX transformMatrix = camera.viewMatrix * camera.projMatrix;
    XMStoreFloat4x4(&cbPerObject.vpMatrix, XMMatrixTranspose(transformMatrix));
+   cbPerObject.camPos = camera.position;
    memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
 
    instanceData instanceData;
@@ -66,7 +67,7 @@ void Dx12Renderer::UpdatePipeline()
    CD3DX12_CPU_DESCRIPTOR_HANDLE dsHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
    commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsHandle);
 
-   const float clearColor[] = {0.f, 0.2f, 0.4f, 1.f};
+   const float clearColor[] = {0.2f, 0.2f, 0.2f, 1.f};
    commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
    commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH,
@@ -178,7 +179,7 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      {0.f, -5.0f, 5.f, 0.f},
+      {0.f, 6.0f, 1.0f, 0.f},
       {0.f, 0.f, 0.f, 0.f},
       {0.f, 1.f, 0.f, 0.f},
       45.f,
@@ -187,15 +188,15 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
    // Adding meshes
    {
       meshes.emplace_back(Mesh());
-      for (int i = -5; i <= 5; ++i)
+      for (int i = -4; i <= 4; ++i)
       {
-         for (int j = -5; j <= 5; ++j)
+         for (int j = -4; j <= 4; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
-               {static_cast<float>(i), static_cast<float>(j), 0.f, 0.f},
+               {static_cast<float>(i), 0.f, static_cast<float>(j), 0.f},
                DirectX::XMQuaternionRotationRollPitchYaw(0.f, 0.f, 0.f),
-               0.2f,
-               {(static_cast<float>(i) + 5.f) / 10.f, (static_cast<float>(j) + 5.f) / 10.f, 0.f, 0.f}));
+               0.25f,
+               {(static_cast<float>(i) + 4.f) / 8.f, (static_cast<float>(j) + 4.f) / 8.f, 0.f, 0.f}));
          }
       }
    }
@@ -500,11 +501,11 @@ void Dx12Renderer::OnInit()
          hr = constantBufferUploadHeaps[i]->Map(0, nullptr, reinterpret_cast<void**>(&cbvGPUAddress[i]));
          ASSERT(hr, "Failed to map CB");
          cbPerObject.color = {1.f, 1.f, 1.f, 1.f};
-         cbPerObject.direction = {0.f, -1.0f, 0.f, 0.f};
+         cbPerObject.direction = {0.f,-1.0f, 0.f, 0.f};
          //XMVECTOR tmp = XMLoadFloat4(&cbPerObject.direction);
          //DirectX::XMVector4Normalize(tmp);
          //XMStoreFloat4(&cbPerObject.direction, tmp);
-         cbPerObject.ambient = {0.05f, 0.05f, 0.05f, 1.f};
+         cbPerObject.ambient = {0.01f, 0.01f, 0.01f, 1.f};
       }
    }
 

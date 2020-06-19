@@ -14,6 +14,7 @@ struct cbPerFrame
    XMFLOAT4 color;
    XMFLOAT4X4 vpMatrix;
    XMFLOAT4 ambient;
+   XMFLOAT4 camPos;
 };
 
 struct instanceData
