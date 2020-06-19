@@ -10,8 +10,7 @@
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
 #define ASSERT(hr, msg) { if (FAILED(hr)) { std::cout << std::system_category().message(hr) << std::endl; throw std::exception(msg); }}
 
-//static WVPMatrix cbPerObject;
-static cbLight cbPerObject;
+static cbPerFrame cbPerObject;
 
 bool Dx12Renderer::isActive() const
 {
@@ -29,16 +28,17 @@ void Dx12Renderer::Update()
    for (auto& i : instances[&meshes[0]])
       i.rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.002f * delta, 0.001f * delta, 0.003f * delta));
 
+   XMMATRIX transformMatrix = camera.viewMatrix * camera.projMatrix;
+   XMStoreFloat4x4(&cbPerObject.vpMatrix, XMMatrixTranspose(transformMatrix));
+   memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
 
-   //memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
-
-   XMMATRIX wvpMat;
-   XMFLOAT4X4 tmp;
+   instanceData instanceData;
    for (size_t i = 0; i < instances[&meshes[0]].size(); ++i)
    {
-      wvpMat = instances[&meshes[0]][i].worldMatrix * camera.viewMatrix * camera.projMatrix;
-      XMStoreFloat4x4(&tmp, XMMatrixTranspose(wvpMat));
-      memcpy(instanceDataGPUAddress + i * sizeof(WVPMatrix), &tmp, sizeof(WVPMatrix));
+      transformMatrix = instances[&meshes[0]][i].worldMatrix;
+      XMStoreFloat4x4(&instanceData.wMatrix, XMMatrixTranspose(transformMatrix));
+      instanceData.material = instances[&meshes[0]][i].material;
+      memcpy(instanceDataGPUAddress + i * sizeof(instanceData), &instanceData, sizeof(instanceData));
    }
 }
 
@@ -178,10 +178,10 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      {0.f, -1.0f, 7.f, 0.f},
+      {0.f, -5.0f, 5.f, 0.f},
       {0.f, 0.f, 0.f, 0.f},
       {0.f, 1.f, 0.f, 0.f},
-      25.f,
+      45.f,
       static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
    // Adding meshes
@@ -192,9 +192,10 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
          for (int j = -5; j <= 5; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
-               {(float)i, (float)j, 0.f, 0.f},
+               {static_cast<float>(i), static_cast<float>(j), 0.f, 0.f},
                DirectX::XMQuaternionRotationRollPitchYaw(0.f, 0.f, 0.f),
-               0.2f));
+               0.2f,
+               {(static_cast<float>(i) + 5.f) / 10.f, (static_cast<float>(j) + 5.f) / 10.f, 0.f, 0.f}));
          }
       }
    }
@@ -388,7 +389,7 @@ void Dx12Renderer::OnInit()
 
       CD3DX12_ROOT_PARAMETER rootParameters[2];
       rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-      rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+      rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
       rootParameters[0].Descriptor = rootDescriptor;
 
       rootParameters[1].InitAsShaderResourceView(0, 1, D3D12_SHADER_VISIBILITY_VERTEX);
@@ -458,7 +459,7 @@ void Dx12Renderer::OnInit()
          {
             "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,
             0,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-         },
+         }
       };
       D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {inputElementDesc,_countof(inputElementDesc)};
 
@@ -490,23 +491,20 @@ void Dx12Renderer::OnInit()
          hr = device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
             D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64 * MUL_ALIGN(cbLight)),
+            &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64 * MUL_ALIGN(cbPerFrame)),
             D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&constantBufferUploadHeaps[i])
          );
          ASSERT(hr, "Failed to create upload heap for CB");
-         constantBufferUploadHeaps[i]->SetName(L"Constant Buffer Upload Resource Heap");
-         //ZeroMemory(&cbPerObject, sizeof(cbPerObject));
-         CD3DX12_RANGE readRange(0, 0);
-         hr = constantBufferUploadHeaps[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
+         hr = constantBufferUploadHeaps[i]->Map(0, nullptr, reinterpret_cast<void**>(&cbvGPUAddress[i]));
          ASSERT(hr, "Failed to map CB");
-         cbPerObject.color = {0.5f, 0.5f, 0.5f, 1.f};
-         cbPerObject.direction = {1.f, 2.0f, -5.f, 0.f};
+         cbPerObject.color = {1.f, 1.f, 1.f, 1.f};
+         cbPerObject.direction = {0.f, -1.0f, 0.f, 0.f};
          //XMVECTOR tmp = XMLoadFloat4(&cbPerObject.direction);
          //DirectX::XMVector4Normalize(tmp);
          //XMStoreFloat4(&cbPerObject.direction, tmp);
-         memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject));
+         cbPerObject.ambient = {0.05f, 0.05f, 0.05f, 1.f};
       }
    }
 
@@ -517,7 +515,7 @@ void Dx12Renderer::OnInit()
          hr = device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
             D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(instances[&meshes[0]].size() * sizeof(WVPMatrix)),
+            &CD3DX12_RESOURCE_DESC::Buffer(instances[&meshes[0]].size() * sizeof(instanceData)),
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr, IID_PPV_ARGS(&instanceBuffer));
          ASSERT(hr, "Failed to create instance buffer");

@@ -8,14 +8,25 @@ struct inputVertex
 struct outputVertex
 {
    float4 position : SV_POSITION;
-   float4 color : COLOR;
+   float4 color : COLOR0;
    float4 normal : NORMAL;
+   float4 material : COLOR1;
 };
 
 struct InstanceData
 {
    float4x4 world;
+   float4 material;
 };
+
+
+cbuffer cbPass : register(b0)
+{
+   float4 cbDirection;
+   float4 cbColor;
+   float4x4 viewProj;
+   float4 ambientColor;
+}
 
 StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);
 
@@ -24,7 +35,9 @@ outputVertex main(inputVertex input, uint instanceID : SV_InstanceID)
    outputVertex output;
    InstanceData instanceData = gInstanceData[instanceID];
    output.position = mul(input.position, instanceData.world);
+   output.position = mul(output.position, viewProj);
    output.color = input.color;
-   output.normal = mul(input.normal, instanceData.world);
+   output.normal = normalize(mul(input.normal, instanceData.world));
+   output.material = instanceData.material;
    return output;
 }

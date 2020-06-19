@@ -1,6 +1,7 @@
 #include "Instance.h"
 
-Instance::Instance(const XMFLOAT4& position, const XMVECTOR& rotation, const XMFLOAT3& scale)
+Instance::Instance(const XMFLOAT4& position, const XMVECTOR& rotation, const XMFLOAT3& scale, const XMFLOAT4& material):
+   material(material)
 {
    translationMatrix = XMMatrixTranslationFromVector(XMVECTOR());
    rotationMatrix = XMMatrixIdentity();
@@ -9,7 +10,8 @@ Instance::Instance(const XMFLOAT4& position, const XMVECTOR& rotation, const XMF
    rescale(scale.x, scale.y, scale.z);
 }
 
-Instance::Instance(const XMFLOAT4& position, const XMVECTOR& rotation, float scale)
+Instance::Instance(const XMFLOAT4& position, const XMVECTOR& rotation, float scale, const XMFLOAT4& material) :
+   material(material)
 {
    translationMatrix = XMMatrixTranslationFromVector(XMVECTOR());
    rotationMatrix = XMMatrixIdentity();
@@ -41,4 +43,9 @@ void Instance::rescale(float scale)
 {
    scaleMatrix = XMMatrixScaling(scale, scale, scale);
    worldMatrix = (scaleMatrix * rotationMatrix * translationMatrix);
+}
+
+void Instance::setMaterial(XMFLOAT4 mat)
+{
+   material = mat;
 }
