@@ -8,11 +8,19 @@
 #include "Instance.h"
 #include "Mesh.h"
 
+struct cbLight
+{
+   XMFLOAT4 direction;
+   XMFLOAT4 color;
+};
+
 struct WVPMatrix
 {
    XMFLOAT4X4 wvpMatrix;
 };
 
+#define CB_ALIGN(struct_)  ((sizeof(struct_) + 255) & ~255)
+#define MUL_ALIGN(struct_)  (CB_ALIGN(struct_) >> 8)
 const int ConstantBufferAlignedSize = (sizeof(WVPMatrix) + 255) & ~255;
 const int MultipleAlignedSize = ConstantBufferAlignedSize >> 8;
 

@@ -29,4 +29,5 @@ struct Vertex
 {
    XMFLOAT4 pos;
    XMFLOAT4 color;
+   XMFLOAT4 normal;
 };

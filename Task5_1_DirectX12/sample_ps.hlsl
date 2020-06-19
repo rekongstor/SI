@@ -2,10 +2,18 @@ struct outputVertex
 {
    float4 position : SV_POSITION;
    float4 color : COLOR;
+   float4 normal : NORMAL;
 };
 
-
-float4 main(outputVertex vertex) : SV_TARGET
+cbuffer cbPass : register(b0)
 {
-   return float4(vertex.color.x, vertex.color.y, vertex.color.z, 1.0f);
+   float4 cbDirection;
+   float4 cbColor;
+}
+
+
+float4 main(outputVertex input) : SV_TARGET
+{
+   float4 output = input.color * cbColor * max(dot(input.normal, -cbDirection), 0.f);
+   return output;
 }
