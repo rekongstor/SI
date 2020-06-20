@@ -6,10 +6,6 @@
 
 int main()
 {
-   // This should depend on localization
-   setlocale(LC_ALL, "Russian");
-
-
    Window window(L"SI", 1024, 1024);
    window.OnInit();
 #ifdef _DEBUG

@@ -3,6 +3,7 @@ struct inputVertex
    float4 position : POSITION;
    float4 color : COLOR;
    float4 normal : NORMAL;
+   float2 uv : TEXCOORD;
 };
 
 struct outputVertex
@@ -38,7 +39,7 @@ outputVertex main(inputVertex input, uint instanceID : SV_InstanceID)
    InstanceData instanceData = gInstanceData[instanceID];
    output.position = mul(input.position, instanceData.world);
    output.position = mul(output.position, viewProj);
-   output.color = input.color;
+   output.color = float4(input.uv.x,input.uv.y,1.f,1.f);
    output.normal = normalize(mul(input.normal, instanceData.world));
    output.view = camPos - input.position;
    output.material = instanceData.material;

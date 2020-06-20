@@ -8,7 +8,7 @@
 #include <chrono>
 
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
-#define ASSERT(hr, msg) { if (FAILED(hr)) { std::cout << std::system_category().message(hr) << std::endl; throw std::exception(msg); }}
+#define ASSERT(hr, msg) { if (FAILED(hr)) { setlocale(LC_ALL, "Russian"); std::cout << std::system_category().message(hr) << std::endl; throw std::exception(msg); }}
 
 static cbPerFrame cbPerObject;
 
@@ -179,7 +179,7 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      {0.f, 6.0f, 1.0f, 0.f},
+      {0.f, 6.0f, -1.0f, 0.f},
       {0.f, 0.f, 0.f, 0.f},
       {0.f, 1.f, 0.f, 0.f},
       45.f,
@@ -187,7 +187,7 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
 {
    // Adding meshes
    {
-      meshes.emplace_back(Mesh());
+      meshes.emplace_back(Mesh("sphere.obj"));
       for (int i = -4; i <= 4; ++i)
       {
          for (int j = -4; j <= 4; ++j)
@@ -195,7 +195,7 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount):
             instances[&meshes[0]].emplace_back(Instance(
                {static_cast<float>(i), 0.f, static_cast<float>(j), 0.f},
                DirectX::XMQuaternionRotationRollPitchYaw(0.f, 0.f, 0.f),
-               0.25f,
+               0.20f,
                {(static_cast<float>(i) + 4.f) / 8.f, (static_cast<float>(j) + 4.f) / 8.f, 0.f, 0.f}));
          }
       }
@@ -459,6 +459,10 @@ void Dx12Renderer::OnInit()
          },
          {
             "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,
+            0,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+         },
+         {
+            "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,
             0,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
          }
       };

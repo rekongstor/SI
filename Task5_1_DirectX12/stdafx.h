@@ -8,6 +8,7 @@ typedef long WinProc;
 #endif
 
 
+using DirectX::XMFLOAT2;
 using DirectX::XMFLOAT3;
 using DirectX::XMFLOAT4;
 using DirectX::XMFLOAT4X4;
@@ -30,4 +31,5 @@ struct Vertex
    XMFLOAT4 pos;
    XMFLOAT4 color;
    XMFLOAT4 normal;
+   XMFLOAT2 uv;
 };

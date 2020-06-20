@@ -11,4 +11,5 @@ public:
    std::vector<Vertex> vertices;
    std::vector<DWORD> indices;
    Mesh();
+   Mesh(const char* filename);
 };
