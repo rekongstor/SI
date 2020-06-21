@@ -50,14 +50,23 @@ class Dx12Renderer
    IDXGISwapChain3* swapChain;
    ID3D12CommandQueue* commandQueue;
    ID3D12DescriptorHeap* rtvDescriptorHeap; // non-shader visible
-   ID3D12DescriptorHeap* srvDescriptorHeap; // non-shader visible
-   ID3D12Resource* renderTargets[maxFrameBufferCount];
-
-
-   ID3D12Resource* depthStencilBuffer;
+   ID3D12DescriptorHeap* srvDescriptorHeap; 
    ID3D12DescriptorHeap* dsDescriptorHeap;
+   ID3D12Resource* renderTargets[maxFrameBufferCount];
+   ID3D12Resource* depthStencilBuffer;
    ID3D12CommandAllocator* commandAllocator[maxFrameBufferCount];
    ID3D12GraphicsCommandList* commandList;
+
+
+   D3D12_CPU_DESCRIPTOR_HANDLE ppCpuSrv;
+   D3D12_CPU_DESCRIPTOR_HANDLE ppCpuUav;
+   D3D12_CPU_DESCRIPTOR_HANDLE ppCpuRtv;
+   ID3D12Resource* ppTexture[3];
+   ID3D12PipelineState* ppPipelineStateObject;
+   ID3D12Resource *quadVertexBuffer;
+   D3D12_VERTEX_BUFFER_VIEW quadVertexBufferView;
+   Vertex quadVertices[6];
+
 
    ID3D12Fence* fence[maxFrameBufferCount];
    HANDLE fenceEvent;

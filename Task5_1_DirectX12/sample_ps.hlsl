@@ -70,7 +70,8 @@ float4 main(outputVertex input) : SV_TARGET
 
    return color;
 
-   //color = color / (color + 1.f);
+   color = color / (color + 1.f);
+   //color = pow(color,2.2f) / (pow(color,2.2f) + 1.f);
 
-   //return pow(color,1.f/2.2f);
+   return pow(color,1.f/2.2f);
 }
