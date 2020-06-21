@@ -58,14 +58,20 @@ class Dx12Renderer
    ID3D12GraphicsCommandList* commandList;
 
 
+   D3D12_CPU_DESCRIPTOR_HANDLE ppCpuRtv;
    D3D12_CPU_DESCRIPTOR_HANDLE ppCpuSrv;
    D3D12_CPU_DESCRIPTOR_HANDLE ppCpuUav;
-   D3D12_CPU_DESCRIPTOR_HANDLE ppCpuRtv;
-   ID3D12Resource* ppTexture[3];
+   D3D12_CPU_DESCRIPTOR_HANDLE ppCpuSrvRT;
+   D3D12_GPU_DESCRIPTOR_HANDLE ppGpuSrv;
+   D3D12_GPU_DESCRIPTOR_HANDLE ppGpuUav;
+   ID3D12Resource* ppTextureSRV;
+   ID3D12Resource* ppTextureUAV;
    ID3D12PipelineState* ppPipelineStateObject;
    ID3D12Resource *quadVertexBuffer;
    D3D12_VERTEX_BUFFER_VIEW quadVertexBufferView;
    Vertex quadVertices[6];
+   ID3D12RootSignature* computeRootSignature;
+   ID3D12PipelineState* computePipelineState;
 
 
    ID3D12Fence* fence[maxFrameBufferCount];

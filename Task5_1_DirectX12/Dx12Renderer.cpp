@@ -62,17 +62,15 @@ void Dx12Renderer::UpdatePipeline()
          active = false;
 
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-                                      ppTexture[currentFrame],
+                                      ppTextureSRV,
                                       D3D12_RESOURCE_STATE_PRESENT,
                                       D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-      CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 3 + currentFrame,
-                                              rtvDescriptorSize);
       CD3DX12_CPU_DESCRIPTOR_HANDLE dsHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-      commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsHandle);
+      commandList->OMSetRenderTargets(1, &ppCpuRtv, FALSE, &dsHandle);
 
       const float clearColor[] = {0.1f, 0.3f, 0.2f, 1.f};
-      commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+      commandList->ClearRenderTargetView(ppCpuRtv, clearColor, 0, nullptr);
 
       commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH,
                                          1.f, 0, 0, nullptr);
@@ -95,12 +93,37 @@ void Dx12Renderer::UpdatePipeline()
          commandList->DrawIndexedInstanced(meshes[i].indices.size(), instances[&meshes[i]].size(), 0, 0, 0);
       }
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-                                      ppTexture[currentFrame],
+                                      ppTextureSRV,
                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                      D3D12_RESOURCE_STATE_PRESENT));
+                                      D3D12_RESOURCE_STATE_GENERIC_READ));
    }
 
-   // Postprocessing
+   // Compute shader
+   {
+      commandList->SetComputeRootSignature(computeRootSignature);
+
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+         ppTextureSRV, D3D12_RESOURCE_STATE_COMMON,
+         D3D12_RESOURCE_STATE_GENERIC_READ));
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      ppTextureUAV, D3D12_RESOURCE_STATE_COMMON,
+                                      D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
+      commandList->SetPipelineState(computePipelineState);
+      commandList->SetComputeRootDescriptorTable(0, ppGpuSrv);
+      commandList->SetComputeRootDescriptorTable(1, ppGpuUav);
+      UINT numGroupsX = static_cast<UINT>(ceilf(window->getWidth() / 256.f));
+      commandList->Dispatch(numGroupsX, window->getHeight(), 1);
+
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      ppTextureUAV, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                      D3D12_RESOURCE_STATE_PRESENT));
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+         ppTextureSRV, D3D12_RESOURCE_STATE_GENERIC_READ,
+         D3D12_RESOURCE_STATE_COMMON));
+   }
+
+   // Postprocessing render
    {
       commandList->SetPipelineState(ppPipelineStateObject);
 
@@ -464,9 +487,9 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount) :
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      { 0.f, 6.0f, -1.0f, 0.f },
-      { 0.f, 0.f, 0.f, 0.f },
-      { 0.f, 1.f, 0.f, 0.f },
+      {0.f, 6.0f, -1.0f, 0.f},
+      {0.f, 0.f, 0.f, 0.f},
+      {0.f, 1.f, 0.f, 0.f},
       45.f,
       static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
@@ -478,28 +501,28 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount) :
          for (int j = -4; j <= 4; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
-               { static_cast<float>(i), 0.f, static_cast<float>(j), 0.f },
+               {static_cast<float>(i), 0.f, static_cast<float>(j), 0.f},
                DirectX::XMQuaternionRotationRollPitchYaw(cosf(static_cast<float>(i)), sinf(static_cast<float>(i)),
-                  static_cast<float>(j)),
+                                                         static_cast<float>(j)),
                0.20f,
-               { (static_cast<float>(i) + 4.f) / 8.f, (static_cast<float>(j) + 4.f) / 8.f, 0.f, 0.f }));
+               {(static_cast<float>(i) + 4.f) / 8.f, (static_cast<float>(j) + 4.f) / 8.f, 0.f, 0.f}));
          }
       }
    }
 
    // Initializing light
-   cbPerObject.color = { 20.f, 20.f, 20.f, 1.f };
-   cbPerObject.direction = { 0.f, -1.0f, 0.f, 0.f };
-   cbPerObject.ambient = { 0.05f, 0.05f, 0.05f, 1.f };
+   cbPerObject.color = {5.f, 5.f, 5.f, 1.f};
+   cbPerObject.direction = {0.f, -1.0f, 0.f, 0.f};
+   cbPerObject.ambient = {0.05f, 0.05f, 0.05f, 1.f};
 
    // Quad vertices
-   quadVertices[0] = { {-1.f,-1.f,0.f,1.f},{},{0.f,1.f} };
-   quadVertices[1] = { {-1.f,+1.f,0.f,1.f},{},{0.f,0.f} };
-   quadVertices[2] = { {+1.f,-1.f,0.f,1.f},{},{1.f,1.f} };
+   quadVertices[0] = {{-1.f, -1.f, 0.f, 1.f}, {}, {0.f, 1.f}};
+   quadVertices[1] = {{-1.f, +1.f, 0.f, 1.f}, {}, {0.f, 0.f}};
+   quadVertices[2] = {{+1.f, -1.f, 0.f, 1.f}, {}, {1.f, 1.f}};
 
    quadVertices[3] = quadVertices[2];
    quadVertices[4] = quadVertices[1];
-   quadVertices[5] = { {+1.f,+1.f,0.f,1.f},{},{1.f,0.f} };
+   quadVertices[5] = {{+1.f, +1.f, 0.f, 1.f}, {}, {1.f, 0.f}};
 }
 
 void Dx12Renderer::OnInit()
@@ -812,7 +835,7 @@ void Dx12Renderer::OnInit()
    {
       D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {
          D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-         3 + frameBufferCount * 2,
+         3 + 4,
          D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
          0
       };
@@ -820,6 +843,7 @@ void Dx12Renderer::OnInit()
       ASSERT(hr, "Failed to create texture descriptor heap");
    }
    CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+   CD3DX12_GPU_DESCRIPTOR_HANDLE srvGPUHandle(srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
    // Texture
    {
@@ -867,55 +891,80 @@ void Dx12Renderer::OnInit()
       createDXTexture(L"albedo.dds", albedo);
       createDXTexture(L"metallic.dds", metallic);
       createDXTexture(L"roughness.dds", roughness);
+      srvGPUHandle.Offset(3, srvDescriptorSize);
    }
 
    // Compute shader resources
    {
-      for (uint32_t i = 0; i < frameBufferCount; ++i)
-      {
-         hr = device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC(D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, window->getWidth(), window->getHeight(), 1, 1,
-                                   DXGI_FORMAT_R32G32B32A32_FLOAT, sampleDesc.Count, sampleDesc.Quality,
-                                   D3D12_TEXTURE_LAYOUT_UNKNOWN,
-                                   D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-                                   D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS),
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            nullptr,
-            IID_PPV_ARGS(&ppTexture[i]));
-         ASSERT(hr, " Failed to create default heap for the texture");
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+         D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC(D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, window->getWidth(), window->getHeight(), 1, 1,
+                                DXGI_FORMAT_R32G32B32A32_FLOAT, sampleDesc.Count, sampleDesc.Quality,
+                                D3D12_TEXTURE_LAYOUT_UNKNOWN,
+                                D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET),
+         D3D12_RESOURCE_STATE_COPY_DEST,
+         nullptr,
+         IID_PPV_ARGS(&ppTextureSRV));
+      ASSERT(hr, " Failed to create default heap for the texture");
 
-         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-         srvDesc.Texture2D.MostDetailedMip = 0;
-         srvDesc.Texture2D.MipLevels = 1;
-         srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+         D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC(D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, window->getWidth(), window->getHeight(), 1, 1,
+                                DXGI_FORMAT_R32G32B32A32_FLOAT, sampleDesc.Count, sampleDesc.Quality,
+                                D3D12_TEXTURE_LAYOUT_UNKNOWN,
+                                D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS),
+         D3D12_RESOURCE_STATE_COPY_DEST,
+         nullptr,
+         IID_PPV_ARGS(&ppTextureUAV));
+      ASSERT(hr, " Failed to create default heap for the texture");
 
-         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+      D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+      srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+      srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+      srvDesc.Texture2D.MostDetailedMip = 0;
+      srvDesc.Texture2D.MipLevels = 1;
+      srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-         uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-         uavDesc.Texture2D.MipSlice = 0;
+      D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
-         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-         rtvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-         rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-         rtvDesc.Texture2D.MipSlice = 0;
+      uavDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+      uavDesc.Texture2D.MipSlice = 0;
+
+      D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+      rtvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+      rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+      rtvDesc.Texture2D.MipSlice = 0;
 
 
-         ppCpuSrv = srvHandle;
-         srvHandle.Offset(1, srvDescriptorSize);
-         device->CreateShaderResourceView(ppTexture[i], &srvDesc, ppCpuSrv);
-         ppCpuUav = srvHandle;
-         srvHandle.Offset(1, srvDescriptorSize);
-         device->CreateUnorderedAccessView(ppTexture[i], nullptr, &uavDesc, ppCpuUav);
-         ppCpuRtv = nsvHandle;
-         nsvHandle.Offset(1, rtvDescriptorSize);
-         device->CreateRenderTargetView(ppTexture[i], &rtvDesc, ppCpuRtv);
-      }
+      ppCpuRtv = nsvHandle;
+      nsvHandle.Offset(1, rtvDescriptorSize);
+      device->CreateRenderTargetView(ppTextureSRV, &rtvDesc, ppCpuRtv);
 
+      ppCpuSrv = srvHandle;
+      srvHandle.Offset(1, srvDescriptorSize);
+      ppGpuSrv = srvGPUHandle;
+      srvGPUHandle.Offset(1, srvDescriptorSize);
+      device->CreateShaderResourceView(ppTextureSRV, &srvDesc, ppCpuSrv);
+
+      ppCpuUav = srvHandle;
+      srvHandle.Offset(1, srvDescriptorSize);
+      ppGpuUav = srvGPUHandle;
+      srvGPUHandle.Offset(1, srvDescriptorSize);
+      device->CreateUnorderedAccessView(ppTextureUAV, nullptr, &uavDesc, ppCpuUav);
+
+
+      ppCpuUav = srvHandle;
+      srvHandle.Offset(1, srvDescriptorSize);
+      ppGpuUav = srvGPUHandle;
+      srvGPUHandle.Offset(1, srvDescriptorSize);
+      device->CreateUnorderedAccessView(ppTextureUAV, nullptr, &uavDesc, ppCpuUav);
+
+      ppCpuSrvRT = srvHandle;
+      srvHandle.Offset(1, srvDescriptorSize);
+      device->CreateUnorderedAccessView(ppTextureUAV, nullptr, &uavDesc, ppCpuSrvRT);
       // Shaders, Input layout, PSO
 
       ID3DBlob* errorBlob;
@@ -1009,15 +1058,71 @@ void Dx12Renderer::OnInit()
       UpdateSubresources(commandList, quadVertexBuffer, vBufferUploadHeap, 0, 0, 1, &vertexData);
 
       commandList->ResourceBarrier(1,
-         &CD3DX12_RESOURCE_BARRIER::Transition(
-            quadVertexBuffer,
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_INDEX_BUFFER));
+                                   &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      quadVertexBuffer,
+                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                      D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
 
       quadVertexBufferView.BufferLocation = quadVertexBuffer->GetGPUVirtualAddress();
       quadVertexBufferView.SizeInBytes = 6 * sizeof(Vertex);
       quadVertexBufferView.StrideInBytes = sizeof(Vertex);
+   }
+
+   // Compute shader root signature & PSO
+   {
+      CD3DX12_ROOT_PARAMETER rootParameters[2];
+
+      CD3DX12_DESCRIPTOR_RANGE descriptorRangeSRV(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+      CD3DX12_DESCRIPTOR_RANGE descriptorRangeUAV(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
+
+      rootParameters[0].InitAsDescriptorTable(1, &descriptorRangeSRV);
+      rootParameters[1].InitAsDescriptorTable(1, &descriptorRangeUAV);
+
+
+      CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(
+         _countof(rootParameters),
+         rootParameters,
+         0,
+         nullptr,
+         D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_NONE
+      );
+
+      ID3DBlob* signature;
+      hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
+      ASSERT(hr, "Failed to serialize root signature");
+
+      hr = device->CreateRootSignature(0,
+                                       signature->GetBufferPointer(),
+                                       signature->GetBufferSize(),
+                                       IID_PPV_ARGS(&computeRootSignature));
+      ASSERT(hr, "Failed to create root signature");
+   }
+
+   // Compute shader PSO
+   {
+      ID3DBlob* computeShader;
+      hr = D3DCompileFromFile(L"tonemap_hdr.hlsl",
+                              nullptr,
+                              nullptr,
+                              "main",
+                              "cs_5_1",
+                              D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+                              NULL,
+                              &computeShader,
+                              nullptr);
+      ASSERT(hr, "Failed to create compute shader");
+
+      D3D12_SHADER_BYTECODE CSShaderByteCode = {computeShader->GetBufferPointer(), computeShader->GetBufferSize()};
+
+
+      D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc;
+      ZeroMemory(&psoDesc, sizeof(D3D12_COMPUTE_PIPELINE_STATE_DESC));
+      psoDesc.pRootSignature = computeRootSignature;
+      psoDesc.CS = CSShaderByteCode;
+
+      hr = device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&computePipelineState));
+      ASSERT(hr, "Failed to create PSO");
    }
 
    // Constant buffer
