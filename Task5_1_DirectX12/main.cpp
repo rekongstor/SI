@@ -8,9 +8,6 @@ int main()
 {
    Window window(L"SI", 1024, 1024);
    window.OnInit();
-#ifdef _DEBUG
-   try {
-#endif
       if (window.getWindow())
       {
          Dx12Renderer renderer(&window, 3);
@@ -32,12 +29,5 @@ int main()
 
          renderer.OnDestroy();
       }
-#ifdef _DEBUG
-   }
-   catch (std::exception& e)
-   {
-      std::cout << e.what() << std::endl;
-   }
-#endif
    return 0;
 }

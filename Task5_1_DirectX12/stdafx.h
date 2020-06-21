@@ -29,7 +29,6 @@ using DirectX::XMMatrixScaling;
 struct Vertex
 {
    XMFLOAT4 pos;
-   XMFLOAT4 color;
    XMFLOAT4 normal;
    XMFLOAT2 uv;
 };

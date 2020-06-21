@@ -1,7 +1,6 @@
 struct inputVertex
 {
    float4 position : POSITION;
-   float4 color : COLOR;
    float4 normal : NORMAL;
    float2 uv : TEXCOORD;
 };
@@ -13,6 +12,7 @@ struct outputVertex
    float4 normal : NORMAL0;
    float4 material : COLOR1;
    float4 view : NORMAL1;
+   float2 uv : TEXCOORD;
 };
 
 struct InstanceData
@@ -31,7 +31,7 @@ cbuffer cbPass : register(b0)
    float4 camPos;
 }
 
-StructuredBuffer<InstanceData> gInstanceData : register(t0, space1);
+StructuredBuffer<InstanceData> gInstanceData : register(t0, space0);
 
 outputVertex main(inputVertex input, uint instanceID : SV_InstanceID)
 {
@@ -39,9 +39,10 @@ outputVertex main(inputVertex input, uint instanceID : SV_InstanceID)
    InstanceData instanceData = gInstanceData[instanceID];
    output.position = mul(input.position, instanceData.world);
    output.position = mul(output.position, viewProj);
-   output.color = float4(input.uv.x,input.uv.y,1.f,1.f);
+   output.color = float4(1.f,0.f,0.f,1.f);
    output.normal = normalize(mul(input.normal, instanceData.world));
    output.view = camPos - input.position;
    output.material = instanceData.material;
+   output.uv = input.uv;
    return output;
 }

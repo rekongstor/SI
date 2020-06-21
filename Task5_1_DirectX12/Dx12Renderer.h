@@ -23,6 +23,16 @@ struct instanceData
    XMFLOAT4 material;
 };
 
+struct Texture
+{
+   std::vector<BYTE> pixels;
+   D3D12_RESOURCE_DESC desc;
+   UINT64 textureHeapSize;
+   int bytesPerRow;
+   ID3D12Resource* textureBuffer;
+   ID3D12Resource* textureUploadHeap;
+};
+
 #define CB_ALIGN(struct_)  ((sizeof(struct_) + 255) & ~255)
 #define MUL_ALIGN(struct_)  (CB_ALIGN(struct_) >> 8)
 
@@ -40,7 +50,10 @@ class Dx12Renderer
    IDXGISwapChain3* swapChain;
    ID3D12CommandQueue* commandQueue;
    ID3D12DescriptorHeap* rtvDescriptorHeap; // non-shader visible
+   ID3D12DescriptorHeap* srvDescriptorHeap; // non-shader visible
    ID3D12Resource* renderTargets[maxFrameBufferCount];
+
+
    ID3D12Resource* depthStencilBuffer;
    ID3D12DescriptorHeap* dsDescriptorHeap;
    ID3D12CommandAllocator* commandAllocator[maxFrameBufferCount];
@@ -71,6 +84,9 @@ class Dx12Renderer
    std::vector<Mesh> meshes;
    std::map<Mesh*, std::vector<Instance>> instances;
 
+   Texture albedo;
+   Texture metallic;
+   Texture roughness;
 
    void Update();
    void UpdatePipeline();
@@ -78,8 +94,11 @@ class Dx12Renderer
    void Cleanup();
    void WaitForPreviousFrame();
 
+   void LoadTexture(LPCTSTR filename, Texture& tex);
+
    uint32_t currentFrame;
    uint32_t rtvDescriptorSize;
+   uint32_t svDescriptorSize;
 public:
    Dx12Renderer(Window* window, uint32_t frameBufferCount);
 
