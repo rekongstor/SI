@@ -7,3 +7,6 @@
 [submodule "3rd_party/OBJ-Loader"]
 	path = 3rd_party/OBJ-Loader
 	url = https://github.com/Bly7/OBJ-Loader
+[submodule "3rd_party/imgui"]
+	path = 3rd_party/imgui
+	url = https://github.com/ocornut/imgui

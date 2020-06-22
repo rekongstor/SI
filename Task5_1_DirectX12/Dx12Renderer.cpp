@@ -487,25 +487,27 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount) :
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      {0.f, 6.0f, -1.0f, 0.f},
+      {-0.0f, 3.5f, 0.1f, 0.f},
       {0.f, 0.f, 0.f, 0.f},
-      {0.f, 1.f, 0.f, 0.f},
+      {0.f, 1.f, 0.0f, 0.f},
       45.f,
       static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
    // Adding meshes
    {
       meshes.emplace_back(Mesh("sphere.obj"));
-      for (int i = -4; i <= 4; ++i)
+      const uint32_t x = 5;
+      const uint32_t y = 5;
+      for (int i = 0; i < x; ++i)
       {
-         for (int j = -4; j <= 4; ++j)
+         for (int j = 0; j < y; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
-               {static_cast<float>(i), 0.f, static_cast<float>(j), 0.f},
+               {static_cast<float>(i) - static_cast<float>(x - 1) / 2.f , 0.f, static_cast<float>(j) - static_cast<float>(y - 1) / 2.f , 0.f},
                DirectX::XMQuaternionRotationRollPitchYaw(cosf(static_cast<float>(i)), sinf(static_cast<float>(i)),
                                                          static_cast<float>(j)),
                0.20f,
-               {(static_cast<float>(i) + 4.f) / 8.f, (static_cast<float>(j) + 4.f) / 8.f, 0.f, 0.f}));
+               {(static_cast<float>(i)) / static_cast<float>(x), (static_cast<float>(j)) / static_cast<float>(y), 0.f, 0.f}));
          }
       }
    }

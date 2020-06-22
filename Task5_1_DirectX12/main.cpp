@@ -3,10 +3,9 @@
 #include "stdafx.h"
 #include <iostream>
 
-
 int main()
 {
-   Window window(L"SI", 1024, 1024);
+   Window window(L"SI", 1024, 768);
    window.OnInit();
       if (window.getWindow())
       {
