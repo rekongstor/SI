@@ -1321,7 +1321,7 @@ void Dx12Renderer::OnUpdate()
 
       ImGui::Begin("Imgui Debug");
       ImGui::Checkbox("Draw textures", &drawTextures);
-      ImGui::InputFloat3("Camera", camPos);
+      ImGui::DragFloat3("Camera", camPos);
       ImGui::End();
    }
    Update();
