@@ -41,7 +41,7 @@ void Dx12Renderer::Update()
    XMStoreFloat4x4(&cbPerObject.vpMatrix, XMMatrixTranspose(transformMatrix));
    memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
 
-   instanceData instanceData;
+   InstanceData instanceData;
    for (size_t i = 0; i < instances[&meshes[0]].size(); ++i)
    {
       transformMatrix = instances[&meshes[0]][i].worldMatrix;
@@ -1180,7 +1180,7 @@ void Dx12Renderer::OnInit()
          hr = device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
             D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(instances[&meshes[0]].size() * sizeof(instanceData)),
+            &CD3DX12_RESOURCE_DESC::Buffer(instances[&meshes[0]].size() * sizeof(InstanceData)),
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr, IID_PPV_ARGS(&instanceBuffer));
          ASSERT(hr, "Failed to create instance buffer");

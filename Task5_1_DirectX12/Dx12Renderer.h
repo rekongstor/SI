@@ -18,7 +18,7 @@ struct cbPerFrame
    float textureAlpha;
 };
 
-struct instanceData
+struct InstanceData
 {
    XMFLOAT4X4 wMatrix;
    XMFLOAT4 material;
