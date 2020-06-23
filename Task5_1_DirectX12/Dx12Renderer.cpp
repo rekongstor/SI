@@ -7,6 +7,8 @@
 #include <iostream>
 #include <chrono>
 #include <wincodec.h>
+#include <examples/imgui_impl_dx12.h>
+#include <examples/imgui_impl_win32.h>
 
 #define SAFE_RELEASE(p) { if ( (p) ) { (p)->Release(); (p) = 0; } }
 #define ASSERT(hr, msg) { if (FAILED(hr)) { setlocale(LC_ALL, "Russian"); std::cout << std::system_category().message(hr) << std::endl; throw std::runtime_error(msg); }}
@@ -32,6 +34,7 @@ void Dx12Renderer::Update()
    XMMATRIX transformMatrix = camera.viewMatrix * camera.projMatrix;
    XMStoreFloat4x4(&cbPerObject.vpMatrix, XMMatrixTranspose(transformMatrix));
    cbPerObject.camPos = camera.position;
+   cbPerObject.textureAlpha = drawTextures ? 1.f : 0.f;
    memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
 
    instanceData instanceData;
@@ -40,6 +43,7 @@ void Dx12Renderer::Update()
       transformMatrix = instances[&meshes[0]][i].worldMatrix;
       XMStoreFloat4x4(&instanceData.wMatrix, XMMatrixTranspose(transformMatrix));
       instanceData.material = instances[&meshes[0]][i].material;
+      instanceData.color = instances[&meshes[0]][i].color;
       memcpy(instanceDataGPUAddress + i * sizeof(instanceData), &instanceData, sizeof(instanceData));
    }
 }
@@ -69,7 +73,7 @@ void Dx12Renderer::UpdatePipeline()
       CD3DX12_CPU_DESCRIPTOR_HANDLE dsHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
       commandList->OMSetRenderTargets(1, &ppCpuRtv, FALSE, &dsHandle);
 
-      const float clearColor[] = {0.1f, 0.3f, 0.2f, 1.f};
+      const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.f};
       commandList->ClearRenderTargetView(ppCpuRtv, clearColor, 0, nullptr);
 
       commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH,
@@ -103,8 +107,8 @@ void Dx12Renderer::UpdatePipeline()
       commandList->SetComputeRootSignature(computeRootSignature);
 
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-         ppTextureSRV, D3D12_RESOURCE_STATE_COMMON,
-         D3D12_RESOURCE_STATE_GENERIC_READ));
+                                      ppTextureSRV, D3D12_RESOURCE_STATE_COMMON,
+                                      D3D12_RESOURCE_STATE_GENERIC_READ));
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                       ppTextureUAV, D3D12_RESOURCE_STATE_COMMON,
                                       D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
@@ -119,8 +123,8 @@ void Dx12Renderer::UpdatePipeline()
                                       ppTextureUAV, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                                       D3D12_RESOURCE_STATE_PRESENT));
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-         ppTextureSRV, D3D12_RESOURCE_STATE_GENERIC_READ,
-         D3D12_RESOURCE_STATE_COMMON));
+                                      ppTextureSRV, D3D12_RESOURCE_STATE_GENERIC_READ,
+                                      D3D12_RESOURCE_STATE_COMMON));
    }
 
    // Postprocessing render
@@ -161,6 +165,10 @@ void Dx12Renderer::UpdatePipeline()
          commandList->SetGraphicsRootDescriptorTable(2, srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
          commandList->DrawInstanced(6, 1, 0, 0);
       }
+
+      ImGui::Render();
+      ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                       renderTargets[currentFrame],
                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -491,29 +499,38 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount) :
       {0.f, 0.f, 0.f, 0.f},
       {0.f, 1.f, 0.0f, 0.f},
       45.f,
-      static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
+      static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight())),
+   drawTextures(true)
 {
    // Adding meshes
    {
       meshes.emplace_back(Mesh("sphere.obj"));
       const uint32_t x = 5;
       const uint32_t y = 5;
-      for (int i = 0; i < x; ++i)
+      for (uint32_t i = 0; i < x; ++i)
       {
-         for (int j = 0; j < y; ++j)
+         for (uint32_t j = 0; j < y; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
-               {static_cast<float>(i) - static_cast<float>(x - 1) / 2.f , 0.f, static_cast<float>(j) - static_cast<float>(y - 1) / 2.f , 0.f},
+               {
+                  static_cast<float>(i) - static_cast<float>(x - 1) / 2.f, 0.f,
+                  static_cast<float>(j) - static_cast<float>(y - 1) / 2.f, 0.f
+               },
                DirectX::XMQuaternionRotationRollPitchYaw(cosf(static_cast<float>(i)), sinf(static_cast<float>(i)),
                                                          static_cast<float>(j)),
                0.20f,
-               {(static_cast<float>(i)) / static_cast<float>(x), (static_cast<float>(j)) / static_cast<float>(y), 0.f, 0.f}));
+               {
+                  static_cast<float>(i) / static_cast<float>(x), static_cast<float>(j) / static_cast<float>(y), 0.f,
+                  0.f
+               },
+               {1.f, 0.1f, 0.1f, 1.f}
+            ));
          }
       }
    }
 
    // Initializing light
-   cbPerObject.color = {5.f, 5.f, 5.f, 1.f};
+   cbPerObject.color = {2.f, 2.f, 2.f, 1.f};
    cbPerObject.direction = {0.f, -1.0f, 0.f, 0.f};
    cbPerObject.ambient = {0.05f, 0.05f, 0.05f, 1.f};
 
@@ -889,11 +906,11 @@ void Dx12Renderer::OnInit()
          srViewDesc.Texture2D.MipLevels = tex.desc.MipLevels;
          device->CreateShaderResourceView(tex.textureBuffer, &srViewDesc, srvHandle);
          srvHandle.Offset(1, srvDescriptorSize);
+         srvGPUHandle.Offset(1, srvDescriptorSize);
       };
-      createDXTexture(L"albedo.dds", albedo);
-      createDXTexture(L"metallic.dds", metallic);
-      createDXTexture(L"roughness.dds", roughness);
-      srvGPUHandle.Offset(3, srvDescriptorSize);
+      createDXTexture(L"rustediron2_basecolor.png", albedo);
+      createDXTexture(L"rustediron2_metallic.png", metallic);
+      createDXTexture(L"rustediron2_roughness.png", roughness);
    }
 
    // Compute shader resources
@@ -1074,10 +1091,8 @@ void Dx12Renderer::OnInit()
    // Compute shader root signature & PSO
    {
       CD3DX12_ROOT_PARAMETER rootParameters[2];
-
       CD3DX12_DESCRIPTOR_RANGE descriptorRangeSRV(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
       CD3DX12_DESCRIPTOR_RANGE descriptorRangeUAV(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
-
       rootParameters[0].InitAsDescriptorTable(1, &descriptorRangeSRV);
       rootParameters[1].InitAsDescriptorTable(1, &descriptorRangeUAV);
 
@@ -1261,10 +1276,38 @@ void Dx12Renderer::OnInit()
       scissorRect.right = window->getWidth();
       scissorRect.bottom = window->getHeight();
    }
+
+   // Imgui
+   {
+      D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {
+         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+         1,
+         D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+         0
+      };
+      hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&imguiDescriptorHeap));
+      ASSERT(hr, "Failed to create texture descriptor heap");
+
+      ImGui_ImplDX12_Init(device, frameBufferCount,
+                          DXGI_FORMAT_R8G8B8A8_UNORM, imguiDescriptorHeap,
+                          imguiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+                          imguiDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+   }
 }
 
 void Dx12Renderer::OnUpdate()
 {
+   ImGui_ImplDX12_NewFrame();
+   ImGui_ImplWin32_NewFrame();
+   ImGui::NewFrame();
+   {
+      static float f = 0.0f;
+      static int counter = 0;
+
+      ImGui::Begin("Imgui Debug");
+      ImGui::Checkbox("Draw textures", &drawTextures);
+      ImGui::End();
+   }
    Update();
    UpdatePipeline();
    Render();

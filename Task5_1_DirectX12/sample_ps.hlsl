@@ -17,6 +17,7 @@ float4 cbColor;
 float4x4 viewProj;
 float4 ambientColor;
 float4 camPos;
+float textureAlpha;
 }
 
 Texture2D albedo : register(t0, space1);
@@ -30,12 +31,12 @@ float4 main(outputVertex input) : SV_TARGET
 {
    //float4 normDiffuseColor =  pow(input.color, 2.2f);
    //float4 normDiffuseColor =  input.color;
-   float4 normDiffuseColor = albedo.Sample(s1, input.uv);
-   float metalness = metallic.Sample(s1, input.uv).x;
-   float roughness = rough.Sample(s1, input.uv).x;
+   float4 normDiffuseColor = lerp(input.color, albedo.Sample(s1, input.uv), textureAlpha);
+   float metalness = lerp(input.material.x, metallic.Sample(s1, input.uv).x, textureAlpha);
+   float roughness = lerp(input.material.y, rough.Sample(s1, input.uv).x, textureAlpha);
    //float metalness = input.material.x;
    //float roughness = input.material.y;
-   normDiffuseColor =  pow(normDiffuseColor, 2.2f);
+   normDiffuseColor = pow(normDiffuseColor, 2.2f);
 
    float4 L = -cbDirection;
    float4 N = normalize(input.normal);

@@ -10,9 +10,12 @@ public:
    XMMATRIX worldMatrix;
 
    XMFLOAT4 material;
+   XMFLOAT4 color;
 
-   explicit Instance(const XMFLOAT4& position, const XMVECTOR& rotation, const XMFLOAT3& scale, const XMFLOAT4& material);
-   explicit Instance(const XMFLOAT4& position, const XMVECTOR& rotation, float scale, const XMFLOAT4& material);
+   explicit Instance(const XMFLOAT4& position, const XMVECTOR& rotation, const XMFLOAT3& scale,
+                     const XMFLOAT4& material, const XMFLOAT4& color);
+   explicit Instance(const XMFLOAT4& position, const XMVECTOR& rotation, float scale, const XMFLOAT4& material,
+                     const XMFLOAT4& color);
 
    void move(XMFLOAT4 translation);
    void rotate(XMVECTOR rotation);
@@ -21,4 +24,3 @@ public:
 
    void setMaterial(XMFLOAT4 mat);
 };
-

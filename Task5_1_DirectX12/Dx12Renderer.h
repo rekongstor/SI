@@ -15,12 +15,14 @@ struct cbPerFrame
    XMFLOAT4X4 vpMatrix;
    XMFLOAT4 ambient;
    XMFLOAT4 camPos;
+   float textureAlpha;
 };
 
 struct instanceData
 {
    XMFLOAT4X4 wMatrix;
    XMFLOAT4 material;
+   XMFLOAT4 color;
 };
 
 struct Texture
@@ -114,6 +116,11 @@ class Dx12Renderer
    uint32_t currentFrame;
    uint32_t rtvDescriptorSize;
    uint32_t svDescriptorSize;
+
+   // Imgui
+   ID3D12DescriptorHeap* imguiDescriptorHeap;
+   bool drawTextures;
+
 public:
    Dx12Renderer(Window* window, uint32_t frameBufferCount);
 

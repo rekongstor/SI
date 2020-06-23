@@ -1,9 +1,14 @@
 #include "Window.h"
 #include "stdafx.h"
+#include <examples/imgui_impl_win32.h>
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 WinProc winProc(HWND window, unsigned msg, WPARAM wp, LPARAM lp)
 {
+   if (ImGui_ImplWin32_WndProcHandler(window, msg, wp, lp))
+      return true;
+
    switch (msg)
    {
    case WM_DESTROY:
@@ -42,6 +47,21 @@ void Window::OnInit()
          UpdateWindow(window);
       }
    }
+
+
+   // Setup Dear ImGui context
+   IMGUI_CHECKVERSION();
+   ImGui::CreateContext();
+   ImGuiIO& io = ImGui::GetIO(); (void)io;
+   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+   // Setup Dear ImGui style
+   ImGui::StyleColorsDark();
+   //ImGui::StyleColorsClassic();
+
+   // Setup Platform/Renderer bindings
+   ImGui_ImplWin32_Init(window);
 }
 
 Window::Window(const WCHAR* name, int width, int height): name(name), width(width), height(height)
