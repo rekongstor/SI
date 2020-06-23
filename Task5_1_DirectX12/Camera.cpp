@@ -17,3 +17,11 @@ Camera::Camera(XMFLOAT4 position, XMFLOAT4 target, XMFLOAT4 up, float fovAngle, 
    XMVECTOR vUp = XMLoadFloat4(&up);
    viewMatrix = XMMatrixLookAtLH(vPos, vTarget, vUp);
 }
+
+void Camera::Update()
+{
+   XMVECTOR vPos = XMLoadFloat4(&position);
+   XMVECTOR vTarget = XMLoadFloat4(&target);
+   XMVECTOR vUp = XMLoadFloat4(&up);
+   viewMatrix = XMMatrixLookAtLH(vPos, vTarget, vUp);
+}

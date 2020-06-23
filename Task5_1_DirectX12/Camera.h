@@ -12,4 +12,5 @@ public:
    XMMATRIX viewMatrix;
 
    Camera(XMFLOAT4 position, XMFLOAT4 target, XMFLOAT4 up, float fovAngle, float aspectRatio);
+   void Update();
 };

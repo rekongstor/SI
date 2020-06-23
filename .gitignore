@@ -342,3 +342,5 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 *.gif
+
+Task5_1_DirectX12/imgui.ini

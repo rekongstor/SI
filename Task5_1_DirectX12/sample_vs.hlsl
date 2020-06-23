@@ -42,8 +42,8 @@ outputVertex main(inputVertex input, uint instanceID : SV_InstanceID)
    output.position = mul(input.position, instanceData.world);
    output.position = mul(output.position, viewProj);
    output.color = instanceData.color;
-   output.normal = normalize(mul(input.normal, instanceData.world));
-   output.view = camPos - input.position;
+   output.normal = normalize(mul(normalize(input.normal), instanceData.world));
+   output.view = normalize(camPos - input.position);
    output.material = instanceData.material;
    output.uv = input.uv;
    return output;

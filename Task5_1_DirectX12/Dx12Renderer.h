@@ -120,6 +120,7 @@ class Dx12Renderer
    // Imgui
    ID3D12DescriptorHeap* imguiDescriptorHeap;
    bool drawTextures;
+   float camPos[3];
 
 public:
    Dx12Renderer(Window* window, uint32_t frameBufferCount);

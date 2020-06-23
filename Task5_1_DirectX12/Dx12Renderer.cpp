@@ -31,10 +31,14 @@ void Dx12Renderer::Update()
    for (auto& i : instances[&meshes[0]])
       i.rotate(DirectX::XMQuaternionRotationRollPitchYaw(0.001f * delta, 0.001f * delta, 0.001f * delta));
 
-   XMMATRIX transformMatrix = camera.viewMatrix * camera.projMatrix;
-   XMStoreFloat4x4(&cbPerObject.vpMatrix, XMMatrixTranspose(transformMatrix));
+   camera.position.x = camPos[0];
+   camera.position.y = camPos[1];
+   camera.position.z = camPos[2];
+   camera.Update();
    cbPerObject.camPos = camera.position;
    cbPerObject.textureAlpha = drawTextures ? 1.f : 0.f;
+   XMMATRIX transformMatrix = camera.viewMatrix * camera.projMatrix;
+   XMStoreFloat4x4(&cbPerObject.vpMatrix, XMMatrixTranspose(transformMatrix));
    memcpy(cbvGPUAddress[currentFrame], &cbPerObject, sizeof(cbPerObject));
 
    instanceData instanceData;
@@ -495,30 +499,33 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount) :
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      {-0.0f, 3.5f, 0.1f, 0.f},
+      {5.f, 5.f, 5.f, 1.f},
       {0.f, 0.f, 0.f, 0.f},
       {0.f, 1.f, 0.0f, 0.f},
       45.f,
       static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight())),
    drawTextures(true)
 {
+   camPos[0] = camera.position.x;
+   camPos[1] = camera.position.y;
+   camPos[2] = camera.position.z;
    // Adding meshes
    {
       meshes.emplace_back(Mesh("sphere.obj"));
-      const uint32_t x = 5;
-      const uint32_t y = 5;
+      const uint32_t x = 3;
+      const uint32_t y = 3;
       for (uint32_t i = 0; i < x; ++i)
       {
          for (uint32_t j = 0; j < y; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
                {
-                  static_cast<float>(i) - static_cast<float>(x - 1) / 2.f, 0.f,
-                  static_cast<float>(j) - static_cast<float>(y - 1) / 2.f, 0.f
+                  (static_cast<float>(i) - static_cast<float>(x - 1) * 0.5f) * (x + 2.f), 0.f,
+                  (static_cast<float>(j) - static_cast<float>(y - 1) * 0.5f) * (y + 2.f), 0.f
                },
                DirectX::XMQuaternionRotationRollPitchYaw(cosf(static_cast<float>(i)), sinf(static_cast<float>(i)),
                                                          static_cast<float>(j)),
-               0.20f,
+               1.f,
                {
                   static_cast<float>(i) / static_cast<float>(x), static_cast<float>(j) / static_cast<float>(y), 0.f,
                   0.f
@@ -1306,6 +1313,7 @@ void Dx12Renderer::OnUpdate()
 
       ImGui::Begin("Imgui Debug");
       ImGui::Checkbox("Draw textures", &drawTextures);
+      ImGui::InputFloat3("Camera", camPos);
       ImGui::End();
    }
    Update();
