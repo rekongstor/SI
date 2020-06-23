@@ -54,11 +54,15 @@ class Dx12Renderer
    ID3D12DescriptorHeap* rtvDescriptorHeap; // non-shader visible
    ID3D12DescriptorHeap* srvDescriptorHeap; 
    ID3D12DescriptorHeap* dsDescriptorHeap;
-   ID3D12Resource* renderTargets[maxFrameBufferCount];
    ID3D12Resource* depthStencilBuffer;
-   ID3D12CommandAllocator* commandAllocator[maxFrameBufferCount];
    ID3D12GraphicsCommandList* commandList;
 
+   ID3D12Resource* renderTargets[maxFrameBufferCount];
+   ID3D12CommandAllocator* commandAllocator[maxFrameBufferCount];
+   ID3D12Fence* fence[maxFrameBufferCount];
+   UINT64 fenceValue[maxFrameBufferCount];
+   ID3D12Resource* constantBufferUploadHeaps[maxFrameBufferCount];
+   UINT8* cbvGPUAddress[maxFrameBufferCount];
 
    D3D12_CPU_DESCRIPTOR_HANDLE ppCpuRtv;
    D3D12_CPU_DESCRIPTOR_HANDLE ppCpuSrv;
@@ -76,9 +80,7 @@ class Dx12Renderer
    ID3D12PipelineState* computePipelineState;
 
 
-   ID3D12Fence* fence[maxFrameBufferCount];
    HANDLE fenceEvent;
-   UINT64 fenceValue[maxFrameBufferCount];
 
 
    ID3D12PipelineState* pipelineStateObject;
@@ -93,8 +95,6 @@ class Dx12Renderer
    ID3D12Resource* instanceBuffer;
    UINT8* instanceDataGPUAddress;
 
-   ID3D12Resource* constantBufferUploadHeaps[maxFrameBufferCount];
-   UINT8* cbvGPUAddress[maxFrameBufferCount];
 
    Camera camera;
 

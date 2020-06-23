@@ -216,6 +216,9 @@ void Dx12Renderer::Cleanup()
    SAFE_RELEASE(swapChain);
    SAFE_RELEASE(commandQueue);
    SAFE_RELEASE(rtvDescriptorHeap);
+   SAFE_RELEASE(srvDescriptorHeap);
+   SAFE_RELEASE(dsDescriptorHeap);
+   SAFE_RELEASE(depthStencilBuffer);
    SAFE_RELEASE(commandList);
 
    for (uint32_t i = 0; i < frameBufferCount; ++i)
@@ -223,20 +226,24 @@ void Dx12Renderer::Cleanup()
       SAFE_RELEASE(renderTargets[i]);
       SAFE_RELEASE(commandAllocator[i]);
       SAFE_RELEASE(fence[i]);
+      SAFE_RELEASE(constantBufferUploadHeaps[i]);
    }
 
+   SAFE_RELEASE(ppTextureSRV);
+   SAFE_RELEASE(ppTextureUAV);
+   SAFE_RELEASE(ppPipelineStateObject);
+
+   SAFE_RELEASE(quadVertexBuffer);
+   SAFE_RELEASE(computeRootSignature);
+   SAFE_RELEASE(computePipelineState);
+   
    SAFE_RELEASE(pipelineStateObject);
    SAFE_RELEASE(rootSignature);
    SAFE_RELEASE(vertexBuffer);
    SAFE_RELEASE(indexBuffer);
+   SAFE_RELEASE(instanceBuffer);
 
-   SAFE_RELEASE(depthStencilBuffer);
-   SAFE_RELEASE(dsDescriptorHeap);
-
-   for (uint32_t i = 0; i < frameBufferCount; ++i)
-   {
-      SAFE_RELEASE(constantBufferUploadHeaps[i]);
-   }
+   SAFE_RELEASE(imguiDescriptorHeap);
 }
 
 void Dx12Renderer::WaitForPreviousFrame()
@@ -499,7 +506,7 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount) :
    window(window),
    frameBufferCount(frameBufferCount > maxFrameBufferCount ? maxFrameBufferCount : frameBufferCount),
    camera(
-      {5.f, 5.f, 5.f, 1.f},
+      {0.f, 15.f, 10.f, 1.f},
       {0.f, 0.f, 0.f, 0.f},
       {0.f, 1.f, 0.0f, 0.f},
       45.f,
@@ -512,20 +519,21 @@ Dx12Renderer::Dx12Renderer(Window* window, uint32_t frameBufferCount) :
    // Adding meshes
    {
       meshes.emplace_back(Mesh("sphere.obj"));
-      const uint32_t x = 3;
-      const uint32_t y = 3;
+      const uint32_t x = 5;
+      const uint32_t y = 5;
+      const float scale = 1.f;
       for (uint32_t i = 0; i < x; ++i)
       {
          for (uint32_t j = 0; j < y; ++j)
          {
             instances[&meshes[0]].emplace_back(Instance(
                {
-                  (static_cast<float>(i) - static_cast<float>(x - 1) * 0.5f) * (x + 2.f), 0.f,
-                  (static_cast<float>(j) - static_cast<float>(y - 1) * 0.5f) * (y + 2.f), 0.f
+                  (static_cast<float>(i) - static_cast<float>(x - 1) * 0.5f) * (scale * 3.5f + 1.f), 0.f,
+                  (static_cast<float>(j) - static_cast<float>(y - 1) * 0.5f) * (scale * 3.5f + 1.f), 0.f
                },
                DirectX::XMQuaternionRotationRollPitchYaw(cosf(static_cast<float>(i)), sinf(static_cast<float>(i)),
                                                          static_cast<float>(j)),
-               1.f,
+               scale,
                {
                   static_cast<float>(i) / static_cast<float>(x), static_cast<float>(j) / static_cast<float>(y), 0.f,
                   0.f
