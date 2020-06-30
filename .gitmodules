@@ -10,3 +10,6 @@
 [submodule "3rd_party/imgui"]
 	path = 3rd_party/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "3rd_party/cacao"]
+	path = 3rd_party/cacao
+	url = https://github.com/GPUOpen-Effects/FidelityFX-CACAO

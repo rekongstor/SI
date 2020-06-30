@@ -7,7 +7,7 @@
 
 int main()
 {
-   Window window(L"SI", 1024, 768);
+   Window window(L"SI", 1024, 1024);
    window.OnInit();
       if (window.getWindow())
       {

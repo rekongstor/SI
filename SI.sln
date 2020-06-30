@@ -32,10 +32,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task4_1_CPU_Renderer", "Tas
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task5_1_DirectX12", "Task5_1_DirectX12\Task5_1_DirectX12.vcxproj", "{789DE6B0-9D38-4DB1-B52E-5CEFEEF99D76}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E3D54879-4A97-4D68-99A3-E8562C7952AB} = {E3D54879-4A97-4D68-99A3-E8562C7952AB}
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1} = {A1F9A285-B272-4A7D-8A90-CBB232960DA1}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rd_party", "3rd_party", "{DEF8C757-557E-4F25-B150-0C2B04D5CAA6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Imgui", "Imgui\Imgui.vcxproj", "{E3D54879-4A97-4D68-99A3-E8562C7952AB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cacao", "Cacao\Cacao.vcxproj", "{A1F9A285-B272-4A7D-8A90-CBB232960DA1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,12 +131,21 @@ Global
 		{E3D54879-4A97-4D68-99A3-E8562C7952AB}.Release|x64.Build.0 = Release|x64
 		{E3D54879-4A97-4D68-99A3-E8562C7952AB}.Release|x86.ActiveCfg = Release|Win32
 		{E3D54879-4A97-4D68-99A3-E8562C7952AB}.Release|x86.Build.0 = Release|Win32
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Debug|x64.ActiveCfg = Debug|x64
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Debug|x64.Build.0 = Debug|x64
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Debug|x86.ActiveCfg = Debug|Win32
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Debug|x86.Build.0 = Debug|Win32
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Release|x64.ActiveCfg = Release|x64
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Release|x64.Build.0 = Release|x64
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Release|x86.ActiveCfg = Release|Win32
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E3D54879-4A97-4D68-99A3-E8562C7952AB} = {DEF8C757-557E-4F25-B150-0C2B04D5CAA6}
+		{A1F9A285-B272-4A7D-8A90-CBB232960DA1} = {DEF8C757-557E-4F25-B150-0C2B04D5CAA6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {549C0188-30FC-4C6F-9F13-C12598ECFF8C}
