@@ -344,3 +344,5 @@ healthchecksdb
 *.gif
 
 Task5_1_DirectX12/imgui.ini
+
+3rd_party/cacao
