@@ -13,3 +13,6 @@
 [submodule "3rd_party/cacao"]
 	path = 3rd_party/cacao
 	url = https://github.com/GPUOpen-Effects/FidelityFX-CACAO
+[submodule "3rd_party/cauldron"]
+	path = 3rd_party/cauldron
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/Cauldron

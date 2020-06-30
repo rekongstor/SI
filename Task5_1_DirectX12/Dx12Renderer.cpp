@@ -244,11 +244,6 @@ void Dx12Renderer::Cleanup()
    SAFE_RELEASE(instanceBuffer);
 
    SAFE_RELEASE(imguiDescriptorHeap);
-
-   FfxCacaoStatus status;
-   status = ffxCacaoD3D12DestroyContext(context);
-   assert(status == FFX_CACAO_STATUS_OK);
-   free(context); 
 }
 
 void Dx12Renderer::WaitForPreviousFrame()
@@ -1296,41 +1291,6 @@ void Dx12Renderer::OnInit()
       scissorRect.right = window->getWidth();
       scissorRect.bottom = window->getHeight();
    }
-
-   //// Cacao
-   //{
-   //   size_t ffxCacaoContextSize = ffxCacaoD3D12GetContextSize();
-   //   context = (FfxCacaoD3D12Context*)malloc(ffxCacaoContextSize);
-   //   FfxCacaoStatus status = ffxCacaoD3D12InitContext(context, device);
-   //   assert(status == FFX_CACAO_STATUS_OK);
-
-   //   D3D12_SHADER_RESOURCE_VIEW_DESC srViewDesc = {};
-   //   srViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-   //   srViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
-   //   srViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-   //   srViewDesc.Texture2D.MipLevels = 1;
-   //   D3D12_SHADER_RESOURCE_VIEW_DESC nsrViewDesc = srViewDesc;
-   //   nsrViewDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-
-   //   FfxCacaoD3D12ScreenSizeInfo screenSizeInfo = {};
-   //   screenSizeInfo.width = window->getWidth(); /* width of the input/output buffers */;
-   //   screenSizeInfo.height = window->getHeight()/* height of the input/output buffers */;
-   //   screenSizeInfo.depthBufferResource = depthStencilBuffer; /* ID3D12Resource* for the depth input buffer */;
-   //   screenSizeInfo.depthBufferSrvDesc = srViewDesc; /* D3D12_SHADER_RESOURCE_VIEW_DESC for the depth input buffer */;
-   //   screenSizeInfo.normalBufferResource = nullptr;/* ID3D12Resource* for the normal input buffer - or NULL if none shall be provided */;
-   //   screenSizeInfo.normalBufferSrvDesc = nsrViewDesc;/* D3D12_SHADER_RESOURCE_VIEW_DESC for the normal input buffer */;
-   //   screenSizeInfo.outputResource = depthStencilBuffer; /* ID3D12Resource* for the output buffer */;
-   //   screenSizeInfo.depthBufferSrvDesc = srViewDesc; /* D3D12_SHADER_RESOURCE_VIEW_DESC for the depth output */;
-
-   //   FfxCacaoBool useDownsampledSsaoGeneration = false;/* whether or not SSAO should be generated on a downsampled texture */;
-
-   //   status = ffxCacaoD3D12InitScreenSizeDependentResources(context, &screenSizeInfo, useDownsampledSsaoGeneration);
-   //   assert(status == FFX_CACAO_STATUS_OK);
-
-   //   FfxCacaoSettings ffxCacaoSettings = FFX_CACAO_DEFAULT_SETTINGS;
-   //   status = ffxCacaoD3D12UpdateSettings(context, &ffxCacaoSettings);
-   //   assert(status == FFX_CACAO_STATUS_OK);
-   //}
 
    // Imgui
    {

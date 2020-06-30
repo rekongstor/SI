@@ -8,9 +8,6 @@
 #include "Instance.h"
 #include "Mesh.h"
 
-#define FFX_CACAO_ENABLE_D3D12 1
-#include "../3rd_party/cacao/ffx-cacao/inc/ffx_cacao.h"
-
 struct cbPerFrame
 {
    XMFLOAT4 direction;
@@ -122,8 +119,6 @@ class Dx12Renderer
 
    // Imgui
    ID3D12DescriptorHeap* imguiDescriptorHeap;
-
-   FfxCacaoD3D12Context* context;
 
    bool drawTextures;
    float camPos[3];
