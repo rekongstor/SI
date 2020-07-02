@@ -13,26 +13,86 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\CommandList">
+      <UniqueIdentifier>{c364c037-8db7-434a-bb3f-8a08ef4d9a27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\CommandList">
+      <UniqueIdentifier>{ef3f579e-e412-4073-9d86-1f8482a25ce2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Task5_1_DirectX12\Window.cpp">
+    <ClCompile Include="siSwapChain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RendererAO.cpp">
+    <ClCompile Include="siTexture2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siDescriptorMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siCommandAllocator.cpp">
+      <Filter>Source Files\CommandList</Filter>
+    </ClCompile>
+    <ClCompile Include="siCommandList.cpp">
+      <Filter>Source Files\CommandList</Filter>
+    </ClCompile>
+    <ClCompile Include="siCommandQueue.cpp">
+      <Filter>Source Files\CommandList</Filter>
+    </ClCompile>
+    <ClCompile Include="siDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siImgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siFenceMgr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Task5_1_DirectX12\Window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RendererAO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siImgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siSwapChain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siTexture2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siDescriptorMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siCommandAllocator.h">
+      <Filter>Header Files\CommandList</Filter>
+    </ClInclude>
+    <ClInclude Include="siCommandList.h">
+      <Filter>Header Files\CommandList</Filter>
+    </ClInclude>
+    <ClInclude Include="siCommandQueue.h">
+      <Filter>Header Files\CommandList</Filter>
+    </ClInclude>
+    <ClInclude Include="siFenceMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

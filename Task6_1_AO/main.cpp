@@ -1,20 +1,21 @@
-#include "../Task5_1_DirectX12/Window.h"
-#include "RendererAO.h"
+#include "siWindow.h"
+#include "siImgui.h"
+#include "siRenderer.h"
 
 int main()
 {
-   Window window(L"Cacao", 512, 512);
-
-   window.OnInit();
-
-
+   siWindow window(L"Cacao", 512, 512);
+   window.onInit();
+   
    if (window.getWindow())
    {
-      RendererAO renderer(&window);
+      siImgui imgui(&window);
+      imgui.onInit();
+      siRenderer renderer(&window, 3);
       renderer.onInit();
 
       MSG msg;
-      while (true)
+      while (renderer.isActive())
       {
          if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
          {

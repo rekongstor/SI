@@ -1302,7 +1302,7 @@ void Dx12Renderer::OnInit()
       };
       hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&imguiDescriptorHeap));
       ASSERT(hr, "Failed to create texture descriptor heap");
-
+      
       ImGui_ImplDX12_Init(device, frameBufferCount,
                           DXGI_FORMAT_R8G8B8A8_UNORM, imguiDescriptorHeap,
                           imguiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
