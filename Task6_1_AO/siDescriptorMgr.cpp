@@ -22,16 +22,11 @@ void siDescriptorMgr::onInit(ID3D12Device* device)
                              CD3DX12_CPU_DESCRIPTOR_HANDLE& cpuHandle,
                              CD3DX12_GPU_DESCRIPTOR_HANDLE& gpuHandle,
                              D3D12_DESCRIPTOR_HEAP_TYPE heapType,
+                             D3D12_DESCRIPTOR_HEAP_FLAGS flags,
                              uint32_t heapSize)
    {
-      HRESULT hr = S_OK;
-      D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {
-         heapType,
-         heapSize,
-         D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
-         0
-      };
-      hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&heap));
+      HRESULT hr = device->CreateDescriptorHeap(&D3D12_DESCRIPTOR_HEAP_DESC({heapType, heapSize, flags, 0}),
+                                                IID_PPV_ARGS(&heap));
       assert(hr == S_OK);
 
       cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
@@ -39,16 +34,16 @@ void siDescriptorMgr::onInit(ID3D12Device* device)
    };
 
    heapInit(dsvHeap, dsvHandle.first, dsvHandle.second,
-            D3D12_DESCRIPTOR_HEAP_TYPE_DSV, dsvHeapSize);
+            D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, dsvHeapSize);
 
    heapInit(rtvHeap, rtvHandle.first, rtvHandle.second,
-            D3D12_DESCRIPTOR_HEAP_TYPE_RTV, rtvHeapSize);
+            D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, rtvHeapSize);
 
    heapInit(cbvSrvUavHeap, cbvSrvUavHandle.first, cbvSrvUavHandle.second,
-            D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cbvSrvUavHeapSize);
+            D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, cbvSrvUavHeapSize);
 
    heapInit(samplerHeap, samplerHandle.first, samplerHandle.second,
-            D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, samplerHeapSize);
+            D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, samplerHeapSize);
 
    dsvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
    rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -94,4 +89,24 @@ std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> siDescri
    samplerHandle.first.Offset(1, samplerDescriptorSize);
    samplerHandle.second.Offset(1, samplerDescriptorSize);
    return ret;
+}
+
+const ComPtr<ID3D12DescriptorHeap>& siDescriptorMgr::getDsvHeap() const
+{
+   return dsvHeap;
+}
+
+const ComPtr<ID3D12DescriptorHeap>& siDescriptorMgr::getRtvHeap() const
+{
+   return rtvHeap;
+}
+
+const ComPtr<ID3D12DescriptorHeap>& siDescriptorMgr::getCbvSrvUavHeap() const
+{
+   return cbvSrvUavHeap;
+}
+
+const ComPtr<ID3D12DescriptorHeap>& siDescriptorMgr::getSamplerHeap() const
+{
+   return samplerHeap;
 }

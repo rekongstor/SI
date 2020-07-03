@@ -19,6 +19,12 @@
     <Filter Include="Header Files\CommandList">
       <UniqueIdentifier>{ef3f579e-e412-4073-9d86-1f8482a25ce2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PSO">
+      <UniqueIdentifier>{c16b04c3-b93e-4e18-90e5-8e8dcd5b8305}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PSO">
+      <UniqueIdentifier>{6f10dcd5-054a-47ea-a9ce-8f368c2a4a86}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -57,6 +63,12 @@
     <ClCompile Include="siFenceMgr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="siPipelineState.cpp">
+      <Filter>Source Files\PSO</Filter>
+    </ClCompile>
+    <ClCompile Include="siViewportScissor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -93,6 +105,12 @@
       <Filter>Header Files\CommandList</Filter>
     </ClInclude>
     <ClInclude Include="siFenceMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siPipelineState.h">
+      <Filter>Header Files\PSO</Filter>
+    </ClInclude>
+    <ClInclude Include="siViewportScissor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

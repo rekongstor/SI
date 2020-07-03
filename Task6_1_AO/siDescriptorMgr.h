@@ -35,5 +35,10 @@ public:
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> getRtvHandle();
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> getCbvSrvUavHandle();
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> getSamplerHandle();
+
+   [[nodiscard]] const ComPtr<ID3D12DescriptorHeap>& getDsvHeap() const;
+   [[nodiscard]] const ComPtr<ID3D12DescriptorHeap>& getRtvHeap() const;
+   [[nodiscard]] const ComPtr<ID3D12DescriptorHeap>& getCbvSrvUavHeap() const;
+   [[nodiscard]] const ComPtr<ID3D12DescriptorHeap>& getSamplerHeap() const;
 };
 

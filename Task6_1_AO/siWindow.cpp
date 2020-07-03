@@ -31,7 +31,7 @@ void siWindow::onInit()
    if (RegisterClassEx(&wndClass))
    {
       window = CreateWindowEx(0, name, name, WS_POPUPWINDOW, 0, 0,
-         width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+                              width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
       if (window)
       {
          ShowWindow(window, SW_SHOWDEFAULT);
@@ -60,4 +60,4 @@ LRESULT siWindow::imguiProcDummy(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
    return false;
 }
 
-LRESULT(*siWindow::imguiProc)(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) = imguiProcDummy;
+LRESULT (*siWindow::imguiProc)(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) = imguiProcDummy;

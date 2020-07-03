@@ -7,19 +7,23 @@
 #include "siTexture2D.h"
 #include "siDescriptorMgr.h"
 #include "siFenceMgr.h"
+#include "siPipelineState.h"
+#include "siViewportScissor.h"
 
 class siWindow;
+class siImgui;
 
 class siRenderer
 {
    siWindow* window = nullptr;
+   siImgui* imgui = nullptr;
    uint32_t bufferCount;
    uint32_t currentFrame;
    DXGI_SAMPLE_DESC sampleDesc = { 1, 0 };
    bool active = false;
 
    static const uint32_t frameBuffers = 3;
-   static const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
+   static const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_1;
    static const bool softwareAdapter = false;
 
    siDevice device;
@@ -29,14 +33,20 @@ class siRenderer
    siSwapChain swapChain;
    siDescriptorMgr descriptorMgr;
    siFenceMgr fenceMgr;
-   std::map<int32_t, siTexture2D> textures;
+
+   siViewportScissor viewportScissor;
+
+   siTexture2D swapChainTargets[maxFrameBufferCount];
+   siTexture2D depthStencilTarget;
+   std::map<int32_t, siTexture2D> textures; 
+   std::map<int32_t, siPipelineState> pipelineStates;
 
    void UpdatePipeline();
 public:
    explicit siRenderer(siWindow* window, uint32_t bufferCount);
 
    [[nodiscard]] bool isActive() const;
-   void onInit();
+   void onInit(siImgui* imgui = nullptr);
    void onUpdate();
    void onDestroy();
 };

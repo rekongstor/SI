@@ -60,3 +60,28 @@ void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
    uavHandle = descMgr->getCbvSrvUavHandle();
    device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
 }
+
+const ComPtr<ID3D12Resource>& siTexture2D::getBuffer() const
+{
+   return buffer;
+}
+
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getDsvHandle() const
+{
+   return dsvHandle;
+}
+
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getRtvHandle() const
+{
+   return rtvHandle;
+}
+
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getSrvHandle() const
+{
+   return srvHandle;
+}
+
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getUavHandle() const
+{
+   return uavHandle;
+}

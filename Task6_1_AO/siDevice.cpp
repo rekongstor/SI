@@ -12,7 +12,7 @@ void siDevice::onInit(IDXGIFactory4* factory, D3D_FEATURE_LEVEL featureLevel, bo
       hr = adapter->GetDesc1(&desc);
       if ((desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) && software)
          break;
-      if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), featureLevel, __uuidof(ID3D12Device), nullptr)) && !software)
+      if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), featureLevel, __uuidof(ID3D12Device), nullptr)) && !software && !(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
          break;
    }
 

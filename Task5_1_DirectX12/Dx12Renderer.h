@@ -45,7 +45,7 @@ class Dx12Renderer
    Window* window;
    uint32_t frameBufferCount;
    static const uint32_t maxFrameBufferCount = 3;
-   const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
+   const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_1;
    bool active = true;
 
    ID3D12Device* device;

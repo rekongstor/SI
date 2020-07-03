@@ -796,6 +796,7 @@ void Dx12Renderer::OnInit()
                                        signature->GetBufferSize(),
                                        IID_PPV_ARGS(&rootSignature));
       ASSERT(hr, "Failed to create root signature");
+      signature->Release();
    }
 
    // Shaders, Input layout, PSO

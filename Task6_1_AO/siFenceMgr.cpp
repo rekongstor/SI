@@ -1,6 +1,6 @@
 #include "siFenceMgr.h"
 
-void siFenceMgr::onInit(ID3D12Device* device, uint32_t bufferCount, ComPtr<IDXGISwapChain3>& swapChain, ComPtr<ID3D12CommandQueue>& cmdQueue)
+void siFenceMgr::onInit(ID3D12Device* device, uint32_t bufferCount, const ComPtr<IDXGISwapChain3>& swapChain, const ComPtr<ID3D12CommandQueue>& cmdQueue)
 {
    std::cout << "Initializing fences..." << std::endl;
    HRESULT hr = S_OK;
@@ -46,12 +46,7 @@ void siFenceMgr::waitForPreviousFrame(uint32_t& currentFrame)
 
 void siFenceMgr::signalCommandQueue(uint32_t currentFrame)
 {
-   HRESULT hr;
-
-   hr = commandQueue->Signal(fences[currentFrame].Get(), fenceValues[currentFrame]);
-   assert(hr);
-
-   hr = swapChain->Present(0, 0);
+   HRESULT hr = commandQueue->Signal(fences[currentFrame].Get(), fenceValues[currentFrame]);
    assert(hr);
 }
 

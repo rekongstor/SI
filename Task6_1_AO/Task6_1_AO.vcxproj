@@ -92,10 +92,12 @@
     <ClCompile Include="siDescriptorMgr.cpp" />
     <ClCompile Include="siDevice.cpp" />
     <ClCompile Include="siFenceMgr.cpp" />
+    <ClCompile Include="siPipelineState.cpp" />
     <ClCompile Include="siRenderer.cpp" />
     <ClCompile Include="siImgui.cpp" />
     <ClCompile Include="siSwapChain.cpp" />
     <ClCompile Include="siTexture2D.cpp" />
+    <ClCompile Include="siViewportScissor.cpp" />
     <ClCompile Include="siWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,10 +107,12 @@
     <ClInclude Include="siDescriptorMgr.h" />
     <ClInclude Include="siDevice.h" />
     <ClInclude Include="siFenceMgr.h" />
+    <ClInclude Include="siPipelineState.h" />
     <ClInclude Include="siRenderer.h" />
     <ClInclude Include="siImgui.h" />
     <ClInclude Include="siSwapChain.h" />
     <ClInclude Include="siTexture2D.h" />
+    <ClInclude Include="siViewportScissor.h" />
     <ClInclude Include="siWindow.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

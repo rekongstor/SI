@@ -4,15 +4,17 @@
 
 int main()
 {
+   siImgui imgui;
+   imgui.onInit();
+
    siWindow window(L"Cacao", 512, 512);
    window.onInit();
    
    if (window.getWindow())
    {
-      siImgui imgui(&window);
-      imgui.onInit();
+      imgui.onInitWindow(window.getWindow());
       siRenderer renderer(&window, 3);
-      renderer.onInit();
+      renderer.onInit(&imgui);
 
       MSG msg;
       while (renderer.isActive())
