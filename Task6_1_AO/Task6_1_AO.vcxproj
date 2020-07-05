@@ -58,11 +58,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>dxcompiler.lib;d3dcompiler.lib;D3D12.lib;$(SolutionDir)3rd_party\cauldron\libs\AGS\amd_ags_x64.lib;$(OutDir)Cauldron_DX12.lib;$(OutDir)Cauldron_Common.lib;$(OutDir)Imgui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dxcompiler.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;$(OutDir)Imgui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -92,9 +93,13 @@
     <ClCompile Include="siDescriptorMgr.cpp" />
     <ClCompile Include="siDevice.cpp" />
     <ClCompile Include="siFenceMgr.cpp" />
+    <ClCompile Include="siInstance.cpp" />
+    <ClCompile Include="siMesh.cpp" />
     <ClCompile Include="siPipelineState.cpp" />
     <ClCompile Include="siRenderer.cpp" />
     <ClCompile Include="siImgui.cpp" />
+    <ClCompile Include="siRootSignature.cpp" />
+    <ClCompile Include="siSceneLoader.cpp" />
     <ClCompile Include="siSwapChain.cpp" />
     <ClCompile Include="siTexture2D.cpp" />
     <ClCompile Include="siViewportScissor.cpp" />
@@ -107,14 +112,28 @@
     <ClInclude Include="siDescriptorMgr.h" />
     <ClInclude Include="siDevice.h" />
     <ClInclude Include="siFenceMgr.h" />
+    <ClInclude Include="siInstance.h" />
+    <ClInclude Include="siMesh.h" />
     <ClInclude Include="siPipelineState.h" />
     <ClInclude Include="siRenderer.h" />
     <ClInclude Include="siImgui.h" />
+    <ClInclude Include="siRootSignature.h" />
+    <ClInclude Include="siSceneLoader.h" />
     <ClInclude Include="siSwapChain.h" />
     <ClInclude Include="siTexture2D.h" />
     <ClInclude Include="siViewportScissor.h" />
     <ClInclude Include="siWindow.h" />
     <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="pbrRenderPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="pbrRenderVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

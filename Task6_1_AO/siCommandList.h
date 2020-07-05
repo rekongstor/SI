@@ -7,5 +7,6 @@ public:
    [[nodiscard]] ID3D12GraphicsCommandList* get() const { return commandList.Get(); }
 
    void onInit(ID3D12Device* device, ID3D12CommandAllocator* commandAllocator);
+   void updateSubresource(ID3D12Resource* buffer, ID3D12Resource* uploadHeap, D3D12_SUBRESOURCE_DATA textureData) const;
 };
 

@@ -1,6 +1,7 @@
 #include "siRenderer.h"
 #include "siWindow.h"
 #include "siImgui.h"
+#include "siSceneLoader.h"
 
 void siRenderer::UpdatePipeline()
 {
@@ -35,7 +36,7 @@ void siRenderer::UpdatePipeline()
    commandList->RSSetViewports(1, &viewportScissor.getViewport());
    commandList->RSSetScissorRects(1, &viewportScissor.getScissorRect());
 
-   ID3D12DescriptorHeap* d[] = { descriptorMgr.getCbvSrvUavHeap().Get() };
+   ID3D12DescriptorHeap* d[] = {descriptorMgr.getCbvSrvUavHeap().Get()};
    commandList->SetDescriptorHeaps(1, d);
    if (imgui)
       imgui->onRender(commandList.get());
@@ -83,11 +84,12 @@ void siRenderer::onInit(siImgui* imgui)
 
    descriptorMgr.onInit(device.get());
 
+   // imgui if exists
    if (imgui)
    {
       this->imgui = imgui;
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
-         descriptorMgr.getCbvSrvUavHandle());
+                            descriptorMgr.getCbvSrvUavHandle());
    }
 
    // swap chain buffers initialization
@@ -101,10 +103,32 @@ void siRenderer::onInit(siImgui* imgui)
    depthStencilTarget.initDepthStencil(device.get(), window->getWidth(), window->getHeight());
    depthStencilTarget.createDsv(device.get(), &descriptorMgr);
 
+   // creating root signatures
+   {
+      auto& rs = rootSignatures[0];
+      rs.onInit(device.get(), rs.createSampleRsBlob()); // blobs should be loaded from files
+   }
+   // creating PSOs
    {
       auto& pso = pipelineStates[0];
-      pso.onInit(device.get(), pso.createSampleRsBlob());
+      pso.createPso(device.get(), rootSignatures[0].get(), L"pbrRenderVS.hlsl", L"pbrRenderPS.hlsl",
+                    DXGI_FORMAT_R8G8B8A8_UNORM, sampleDesc,
+                    {
+                       {
+                          "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0
+                       },
+                       {
+                          "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
+                       },
+                       {
+                          "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
+                       }
+                    }
+      );
    }
+
+   siSceneLoader::loadScene("sponza.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
+
 
    active = true;
 }
@@ -124,7 +148,7 @@ void siRenderer::onUpdate()
    fenceMgr.signalCommandQueue(currentFrame);
 
    HRESULT hr = swapChain->Present(0, 0);
-   assert(hr);
+   assert(hr == S_OK);
 }
 
 void siRenderer::onDestroy()

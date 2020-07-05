@@ -12,7 +12,7 @@ void siFenceMgr::onInit(ID3D12Device* device, uint32_t bufferCount, const ComPtr
          D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE,
          IID_PPV_ARGS(&fences[i])
       );
-      assert(hr);
+      assert(hr == S_OK);
       fenceValues[i] = 0;
    }
 
@@ -23,7 +23,7 @@ void siFenceMgr::onInit(ID3D12Device* device, uint32_t bufferCount, const ComPtr
       nullptr
    );
    hr = fenceEvent ? S_OK : E_FAIL;
-   assert(hr);
+   assert(hr == S_OK);
 
    this->swapChain = swapChain;
    this->commandQueue = cmdQueue;
@@ -37,7 +37,7 @@ void siFenceMgr::waitForPreviousFrame(uint32_t& currentFrame)
    if (fences[currentFrame]->GetCompletedValue() < fenceValues[currentFrame])
    {
       hr = fences[currentFrame]->SetEventOnCompletion(fenceValues[currentFrame], fenceEvent);
-      assert(hr);
+      assert(hr == S_OK);
       WaitForSingleObject(fenceEvent, INFINITE);
    }
 
@@ -47,7 +47,7 @@ void siFenceMgr::waitForPreviousFrame(uint32_t& currentFrame)
 void siFenceMgr::signalCommandQueue(uint32_t currentFrame)
 {
    HRESULT hr = commandQueue->Signal(fences[currentFrame].Get(), fenceValues[currentFrame]);
-   assert(hr);
+   assert(hr == S_OK);
 }
 
 siFenceMgr::~siFenceMgr()

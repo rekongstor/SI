@@ -1,53 +1,69 @@
 #include "siPipelineState.h"
+#include <d3dcompiler.h>
 
-
-void siPipelineState::onInit(ID3D12Device* device, const ComPtr<ID3DBlob>& signature)
+void siPipelineState::createPso(
+   ID3D12Device* device, 
+   const ComPtr<ID3D12RootSignature>& rootSignature,
+   LPCWSTR vsFileName,
+   LPCWSTR psFileName,
+   DXGI_FORMAT format,
+   DXGI_SAMPLE_DESC sampleDesc, 
+   const std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDesc)
 {
-   HRESULT hr = S_OK;
+   HRESULT hr;
 
-   hr = device->CreateRootSignature(0,
-                                    signature->GetBufferPointer(),
-                                    signature->GetBufferSize(),
-                                    IID_PPV_ARGS(&rootSignature));
+   ComPtr<ID3DBlob> vertexShader;
+   hr = D3DCompileFromFile(vsFileName,
+      nullptr,
+      nullptr,
+      "main",
+      "vs_5_1",
+      D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+      NULL,
+      &vertexShader,
+      nullptr);
    assert(hr == S_OK);
 
-
-}
-
-ComPtr<ID3DBlob> siPipelineState::createSampleRsBlob()
-{
-   HRESULT hr = S_OK;
-
-   CD3DX12_ROOT_PARAMETER rootParameters[3];
-   rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
-   rootParameters[1].InitAsShaderResourceView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
-   rootParameters[2].InitAsDescriptorTable(1,
-                                           &CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 1),
-                                           D3D12_SHADER_VISIBILITY_ALL);
-
-   ComPtr<ID3DBlob> signature;
-
-   hr = D3D12SerializeRootSignature(
-      &CD3DX12_ROOT_SIGNATURE_DESC(
-         _countof(rootParameters), rootParameters,
-         1, &CD3DX12_STATIC_SAMPLER_DESC(0),
-         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-         D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
-      ),
-      D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
+   ComPtr<ID3DBlob> pixelShader;
+   hr = D3DCompileFromFile(psFileName,
+      nullptr,
+      nullptr,
+      "main",
+      "ps_5_1",
+      D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+      NULL,
+      &pixelShader,
+      nullptr);
    assert(hr == S_OK);
 
-   return signature;
-}
+   D3D12_SHADER_BYTECODE vertexShaderByteCode = { vertexShader->GetBufferPointer(), vertexShader->GetBufferSize() };
+   D3D12_SHADER_BYTECODE pixelShaderByteCode = { pixelShader->GetBufferPointer(), pixelShader->GetBufferSize() };
 
-const ComPtr<ID3D12RootSignature>& siPipelineState::getRootSignature() const
-{
-   return rootSignature;
+
+   D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = { inputElementDesc.data(),inputElementDesc.size() };
+
+
+   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+   ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+   psoDesc.InputLayout = inputLayoutDesc;
+   psoDesc.pRootSignature = rootSignature.Get();
+   psoDesc.VS = vertexShaderByteCode;
+   psoDesc.PS = pixelShaderByteCode;
+   psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+   psoDesc.RTVFormats[0] = format;
+   psoDesc.SampleDesc = sampleDesc;
+   psoDesc.SampleMask = UINT_MAX;
+   psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+   psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+   psoDesc.NumRenderTargets = 1;
+   psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+
+   hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
+   assert(hr == S_OK);
+
 }
 
 const ComPtr<ID3D12PipelineState>& siPipelineState::getPipelineState() const
 {
-   return pipelineState;
+   return pipelineStateObject;
 }

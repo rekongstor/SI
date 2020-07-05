@@ -7,7 +7,10 @@
 #include "siTexture2D.h"
 #include "siDescriptorMgr.h"
 #include "siFenceMgr.h"
+#include "siInstance.h"
+#include "siMesh.h"
 #include "siPipelineState.h"
+#include "siRootSignature.h"
 #include "siViewportScissor.h"
 
 class siWindow;
@@ -19,7 +22,7 @@ class siRenderer
    siImgui* imgui = nullptr;
    uint32_t bufferCount;
    uint32_t currentFrame;
-   DXGI_SAMPLE_DESC sampleDesc = { 1, 0 };
+   DXGI_SAMPLE_DESC sampleDesc = {1, 0};
    bool active = false;
 
    static const uint32_t frameBuffers = 3;
@@ -38,8 +41,11 @@ class siRenderer
 
    siTexture2D swapChainTargets[maxFrameBufferCount];
    siTexture2D depthStencilTarget;
-   std::map<int32_t, siTexture2D> textures; 
+   std::map<std::string, siTexture2D> textures;
+   std::map<int32_t, siRootSignature> rootSignatures;
    std::map<int32_t, siPipelineState> pipelineStates;
+   std::map<int32_t, siMesh> meshes;
+   std::vector<siInstance> instances;
 
    void UpdatePipeline();
 public:
