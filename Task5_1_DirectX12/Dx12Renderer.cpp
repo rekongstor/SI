@@ -95,8 +95,8 @@ void Dx12Renderer::UpdatePipeline()
       for (size_t i = 0; i < meshes.size(); ++i)
       {
          commandList->SetGraphicsRootShaderResourceView(1, instanceBuffer->GetGPUVirtualAddress());
-         ID3D12DescriptorHeap* ppHeaps[] = {srvDescriptorHeap};
-         commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+         //ID3D12DescriptorHeap* ppHeaps[] = {srvDescriptorHeap};
+         //commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
          commandList->SetGraphicsRootDescriptorTable(2, srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
          commandList->DrawIndexedInstanced(meshes[i].indices.size(), instances[&meshes[i]].size(), 0, 0, 0);
       }
@@ -236,7 +236,7 @@ void Dx12Renderer::Cleanup()
    SAFE_RELEASE(quadVertexBuffer);
    SAFE_RELEASE(computeRootSignature);
    SAFE_RELEASE(computePipelineState);
-   
+
    SAFE_RELEASE(pipelineStateObject);
    SAFE_RELEASE(rootSignature);
    SAFE_RELEASE(vertexBuffer);
@@ -1176,17 +1176,14 @@ void Dx12Renderer::OnInit()
 
    // Instance buffer
    {
-      for (uint32_t i = 0; i < frameBufferCount; ++i)
-      {
-         hr = device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(instances[&meshes[0]].size() * sizeof(InstanceData)),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr, IID_PPV_ARGS(&instanceBuffer));
-         ASSERT(hr, "Failed to create instance buffer");
-         hr = instanceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instanceDataGPUAddress));
-      }
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+         D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC::Buffer(instances[&meshes[0]].size() * sizeof(InstanceData)),
+         D3D12_RESOURCE_STATE_GENERIC_READ,
+         nullptr, IID_PPV_ARGS(&instanceBuffer));
+      ASSERT(hr, "Failed to create instance buffer");
+      hr = instanceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instanceDataGPUAddress));
    }
 
    // Vertex and Index buffers + Closing the command list
@@ -1303,13 +1300,12 @@ void Dx12Renderer::OnInit()
       };
       hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&imguiDescriptorHeap));
       ASSERT(hr, "Failed to create texture descriptor heap");
-      
+
       ImGui_ImplDX12_Init(device, frameBufferCount,
                           DXGI_FORMAT_R8G8B8A8_UNORM, imguiDescriptorHeap,
                           imguiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
                           imguiDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
    }
-
 }
 
 void Dx12Renderer::OnUpdate()

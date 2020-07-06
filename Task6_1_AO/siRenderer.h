@@ -47,7 +47,7 @@ class siRenderer
    std::map<int32_t, siRootSignature> rootSignatures;
    std::map<int32_t, siPipelineState> pipelineStates;
    std::map<int32_t, siMesh> meshes;
-   std::vector<siInstance> instances;
+   std::map<int32_t, siInstance> instances;
 
    siCamera camera;
 

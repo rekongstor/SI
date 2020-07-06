@@ -23,8 +23,11 @@ class siConstBuffer
    T data;
    uint8_t* gpuAddress = nullptr;
    ComPtr<ID3D12Resource> buffer;
+   D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress;
 public:
    T& get() { return data; }
+   [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS getGpuVirtualAddress() const { return gpuVirtualAddress; }
+
    void initBuffer(const T& data, ID3D12Device* device);
    void gpuCopy();
 };
@@ -46,6 +49,8 @@ void siConstBuffer<T>::initBuffer(const T& data, ID3D12Device* device)
 
    hr = buffer->Map(0, nullptr, reinterpret_cast<void**>(&gpuAddress));
    assert(hr == S_OK);
+
+   gpuVirtualAddress = buffer->GetGPUVirtualAddress();
 }
 
 template <class T>

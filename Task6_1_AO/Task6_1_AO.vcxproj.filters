@@ -78,13 +78,13 @@
     <ClCompile Include="siMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="siInstance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="siConstBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="siCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -140,13 +140,16 @@
     <ClInclude Include="siMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="siInstance.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="siConstBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="siCamera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="siInstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

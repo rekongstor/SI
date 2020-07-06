@@ -23,7 +23,6 @@ float textureAlpha;
 Texture2D albedo : register(t0, space1);
 Texture2D metallic : register(t1, space1);
 Texture2D rough : register(t2, space1);
-//StructuredBuffer<Texture2D> gMaterialData : register(t0, space1);
 
 SamplerState s1 : register(s0);
 

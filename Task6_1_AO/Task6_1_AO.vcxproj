@@ -91,7 +91,6 @@
     <ClCompile Include="siCommandAllocator.cpp" />
     <ClCompile Include="siCommandList.cpp" />
     <ClCompile Include="siCommandQueue.cpp" />
-    <ClCompile Include="siConstBuffer.cpp" />
     <ClCompile Include="siDescriptorMgr.cpp" />
     <ClCompile Include="siDevice.cpp" />
     <ClCompile Include="siFenceMgr.cpp" />
@@ -104,6 +103,7 @@
     <ClCompile Include="siSceneLoader.cpp" />
     <ClCompile Include="siSwapChain.cpp" />
     <ClCompile Include="siTexture2D.cpp" />
+    <ClCompile Include="siTimer.cpp" />
     <ClCompile Include="siViewportScissor.cpp" />
     <ClCompile Include="siWindow.cpp" />
   </ItemGroup>
@@ -125,6 +125,7 @@
     <ClInclude Include="siSceneLoader.h" />
     <ClInclude Include="siSwapChain.h" />
     <ClInclude Include="siTexture2D.h" />
+    <ClInclude Include="siTimer.h" />
     <ClInclude Include="siViewportScissor.h" />
     <ClInclude Include="siWindow.h" />
     <ClInclude Include="stdafx.h" />
@@ -133,10 +134,14 @@
     <FxCompile Include="pbrRenderPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
     </FxCompile>
     <FxCompile Include="pbrRenderVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

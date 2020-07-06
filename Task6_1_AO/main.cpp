@@ -7,7 +7,7 @@ int main()
    siImgui imgui;
    imgui.onInit();
 
-   siWindow window(L"Cacao", 512, 512);
+   siWindow window(L"Cacao", 1024, 1024);
    window.onInit();
    
    if (window.getWindow())

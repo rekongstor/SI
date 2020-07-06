@@ -15,9 +15,9 @@ void siCommandList::onInit(ID3D12Device* device, ID3D12CommandAllocator* command
    assert(hr == S_OK);
 }
 
-void siCommandList::updateSubresource(ID3D12Resource* buffer, ID3D12Resource* uploadHeap, D3D12_SUBRESOURCE_DATA textureData) const
+void siCommandList::updateSubresource(ID3D12Resource* buffer, ID3D12Resource* uploadHeap, D3D12_SUBRESOURCE_DATA data) const
 {
-   UpdateSubresources(commandList.Get(), buffer, uploadHeap, 0, 0, 1, &textureData);
+   UpdateSubresources(commandList.Get(), buffer, uploadHeap, 0, 0, 1, &data);
 
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
       buffer, D3D12_RESOURCE_STATE_COPY_DEST,

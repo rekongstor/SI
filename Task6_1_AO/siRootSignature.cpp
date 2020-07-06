@@ -20,7 +20,7 @@ ComPtr<ID3DBlob> siRootSignature::createSampleRsBlob()
    rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
    rootParameters[1].InitAsShaderResourceView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
    rootParameters[2].InitAsDescriptorTable(1,
-      &CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 1),
+      &CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 1),
       D3D12_SHADER_VISIBILITY_ALL);
 
    ComPtr<ID3DBlob> signature;
