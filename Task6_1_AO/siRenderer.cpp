@@ -26,7 +26,7 @@ void siRenderer::UpdatePipeline()
    commandList->OMSetRenderTargets(1,
                                    &renderTarget.getRtvHandle().first,
                                    FALSE,
-                                   &textures[0].getDsvHandle().first);
+                                   &renderTarget.getDsvHandle().first);
 
 
    const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
@@ -127,8 +127,15 @@ void siRenderer::onInit(siImgui* imgui)
       );
    }
 
-   siSceneLoader::loadScene("sponza.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
+   siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
 
+
+   commandList->Close();
+   ID3D12CommandList* ppCommandLists[] = { commandList.get() };
+   commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+   fenceMgr.signalCommandQueue(currentFrame);
+   assert(hr == S_OK);
 
    active = true;
 }

@@ -295,8 +295,6 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
 
    commandList.updateSubresource(buffer.Get(), textureUploadHeap.Get(),
                                  {pixels.data(), bytesPerRow, bytesPerRow * desc.Height});
-   if (hr != S_OK)
-      throw(std::exception());
 }
 
 void siTexture2D::releaseUploadBuffer()
