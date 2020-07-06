@@ -46,6 +46,8 @@ void siImgui::onUpdate()
    ImGui::NewFrame();
    {
       ImGui::Begin("Imgui Debug");
+      ImGui::DragFloat3("Camera position", &camPos->x);
+      ImGui::DragFloat3("Camera target", &camTarget->x);
       ImGui::End();
    }
 }
@@ -54,4 +56,10 @@ void siImgui::onRender(ID3D12GraphicsCommandList* commandList)
 {
    ImGui::Render();
    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+}
+
+void siImgui::bindVariables(void* cameraPos, void* cameraTarget)
+{
+   camPos = static_cast<XMFLOAT3*>(cameraPos);
+   camTarget = static_cast<XMFLOAT3*>(cameraTarget);
 }

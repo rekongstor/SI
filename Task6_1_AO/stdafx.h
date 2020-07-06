@@ -14,8 +14,6 @@ using namespace DirectX;
 #include <wrl.h>
 using Microsoft::WRL::ComPtr;
 
-
-
 const uint32_t maxFrameBufferCount = 3;
 
 struct siVertex

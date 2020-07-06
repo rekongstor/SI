@@ -87,9 +87,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="siCamera.cpp" />
     <ClCompile Include="siCommandAllocator.cpp" />
     <ClCompile Include="siCommandList.cpp" />
     <ClCompile Include="siCommandQueue.cpp" />
+    <ClCompile Include="siConstBuffer.cpp" />
     <ClCompile Include="siDescriptorMgr.cpp" />
     <ClCompile Include="siDevice.cpp" />
     <ClCompile Include="siFenceMgr.cpp" />
@@ -106,9 +108,11 @@
     <ClCompile Include="siWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="siCamera.h" />
     <ClInclude Include="siCommandAllocator.h" />
     <ClInclude Include="siCommandList.h" />
     <ClInclude Include="siCommandQueue.h" />
+    <ClInclude Include="siConstBuffer.h" />
     <ClInclude Include="siDescriptorMgr.h" />
     <ClInclude Include="siDevice.h" />
     <ClInclude Include="siFenceMgr.h" />

@@ -253,11 +253,11 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
    auto& tex = *this;
 
 
-   pixels.resize(imageSize);
+   data.resize(imageSize);
    if (imageConverted)
-      wicFormatConverter->CopyPixels(nullptr, bytesPerRow, imageSize, pixels.data());
+      wicFormatConverter->CopyPixels(nullptr, bytesPerRow, imageSize, data.data());
    else
-      wicFrame->CopyPixels(nullptr, bytesPerRow, imageSize, pixels.data());
+      wicFrame->CopyPixels(nullptr, bytesPerRow, imageSize, data.data());
 
    D3D12_RESOURCE_DESC desc;
    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -294,13 +294,13 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
    assert(hr == S_OK);
 
    commandList.updateSubresource(buffer.Get(), textureUploadHeap.Get(),
-                                 {pixels.data(), bytesPerRow, bytesPerRow * desc.Height});
+                                 {data.data(), bytesPerRow, bytesPerRow * desc.Height});
 }
 
 void siTexture2D::releaseUploadBuffer()
 {
    textureUploadHeap.Reset();
-   pixels.clear();
+   data.clear();
 }
 
 

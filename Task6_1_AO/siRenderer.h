@@ -1,8 +1,10 @@
 #pragma once
+#include "siCamera.h"
 #include "siDevice.h"
 #include "siCommandQueue.h"
 #include "siCommandAllocator.h"
 #include "siCommandList.h"
+#include "siConstBuffer.h"
 #include "siSwapChain.h"
 #include "siTexture2D.h"
 #include "siDescriptorMgr.h"
@@ -21,7 +23,7 @@ class siRenderer
    siWindow* window = nullptr;
    siImgui* imgui = nullptr;
    uint32_t bufferCount;
-   uint32_t currentFrame;
+   uint32_t currentFrame = 0;
    DXGI_SAMPLE_DESC sampleDesc = {1, 0};
    bool active = false;
 
@@ -47,12 +49,17 @@ class siRenderer
    std::map<int32_t, siMesh> meshes;
    std::vector<siInstance> instances;
 
-   void UpdatePipeline();
+   siCamera camera;
+
+   siConstBuffer<mainConstBuff> mainConstBuffer[maxFrameBufferCount];
+
+   void update();
+   void updatePipeline();
+   void executePipeline();
 public:
    explicit siRenderer(siWindow* window, uint32_t bufferCount);
 
    [[nodiscard]] bool isActive() const;
    void onInit(siImgui* imgui = nullptr);
    void onUpdate();
-   void onDestroy();
 };

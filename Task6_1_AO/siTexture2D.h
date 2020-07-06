@@ -6,7 +6,7 @@ class siTexture2D
 {
    ComPtr<ID3D12Resource> buffer;
    ComPtr<ID3D12Resource> textureUploadHeap;
-   std::vector<BYTE> pixels;
+   std::vector<BYTE> data;
 
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> dsvHandle;
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rtvHandle;

@@ -3,66 +3,15 @@
 #include "siImgui.h"
 #include "siSceneLoader.h"
 
-void siRenderer::UpdatePipeline()
-{
-   HRESULT hr = S_OK;
-
-   hr = commandAllocator.getAllocator(currentFrame)->Reset();
-   assert(hr == S_OK);
-
-
-   hr = commandList->Reset(commandAllocator.getAllocator(currentFrame),
-                           pipelineStates[0].getPipelineState().Get());
-   assert(hr == S_OK);
-
-   auto& renderTarget = swapChainTargets[currentFrame];
-   auto& depthStencil = depthStencilTarget;
-   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-                                   renderTarget.getBuffer().Get(),
-                                   D3D12_RESOURCE_STATE_PRESENT,
-                                   D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-
-   commandList->OMSetRenderTargets(1,
-                                   &renderTarget.getRtvHandle().first,
-                                   FALSE,
-                                   &renderTarget.getDsvHandle().first);
-
-
-   const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
-   commandList->ClearRenderTargetView(renderTarget.getRtvHandle().first, clearColor, 0, nullptr);
-   commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
-
-   commandList->RSSetViewports(1, &viewportScissor.getViewport());
-   commandList->RSSetScissorRects(1, &viewportScissor.getScissorRect());
-
-   ID3D12DescriptorHeap* d[] = {descriptorMgr.getCbvSrvUavHeap().Get()};
-   commandList->SetDescriptorHeaps(1, d);
-   if (imgui)
-      imgui->onRender(commandList.get());
-
-   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-                                   renderTarget.getBuffer().Get(),
-                                   D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                   D3D12_RESOURCE_STATE_PRESENT));
-
-
-   hr = commandList->Close();
-   assert(hr == S_OK);
-}
-
 siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    window(window),
    bufferCount(bufferCount),
    commandAllocator(bufferCount),
    descriptorMgr(50, 50, 50, 50),
-   viewportScissor(window->getWidth(), window->getHeight())
+   viewportScissor(window->getWidth(), window->getHeight()),
+   camera({5.f, 5.f, 5.f, 1.f}, {0.f, 0.f, 0.f, 1.f}, 75.f, 
+      static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
-}
-
-bool siRenderer::isActive() const
-{
-   return active;
 }
 
 void siRenderer::onInit(siImgui* imgui)
@@ -89,7 +38,8 @@ void siRenderer::onInit(siImgui* imgui)
    {
       this->imgui = imgui;
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
-                            descriptorMgr.getCbvSrvUavHandle());
+         descriptorMgr.getCbvSrvUavHandle());
+      imgui->bindVariables(&camera.position, &camera.target);
    }
 
    // swap chain buffers initialization
@@ -112,52 +62,120 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& pso = pipelineStates[0];
       pso.createPso(device.get(), rootSignatures[0].get(), L"pbrRenderVS.hlsl", L"pbrRenderPS.hlsl",
-                    DXGI_FORMAT_R8G8B8A8_UNORM, sampleDesc,
-                    {
-                       {
-                          "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0
-                       },
-                       {
-                          "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
-                       },
-                       {
-                          "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
-                       }
-                    }
+         DXGI_FORMAT_R8G8B8A8_UNORM, sampleDesc,
+         {
+            {
+               "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0
+            },
+            {
+               "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
+            },
+            {
+               "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
+            }
+         }
       );
    }
 
    siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
 
+   for (auto& cb : mainConstBuffer)
+   {
+      cb.initBuffer(
+         {
+            XMFLOAT4X4(),
+            {5.f, 5.f, 5.f, 1.f},
+            {0.f, -1.f, 0.f, 0.f},
+            {1.f, 1.f, 1.f, 1.f},
+            {.1f, .1f, .1f, 1.f}
+         }, device.get());
+   }
 
-   commandList->Close();
+   executePipeline();
+   active = true;
+}
+
+void siRenderer::update()
+{
+   camera.update();
+   auto& cb = mainConstBuffer[currentFrame].get();
+   cb.camPos = camera.position;
+   cb.vpMatrix = camera.vpMatrix;
+   mainConstBuffer[currentFrame].gpuCopy();
+}
+
+void siRenderer::updatePipeline()
+{
+   HRESULT hr = S_OK;
+
+   hr = commandAllocator.getAllocator(currentFrame)->Reset();
+   assert(hr == S_OK);
+
+
+   hr = commandList->Reset(commandAllocator.getAllocator(currentFrame),
+      pipelineStates[0].getPipelineState().Get());
+   assert(hr == S_OK);
+
+   auto& renderTarget = swapChainTargets[currentFrame];
+   auto& depthStencil = depthStencilTarget;
+   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+      renderTarget.getBuffer().Get(),
+      D3D12_RESOURCE_STATE_PRESENT,
+      D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+
+   commandList->OMSetRenderTargets(1,
+      &renderTarget.getRtvHandle().first,
+      FALSE,
+      &renderTarget.getDsvHandle().first);
+
+
+   const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+   commandList->ClearRenderTargetView(renderTarget.getRtvHandle().first, clearColor, 0, nullptr);
+   commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+
+   commandList->RSSetViewports(1, &viewportScissor.getViewport());
+   commandList->RSSetScissorRects(1, &viewportScissor.getScissorRect());
+
+   ID3D12DescriptorHeap* d[] = { descriptorMgr.getCbvSrvUavHeap().Get() };
+   commandList->SetDescriptorHeaps(1, d);
+   if (imgui)
+      imgui->onRender(commandList.get());
+
+   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+      renderTarget.getBuffer().Get(),
+      D3D12_RESOURCE_STATE_RENDER_TARGET,
+      D3D12_RESOURCE_STATE_PRESENT));
+}
+
+void siRenderer::executePipeline()
+{
+   HRESULT hr = commandList->Close();
+   assert(hr == S_OK);
+
    ID3D12CommandList* ppCommandLists[] = { commandList.get() };
    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
    fenceMgr.signalCommandQueue(currentFrame);
-   assert(hr == S_OK);
-
-   active = true;
 }
-
 
 void siRenderer::onUpdate()
 {
+
+   fenceMgr.waitForPreviousFrame(currentFrame);
+
+   update();
    if (imgui)
       imgui->onUpdate();
 
-   fenceMgr.waitForPreviousFrame(currentFrame);
-   UpdatePipeline();
-
-   ID3D12CommandList* ppCommandLists[] = {commandList.get()};
-   commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-   fenceMgr.signalCommandQueue(currentFrame);
+   updatePipeline();
+   executePipeline();
 
    HRESULT hr = swapChain->Present(0, 0);
    assert(hr == S_OK);
 }
 
-void siRenderer::onDestroy()
+bool siRenderer::isActive() const
 {
+   return active;
 }

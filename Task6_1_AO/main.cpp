@@ -29,8 +29,6 @@ int main()
             renderer.onUpdate();
          }
       }
-
-      renderer.onDestroy();
    }
    return 0;
 }
