@@ -16,6 +16,7 @@ struct PSInput
 struct InstanceData
 {
    float4x4 world;
+   float4x4 worldIt;
 };
 
 
@@ -93,7 +94,7 @@ PSInput main(VSInput input, uint instanceID : SV_InstanceID)
 
    output.position = mul(input.position, inst.world);
    output.position = mul(output.position, vpMatrix);
-   output.normal = normalize(mul(normalize(input.normal), inst.world));
+   output.normal = normalize(mul(normalize(input.normal), inst.worldIt));
 
    output.uv = input.uv;
    output.view = normalize(camPos - input.position);

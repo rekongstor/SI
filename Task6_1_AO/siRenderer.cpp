@@ -106,9 +106,18 @@ void siRenderer::onInit(siImgui* imgui)
             XMVECTOR transVector(XMLoadFloat4(&position));
             XMMATRIX transMatrix = XMMatrixTranslationFromVector(transVector);
             XMMATRIX scaleMatrix = XMMatrixScaling(scale, scale, scale);
+            auto InverseTranspose = [](CXMMATRIX M)
+            {
+               XMMATRIX A = M;
+               A.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+               XMVECTOR det = XMMatrixDeterminant(A);
+               return XMMatrixTranspose(XMMatrixInverse(&det,
+                  A));
+            };
             XMMATRIX world = scaleMatrix * rotMatrix * transMatrix;
             perInstanceData instanceData;
             XMStoreFloat4x4(&instanceData.world, XMMatrixTranspose(world));
+            XMStoreFloat4x4(&instanceData.worldIt, XMMatrixTranspose(InverseTranspose(world)));
 
             inst.get().emplace_back(instanceData);
          }

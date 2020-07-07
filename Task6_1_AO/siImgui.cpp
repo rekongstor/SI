@@ -46,8 +46,8 @@ void siImgui::onUpdate()
    ImGui::NewFrame();
    {
       ImGui::Begin("Imgui Debug");
-      ImGui::DragFloat3("Camera position", &camPos->x);
-      ImGui::DragFloat3("Camera target", &camTarget->x);
+      ImGui::DragFloat3("Camera position", &camPos->x,0.1f);
+      ImGui::DragFloat3("Camera target", &camTarget->x, 0.1f);
       ImGui::End();
    }
 }

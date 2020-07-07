@@ -3,6 +3,7 @@
 struct perInstanceData
 {
    XMFLOAT4X4 world;
+   XMFLOAT4X4 worldIt;
 };
 
 class siInstance

@@ -67,7 +67,7 @@ float4 main(PSInput input) : SV_TARGET
 
    float4 color = ambientColor * normDiffuseColor + (normDiffuseColor * kD / PI + specular) * lightColor * dotNL;
 
-   color = pow(color, 2.2f) / (pow(color, 2.2f) + 1.f);
+   color = color / (color + 1.f);
 
    return pow(color, 1.f / 2.2f);
 }
