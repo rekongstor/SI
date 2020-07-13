@@ -8,15 +8,6 @@ constexpr UINT64 cbSize()
 }
 
 
-struct mainConstBuff
-{
-   XMFLOAT4X4 vpMatrix;
-   XMFLOAT4 camPos;
-   XMFLOAT4 lightDirection;
-   XMFLOAT4 lightColor;
-   XMFLOAT4 ambientColor;
-};
-
 template <class T>
 class siConstBuffer
 {

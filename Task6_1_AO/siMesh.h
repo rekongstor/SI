@@ -1,4 +1,5 @@
 #pragma once
+#include "structures.h"
 class siCommandList;
 class siSceneLoader;
 

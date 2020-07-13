@@ -65,6 +65,37 @@ void siPipelineState::createPso(
    assert(hr == S_OK);
 }
 
+void siPipelineState::createPso(
+   ID3D12Device* device,
+   const ComPtr<ID3D12RootSignature>& rootSignature,
+   LPCWSTR csFileName)
+{
+   HRESULT hr;
+
+   ID3DBlob* computeShader;
+   hr = D3DCompileFromFile(csFileName,
+      nullptr,
+      nullptr,
+      "main",
+      "cs_5_1",
+      D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+      NULL,
+      &computeShader,
+      nullptr);
+   assert(hr == S_OK);
+
+   D3D12_SHADER_BYTECODE CSShaderByteCode = { computeShader->GetBufferPointer(), computeShader->GetBufferSize() };
+
+
+   D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc;
+   ZeroMemory(&psoDesc, sizeof(D3D12_COMPUTE_PIPELINE_STATE_DESC));
+   psoDesc.pRootSignature = rootSignature.Get();
+   psoDesc.CS = CSShaderByteCode;
+
+   hr = device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
+   assert(hr == S_OK);
+}
+
 const ComPtr<ID3D12PipelineState>& siPipelineState::getPipelineState() const
 {
    return pipelineStateObject;

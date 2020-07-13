@@ -15,10 +15,3 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 const uint32_t maxFrameBufferCount = 3;
-
-struct siVertex
-{
-   XMFLOAT4 position;
-   XMFLOAT4 normal;
-   XMFLOAT2 uv;
-};

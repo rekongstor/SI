@@ -91,6 +91,7 @@
     <ClCompile Include="siCommandAllocator.cpp" />
     <ClCompile Include="siCommandList.cpp" />
     <ClCompile Include="siCommandQueue.cpp" />
+    <ClCompile Include="siComputeShader.cpp" />
     <ClCompile Include="siDescriptorMgr.cpp" />
     <ClCompile Include="siDevice.cpp" />
     <ClCompile Include="siFenceMgr.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="siCommandAllocator.h" />
     <ClInclude Include="siCommandList.h" />
     <ClInclude Include="siCommandQueue.h" />
+    <ClInclude Include="siComputeShader.h" />
     <ClInclude Include="siConstBuffer.h" />
     <ClInclude Include="siDescriptorMgr.h" />
     <ClInclude Include="siDevice.h" />
@@ -129,6 +131,7 @@
     <ClInclude Include="siViewportScissor.h" />
     <ClInclude Include="siWindow.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="structures.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="pbrRenderPS.hlsl">

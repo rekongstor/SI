@@ -72,8 +72,10 @@ void siRenderer::onInit(siImgui* imgui)
       auto& normalsRenderTarget = textures["#normalsRenderTarget"];
       normalsRenderTarget.initTexture(
          device.get(), window->getWidth(), window->getHeight(),
-         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
       normalsRenderTarget.createRtv(device.get(), &descriptorMgr);
+
+      normalsRenderTarget.createSrv(device.get(), &descriptorMgr);
    }
 
    // creating root signatures
@@ -81,6 +83,11 @@ void siRenderer::onInit(siImgui* imgui)
       auto& rs = rootSignatures[0];
       rs.onInit(device.get(), siRootSignature::createSampleRsBlob()); // blobs should be loaded from files
    }
+   {
+      auto& rsCs = rootSignatures[1];
+      rsCs.onInit(device.get(), siRootSignature::createCsRsBlob1In());
+   }
+
    // creating PSOs
    {
       auto& pso = pipelineStates[0];
@@ -202,6 +209,10 @@ void siRenderer::updatePipeline()
                                    renderTarget.getBuffer().Get(),
                                    D3D12_RESOURCE_STATE_PRESENT,
                                    D3D12_RESOURCE_STATE_RENDER_TARGET));
+   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                   normalsRenderTarget.getBuffer().Get(),
+                                   D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                   D3D12_RESOURCE_STATE_RENDER_TARGET));
 
    D3D12_CPU_DESCRIPTOR_HANDLE rts[] = {renderTarget.getRtvHandle().first, normalsRenderTarget.getRtvHandle().first};
    commandList->OMSetRenderTargets(2,
@@ -237,6 +248,24 @@ void siRenderer::updatePipeline()
       commandList->SetGraphicsRootDescriptorTable(2, textures[mesh.getDiffuseMap()].getSrvHandle().second);
       commandList->DrawIndexedInstanced(mesh.getIndexCount(), static_cast<UINT>(instance.second.get().size()), 0, 0, 0);
    }
+
+   // Copying compute shader results to render target
+   {
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      normalsRenderTarget.getBuffer().Get(),
+                                      D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                      D3D12_RESOURCE_STATE_COPY_SOURCE));
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      renderTarget.getBuffer().Get(),
+                                      D3D12_RESOURCE_STATE_RENDER_TARGET,
+                                      D3D12_RESOURCE_STATE_COPY_DEST));
+      commandList->CopyResource(renderTarget.getBuffer().Get(), normalsRenderTarget.getBuffer().Get());
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      renderTarget.getBuffer().Get(),
+                                      D3D12_RESOURCE_STATE_COPY_DEST,
+                                      D3D12_RESOURCE_STATE_RENDER_TARGET));
+   }
+
 
    if (imgui)
       imgui->onRender(commandList.get());
