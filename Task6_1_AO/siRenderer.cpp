@@ -51,8 +51,30 @@ void siRenderer::onInit(siImgui* imgui)
       texture.createRtv(device.get(), &descriptorMgr);
    }
 
-   depthStencilTarget.initDepthStencil(device.get(), window->getWidth(), window->getHeight());
-   depthStencilTarget.createDsv(device.get(), &descriptorMgr);
+   // depth/stencil buffers
+   {
+      auto& depthStencilTarget = textures["#depthStencil"];
+      depthStencilTarget.initDepthStencil(device.get(), window->getWidth(), window->getHeight());
+      depthStencilTarget.createDsv(device.get(), &descriptorMgr);
+
+      D3D12_SHADER_RESOURCE_VIEW_DESC depthShaderResourceViewDesc;
+      ZeroMemory(&depthShaderResourceViewDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
+      depthShaderResourceViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+      depthShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+      depthShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+      depthShaderResourceViewDesc.Texture2D.MipLevels = 1;
+      depthShaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+      depthStencilTarget.createSrv(device.get(), &descriptorMgr, &depthShaderResourceViewDesc);
+   }
+
+   // normals render target buffer
+   {
+      auto& normalsRenderTarget = textures["#normalsRenderTarget"];
+      normalsRenderTarget.initTexture(
+         device.get(), window->getWidth(), window->getHeight(),
+         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+      normalsRenderTarget.createRtv(device.get(), &descriptorMgr);
+   }
 
    // creating root signatures
    {
@@ -62,9 +84,10 @@ void siRenderer::onInit(siImgui* imgui)
    // creating PSOs
    {
       auto& pso = pipelineStates[0];
+      DXGI_FORMAT rtvFormats[] = {DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM};
       pso.createPso(device.get(), rootSignatures[0].get(), L"pbrRenderVS.hlsl", L"pbrRenderPS.hlsl",
-                    DXGI_FORMAT_R8G8B8A8_UNORM, sampleDesc,
-                    {
+                    rtvFormats, _countof(rtvFormats),
+                    sampleDesc, {
                        {
                           "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0
                        },
@@ -98,8 +121,8 @@ void siRenderer::onInit(siImgui* imgui)
                              0.f
                           ));
             position = {
-                     (static_cast<float>(i) - static_cast<float>(x - 1) * 0.5f) * (scale * 3.5f + 1.f), 0.f,
-                     (static_cast<float>(j) - static_cast<float>(y - 1) * 0.5f) * (scale * 3.5f + 1.f), 1.f
+               (static_cast<float>(i) - static_cast<float>(x - 1) * 0.5f) * (scale * 3.5f + 1.f), 0.f,
+               (static_cast<float>(j) - static_cast<float>(y - 1) * 0.5f) * (scale * 3.5f + 1.f), 1.f
             };
             XMVECTOR rotVector(XMLoadFloat4(&rotation));
             XMMATRIX rotMatrix = XMMatrixRotationQuaternion(rotVector);
@@ -112,7 +135,7 @@ void siRenderer::onInit(siImgui* imgui)
                A.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
                XMVECTOR det = XMMatrixDeterminant(A);
                return XMMatrixTranspose(XMMatrixInverse(&det,
-                  A));
+                                                        A));
             };
             XMMATRIX world = scaleMatrix * rotMatrix * transMatrix;
             perInstanceData instanceData;
@@ -173,21 +196,23 @@ void siRenderer::updatePipeline()
    assert(hr == S_OK);
 
    auto& renderTarget = swapChainTargets[currentFrame];
-   auto& depthStencil = depthStencilTarget;
+   auto& normalsRenderTarget = textures["#normalsRenderTarget"];
+   auto& depthStencil = textures["#depthStencil"];
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                    renderTarget.getBuffer().Get(),
                                    D3D12_RESOURCE_STATE_PRESENT,
                                    D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-
-   commandList->OMSetRenderTargets(1,
-                                   &renderTarget.getRtvHandle().first,
+   D3D12_CPU_DESCRIPTOR_HANDLE rts[] = {renderTarget.getRtvHandle().first, normalsRenderTarget.getRtvHandle().first};
+   commandList->OMSetRenderTargets(2,
+                                   rts,
                                    FALSE,
                                    &depthStencil.getDsvHandle().first);
 
 
-   const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
+   const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
    commandList->ClearRenderTargetView(renderTarget.getRtvHandle().first, clearColor, 0, nullptr);
+   commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
    commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
    commandList->RSSetViewports(1, &viewportScissor.getViewport());
@@ -210,7 +235,7 @@ void siRenderer::updatePipeline()
       commandList->IASetIndexBuffer(&mesh.getIndexBufferView());
       commandList->SetGraphicsRootShaderResourceView(1, instance.second.getGpuVirtualAddress(currentFrame));
       commandList->SetGraphicsRootDescriptorTable(2, textures[mesh.getDiffuseMap()].getSrvHandle().second);
-      commandList->DrawIndexedInstanced(mesh.getIndexCount(), instance.second.get().size(), 0, 0, 0);
+      commandList->DrawIndexedInstanced(mesh.getIndexCount(), static_cast<UINT>(instance.second.get().size()), 0, 0, 0);
    }
 
    if (imgui)

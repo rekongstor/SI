@@ -13,16 +13,10 @@ void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_
 {
    HRESULT hr = S_OK;
 
-   D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-   ZeroMemory(&depthStencilViewDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
-   depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
-   depthStencilViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-   depthStencilViewDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-   D3D12_CLEAR_VALUE depthStencilClearValue;
-   ZeroMemory(&depthStencilClearValue, sizeof(D3D12_CLEAR_VALUE));
-   depthStencilClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-   depthStencilClearValue.DepthStencil = {1.f, 0};
+   D3D12_CLEAR_VALUE optClearValue;
+   ZeroMemory(&optClearValue, sizeof(D3D12_CLEAR_VALUE));
+   optClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+   optClearValue.DepthStencil = {1.f, 0};
 
    hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -34,7 +28,36 @@ void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_
          1, 0, 1, 0,
          D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
       D3D12_RESOURCE_STATE_DEPTH_WRITE,
-      &depthStencilClearValue,
+      &optClearValue,
+      IID_PPV_ARGS(&buffer)
+   );
+   assert(hr == S_OK);
+}
+
+void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
+                              DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState)
+{
+   HRESULT hr = S_OK;
+
+   D3D12_CLEAR_VALUE optClearValue;
+   ZeroMemory(&optClearValue, sizeof(D3D12_CLEAR_VALUE));
+   optClearValue.Format = format;
+   optClearValue.Color[0] = 0.f;
+   optClearValue.Color[1] = 0.f;
+   optClearValue.Color[2] = 0.f;
+   optClearValue.Color[3] = 1.f;
+
+   hr = device->CreateCommittedResource(
+      &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+      D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+      &CD3DX12_RESOURCE_DESC::Tex2D(
+         format,
+         width,
+         height,
+         1, 0, 1, 0,
+         flags),
+      initState,
+      &optClearValue,
       IID_PPV_ARGS(&buffer)
    );
    assert(hr == S_OK);
@@ -304,28 +327,28 @@ void siTexture2D::releaseUploadBuffer()
 }
 
 
-void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc)
 {
    dsvHandle = descMgr->getDsvHandle();
-   device->CreateDepthStencilView(buffer.Get(), nullptr, dsvHandle.first);
+   device->CreateDepthStencilView(buffer.Get(), desc, dsvHandle.first);
 }
 
-void siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_RENDER_TARGET_VIEW_DESC* desc)
 {
    rtvHandle = descMgr->getRtvHandle();
-   device->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
+   device->CreateRenderTargetView(buffer.Get(), desc, rtvHandle.first);
 }
 
-void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc)
 {
    srvHandle = descMgr->getCbvSrvUavHandle();
-   device->CreateShaderResourceView(buffer.Get(), nullptr, srvHandle.first);
+   device->CreateShaderResourceView(buffer.Get(), desc, srvHandle.first);
 }
 
-void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_UNORDERED_ACCESS_VIEW_DESC* desc)
 {
    uavHandle = descMgr->getCbvSrvUavHandle();
-   device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
+   device->CreateUnorderedAccessView(buffer.Get(), nullptr, desc, uavHandle.first);
 }
 
 const ComPtr<ID3D12Resource>& siTexture2D::getBuffer() const

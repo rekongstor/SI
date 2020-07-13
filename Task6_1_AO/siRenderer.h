@@ -42,7 +42,6 @@ class siRenderer
    siViewportScissor viewportScissor;
 
    siTexture2D swapChainTargets[maxFrameBufferCount];
-   siTexture2D depthStencilTarget;
    std::map<std::string, siTexture2D> textures;
    std::map<int32_t, siRootSignature> rootSignatures;
    std::map<int32_t, siPipelineState> pipelineStates;

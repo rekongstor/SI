@@ -8,6 +8,12 @@ struct PSInput
    float2 uv : TEXCOORD;
 };
 
+struct PSOutput
+{
+   float4 color : SV_TARGET0;
+   float4 normals : SV_TARGET1;
+};
+
 
 cbuffer cbPass : register(b0)
 {
@@ -33,8 +39,9 @@ Texture2D rough : register(t2, space1);
 
 SamplerState s1 : register(s0);
 
-float4 main(PSInput input) : SV_TARGET
+PSOutput main(PSInput input) : SV_TARGET
 {
+   PSOutput output;
    float4 normDiffuseColor = albedo.Sample(s1, input.uv);
    normDiffuseColor = pow(normDiffuseColor, 2.2f);
    float metalness = 1.f - metallic.Sample(s1, input.uv).x;
@@ -69,5 +76,7 @@ float4 main(PSInput input) : SV_TARGET
 
    color = color / (color + 1.f);
 
-   return pow(color, 1.f / 2.2f);
+   output.color = pow(color, 1.f / 2.2f);
+   output.normals = normalize(input.normal);
+   return output;
 }

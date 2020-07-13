@@ -16,13 +16,16 @@ class siTexture2D
 public:
    void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer);
    void initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height);
+   void initTexture(ID3D12Device* device, uint32_t width, uint32_t height, DXGI_FORMAT format,
+                    D3D12_RESOURCE_FLAGS flags,
+                    D3D12_RESOURCE_STATES initState);
    void initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList);
    void releaseUploadBuffer();
 
-   void createDsv(ID3D12Device* device, siDescriptorMgr* descMgr);
-   void createRtv(ID3D12Device* device, siDescriptorMgr* descMgr);
-   void createSrv(ID3D12Device* device, siDescriptorMgr* descMgr);
-   void createUav(ID3D12Device* device, siDescriptorMgr* descMgr);
+   void createDsv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc = nullptr);
+   void createRtv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_RENDER_TARGET_VIEW_DESC* desc = nullptr);
+   void createSrv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc = nullptr);
+   void createUav(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_UNORDERED_ACCESS_VIEW_DESC* desc = nullptr);
 
 
    [[nodiscard]] const ComPtr<ID3D12Resource>& getBuffer() const;
