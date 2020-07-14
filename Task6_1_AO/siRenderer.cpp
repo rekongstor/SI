@@ -47,7 +47,7 @@ void siRenderer::onInit(siImgui* imgui)
    for (uint32_t i = 0; i < bufferCount; ++i)
    {
       auto& texture = swapChainTargets[i];
-      texture.initFromBuffer(swapChain.getBuffer(i));
+      texture.initFromBuffer(swapChain.getBuffer(i), DXGI_FORMAT_UNKNOWN, sampleDesc);
       texture.createRtv(device.get(), &descriptorMgr);
    }
 
@@ -56,15 +56,7 @@ void siRenderer::onInit(siImgui* imgui)
       auto& depthStencilTarget = textures["#depthStencil"];
       depthStencilTarget.initDepthStencil(device.get(), window->getWidth(), window->getHeight());
       depthStencilTarget.createDsv(device.get(), &descriptorMgr);
-
-      D3D12_SHADER_RESOURCE_VIEW_DESC depthShaderResourceViewDesc;
-      ZeroMemory(&depthShaderResourceViewDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
-      depthShaderResourceViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-      depthShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-      depthShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-      depthShaderResourceViewDesc.Texture2D.MipLevels = 1;
-      depthShaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
-      depthStencilTarget.createSrv(device.get(), &descriptorMgr, &depthShaderResourceViewDesc);
+      depthStencilTarget.createSrv(device.get(), &descriptorMgr);
    }
 
    // normals render target buffer
@@ -72,7 +64,7 @@ void siRenderer::onInit(siImgui* imgui)
       auto& normalsRenderTarget = textures["#normalsRenderTarget"];
       normalsRenderTarget.initTexture(
          device.get(), window->getWidth(), window->getHeight(),
-         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
+         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE, sampleDesc);
       normalsRenderTarget.createRtv(device.get(), &descriptorMgr);
 
       normalsRenderTarget.createSrv(device.get(), &descriptorMgr);
@@ -80,19 +72,19 @@ void siRenderer::onInit(siImgui* imgui)
 
    // creating root signatures
    {
-      auto& rs = rootSignatures[0];
+      auto& rs = rootSignatures["default"];
       rs.onInit(device.get(), siRootSignature::createSampleRsBlob()); // blobs should be loaded from files
    }
    {
-      auto& rsCs = rootSignatures[1];
-      rsCs.onInit(device.get(), siRootSignature::createCsRsBlob1In());
+      auto& rsCs = rootSignatures["csCb1In1Out"];
+      rsCs.onInit(device.get(), siRootSignature::createCsRsBlobCb1In1Out());
    }
 
    // creating PSOs
    {
-      auto& pso = pipelineStates[0];
+      auto& pso = pipelineStates["default"];
       DXGI_FORMAT rtvFormats[] = {DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM};
-      pso.createPso(device.get(), rootSignatures[0].get(), L"pbrRenderVS.hlsl", L"pbrRenderPS.hlsl",
+      pso.createPso(device.get(), rootSignatures["default"].get(), L"pbrRenderVS.hlsl", L"pbrRenderPS.hlsl",
                     rtvFormats, _countof(rtvFormats),
                     sampleDesc, {
                        {
@@ -106,6 +98,10 @@ void siRenderer::onInit(siImgui* imgui)
                        }
                     }
       );
+   }
+   {
+      auto& pso = pipelineStates["depthPrepare"];
+      pso.createPso(device.get(), rootSignatures["csCb1In1Out"].get(), L"depthPrepare.hlsl");
    }
 
    siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
@@ -199,7 +195,7 @@ void siRenderer::updatePipeline()
 
 
    hr = commandList->Reset(commandAllocator.getAllocator(currentFrame),
-                           pipelineStates[0].getPipelineState().Get());
+                           pipelineStates["default"].getPipelineState().Get());
    assert(hr == S_OK);
 
    auto& renderTarget = swapChainTargets[currentFrame];
@@ -230,7 +226,7 @@ void siRenderer::updatePipeline()
    commandList->RSSetScissorRects(1, &viewportScissor.getScissorRect());
 
    // Root signature [0]. Drawing meshes
-   commandList->SetGraphicsRootSignature(rootSignatures[0].get().Get());
+   commandList->SetGraphicsRootSignature(rootSignatures["default"].get().Get());
    commandList->SetGraphicsRootConstantBufferView(0, mainConstBuffer[currentFrame].getGpuVirtualAddress());
 
    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

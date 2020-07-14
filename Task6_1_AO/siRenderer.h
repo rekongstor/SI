@@ -43,8 +43,8 @@ class siRenderer
 
    siTexture2D swapChainTargets[maxFrameBufferCount];
    std::map<std::string, siTexture2D> textures;
-   std::map<int32_t, siRootSignature> rootSignatures;
-   std::map<int32_t, siPipelineState> pipelineStates;
+   std::map<std::string, siRootSignature> rootSignatures;
+   std::map<std::string, siPipelineState> pipelineStates;
    std::map<int32_t, siMesh> meshes;
    std::map<int32_t, siInstance> instances;
 

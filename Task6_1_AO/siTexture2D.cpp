@@ -4,9 +4,12 @@
 #include "siCommandList.h"
 #include "siDescriptorMgr.h"
 
-void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer)
+void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format,
+                                 DXGI_SAMPLE_DESC sampleDesc)
 {
    buffer = existingBuffer;
+   this->format = format;
+   this->sampleDesc = sampleDesc;
 }
 
 void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height)
@@ -25,42 +28,41 @@ void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_
          DXGI_FORMAT_D32_FLOAT,
          width,
          height,
-         1, 0, 1, 0,
+         1, 1, 1, 0,
          D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
       D3D12_RESOURCE_STATE_DEPTH_WRITE,
       &optClearValue,
       IID_PPV_ARGS(&buffer)
    );
    assert(hr == S_OK);
+
+   this->sampleDesc = {1, 0};
+   this->format = DXGI_FORMAT_D32_FLOAT;
 }
 
 void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
-                              DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState)
+                              DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState,
+                              DXGI_SAMPLE_DESC sampleDesc)
 {
    HRESULT hr = S_OK;
 
-   D3D12_CLEAR_VALUE optClearValue;
-   ZeroMemory(&optClearValue, sizeof(D3D12_CLEAR_VALUE));
-   optClearValue.Format = format;
-   optClearValue.Color[0] = 0.f;
-   optClearValue.Color[1] = 0.f;
-   optClearValue.Color[2] = 0.f;
-   optClearValue.Color[3] = 1.f;
-
    hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-      D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+      D3D12_HEAP_FLAG_NONE,
       &CD3DX12_RESOURCE_DESC::Tex2D(
          format,
          width,
          height,
-         1, 0, 1, 0,
+         1, 1, sampleDesc.Count, sampleDesc.Quality,
          flags),
       initState,
-      &optClearValue,
+      nullptr,
       IID_PPV_ARGS(&buffer)
    );
    assert(hr == S_OK);
+
+   this->sampleDesc = sampleDesc;
+   this->format = format;
 }
 
 void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
@@ -295,6 +297,7 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
    desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
    desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
+
    hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
       D3D12_HEAP_FLAG_NONE,
@@ -318,6 +321,9 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
 
    commandList.updateSubresource(buffer.Get(), textureUploadHeap.Get(),
                                  {data.data(), bytesPerRow, bytesPerRow * desc.Height});
+
+   sampleDesc = desc.SampleDesc;
+   format = desc.Format;
 }
 
 void siTexture2D::releaseUploadBuffer()
@@ -327,28 +333,74 @@ void siTexture2D::releaseUploadBuffer()
 }
 
 
-void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_DEPTH_STENCIL_VIEW_DESC* desc)
+void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
+   D3D12_DEPTH_STENCIL_VIEW_DESC desc;
+   ZeroMemory(&desc, sizeof(desc));
+   desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+   desc.Format = format;
+   desc.Flags = D3D12_DSV_FLAG_NONE;
+
    dsvHandle = descMgr->getDsvHandle();
-   device->CreateDepthStencilView(buffer.Get(), desc, dsvHandle.first);
+   device->CreateDepthStencilView(buffer.Get(), &desc, dsvHandle.first);
+   auto hr = device->GetDeviceRemovedReason();
+   assert(hr == S_OK);
 }
 
-void siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_RENDER_TARGET_VIEW_DESC* desc)
+auto siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr) -> void
 {
    rtvHandle = descMgr->getRtvHandle();
-   device->CreateRenderTargetView(buffer.Get(), desc, rtvHandle.first);
+   device->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
+   auto hr = device->GetDeviceRemovedReason();
+   assert(hr == S_OK);
 }
 
-void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_SHADER_RESOURCE_VIEW_DESC* desc)
+void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
+   DXGI_FORMAT srvformat;
+   switch (format)
+   {
+   case DXGI_FORMAT::DXGI_FORMAT_D16_UNORM:
+      srvformat = DXGI_FORMAT::DXGI_FORMAT_R16_FLOAT;
+      break;
+   case DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT:
+      srvformat = DXGI_FORMAT::DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+      break;
+   case DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT:
+      srvformat = DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT;
+      break;
+   case DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
+      srvformat = DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+      break;
+   default:
+      srvformat = format;
+   }
+
+   D3D12_SHADER_RESOURCE_VIEW_DESC desc;
+   ZeroMemory(&desc, sizeof(desc));
+   desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+   desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+   desc.Texture2D.MostDetailedMip = 0;
+   desc.Texture2D.MipLevels = 1;
+   desc.Format = srvformat;
+
    srvHandle = descMgr->getCbvSrvUavHandle();
-   device->CreateShaderResourceView(buffer.Get(), desc, srvHandle.first);
+   device->CreateShaderResourceView(buffer.Get(), &desc, srvHandle.first);
+   auto hr = device->GetDeviceRemovedReason();
+   assert(hr == S_OK);
 }
 
-void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr, const D3D12_UNORDERED_ACCESS_VIEW_DESC* desc)
+void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
+   D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
+   ZeroMemory(&desc, sizeof(desc));
+   desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+   desc.Format = format;
+
    uavHandle = descMgr->getCbvSrvUavHandle();
-   device->CreateUnorderedAccessView(buffer.Get(), nullptr, desc, uavHandle.first);
+   device->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle.first);
+   auto hr = device->GetDeviceRemovedReason();
+   assert(hr == S_OK);
 }
 
 const ComPtr<ID3D12Resource>& siTexture2D::getBuffer() const

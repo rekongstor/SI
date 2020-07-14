@@ -10,9 +10,11 @@ void siRootSignature::onInit(ID3D12Device* device, const ComPtr<ID3DBlob>& signa
                                     signature->GetBufferSize(),
                                     IID_PPV_ARGS(&rootSignature));
    assert(hr == S_OK);
+   hr = device->GetDeviceRemovedReason();
+   assert(hr == S_OK);
 }
 
-ComPtr<ID3DBlob> siRootSignature::createCsRsBlob1In()
+ComPtr<ID3DBlob> siRootSignature::createCsRsBlobCb1In1Out()
 {
    HRESULT hr = S_OK;
 
