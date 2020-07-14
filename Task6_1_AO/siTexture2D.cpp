@@ -392,13 +392,14 @@ void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
 
 void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
-   D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
-   ZeroMemory(&desc, sizeof(desc));
-   desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-   desc.Format = format;
+   //D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
+   //ZeroMemory(&desc, sizeof(desc));
+   //desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+   //desc.Format = format;
+   //desc.Texture2D.MipSlice = 0;
 
    uavHandle = descMgr->getCbvSrvUavHandle();
-   device->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle.first);
+   device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
    auto hr = device->GetDeviceRemovedReason();
    assert(hr == S_OK);
 }

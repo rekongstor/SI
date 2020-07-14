@@ -5,6 +5,5 @@ RWTexture2D<float4> output;
 void main(uint3 DTid : SV_DispatchThreadID)
 {
    float4 color = input[DTid.xy].xxxx;
-   color = color / (color + 1.f);
-   output[DTid.xy] = pow(color, 1.f / 2.2f);
+   output[DTid.xy] = color;
 }

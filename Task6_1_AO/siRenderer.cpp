@@ -49,6 +49,7 @@ void siRenderer::onInit(siImgui* imgui)
       auto& texture = swapChainTargets[i];
       texture.initFromBuffer(swapChain.getBuffer(i), DXGI_FORMAT_UNKNOWN, sampleDesc);
       texture.createRtv(device.get(), &descriptorMgr);
+      texture.createSrv(device.get(), &descriptorMgr);
    }
 
    // depth/stencil buffers
@@ -59,15 +60,23 @@ void siRenderer::onInit(siImgui* imgui)
       depthStencilTarget.createSrv(device.get(), &descriptorMgr);
    }
 
-   // normals render target buffer
+   // cacao post-process buffers
    {
       auto& normalsRenderTarget = textures["#normalsRenderTarget"];
       normalsRenderTarget.initTexture(
          device.get(), window->getWidth(), window->getHeight(),
-         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE, sampleDesc);
+         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE,
+         sampleDesc);
       normalsRenderTarget.createRtv(device.get(), &descriptorMgr);
-
       normalsRenderTarget.createSrv(device.get(), &descriptorMgr);
+   }
+   {
+      auto& texture = textures["#depthPrepared"];
+      texture.initTexture(
+         device.get(), window->getWidth(), window->getHeight(),
+         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE,
+         sampleDesc);
+      texture.createUav(device.get(), &descriptorMgr);
    }
 
    // creating root signatures
@@ -102,6 +111,13 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& pso = pipelineStates["depthPrepare"];
       pso.createPso(device.get(), rootSignatures["csCb1In1Out"].get(), L"depthPrepare.hlsl");
+   }
+
+   // creating compute shaders
+   {
+      auto& cs = computeShaders["depthPrepare"];
+      cs.onInit(&rootSignatures["csCb1In1Out"], &pipelineStates["depthPrepare"], &textures["#depthPrepared"],
+                &textures["#depthStencil"], nullptr, mainConstBuffer[0].getGpuVirtualAddress());
    }
 
    siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
@@ -201,52 +217,53 @@ void siRenderer::updatePipeline()
    auto& renderTarget = swapChainTargets[currentFrame];
    auto& normalsRenderTarget = textures["#normalsRenderTarget"];
    auto& depthStencil = textures["#depthStencil"];
-   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-                                   renderTarget.getBuffer().Get(),
-                                   D3D12_RESOURCE_STATE_PRESENT,
-                                   D3D12_RESOURCE_STATE_RENDER_TARGET));
-   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-                                   normalsRenderTarget.getBuffer().Get(),
-                                   D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                   D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-   D3D12_CPU_DESCRIPTOR_HANDLE rts[] = {renderTarget.getRtvHandle().first, normalsRenderTarget.getRtvHandle().first};
-   commandList->OMSetRenderTargets(2,
-                                   rts,
-                                   FALSE,
-                                   &depthStencil.getDsvHandle().first);
-
-
-   const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
-   commandList->ClearRenderTargetView(renderTarget.getRtvHandle().first, clearColor, 0, nullptr);
-   commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
-   commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
-
-   commandList->RSSetViewports(1, &viewportScissor.getViewport());
-   commandList->RSSetScissorRects(1, &viewportScissor.getScissorRect());
-
-   // Root signature [0]. Drawing meshes
-   commandList->SetGraphicsRootSignature(rootSignatures["default"].get().Get());
-   commandList->SetGraphicsRootConstantBufferView(0, mainConstBuffer[currentFrame].getGpuVirtualAddress());
-
-   commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-   for (auto& instance : instances)
+   // drawing
    {
-      auto it = meshes.find(instance.first);
-      if (it == meshes.end())
-         continue;
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      renderTarget.getBuffer().Get(),
+                                      D3D12_RESOURCE_STATE_PRESENT,
+                                      D3D12_RESOURCE_STATE_RENDER_TARGET));
+      commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                      normalsRenderTarget.getBuffer().Get(),
+                                      D3D12_RESOURCE_STATE_COPY_SOURCE,
+                                      D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-      auto& mesh = it->second;
-      commandList->IASetVertexBuffers(0, 1, &mesh.getVertexBufferView());
-      commandList->IASetIndexBuffer(&mesh.getIndexBufferView());
-      commandList->SetGraphicsRootShaderResourceView(1, instance.second.getGpuVirtualAddress(currentFrame));
-      commandList->SetGraphicsRootDescriptorTable(2, textures[mesh.getDiffuseMap()].getSrvHandle().second);
-      commandList->DrawIndexedInstanced(mesh.getIndexCount(), static_cast<UINT>(instance.second.get().size()), 0, 0, 0);
-   }
+      D3D12_CPU_DESCRIPTOR_HANDLE rts[] = {renderTarget.getRtvHandle().first, normalsRenderTarget.getRtvHandle().first};
+      commandList->OMSetRenderTargets(2,
+                                      rts,
+                                      FALSE,
+                                      &depthStencil.getDsvHandle().first);
 
-   // Copying compute shader results to render target
-   {
+
+      const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+      commandList->ClearRenderTargetView(renderTarget.getRtvHandle().first, clearColor, 0, nullptr);
+      commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
+      commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+
+      commandList->RSSetViewports(1, &viewportScissor.getViewport());
+      commandList->RSSetScissorRects(1, &viewportScissor.getScissorRect());
+
+      // Root signature [0]. Drawing meshes
+      commandList->SetGraphicsRootSignature(rootSignatures["default"].get().Get());
+      commandList->SetGraphicsRootConstantBufferView(0, mainConstBuffer[currentFrame].getGpuVirtualAddress());
+
+      commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+      for (auto& instance : instances)
+      {
+         auto it = meshes.find(instance.first);
+         if (it == meshes.end())
+            continue;
+
+         auto& mesh = it->second;
+         commandList->IASetVertexBuffers(0, 1, &mesh.getVertexBufferView());
+         commandList->IASetIndexBuffer(&mesh.getIndexBufferView());
+         commandList->SetGraphicsRootShaderResourceView(1, instance.second.getGpuVirtualAddress(currentFrame));
+         commandList->SetGraphicsRootDescriptorTable(2, textures[mesh.getDiffuseMap()].getSrvHandle().second);
+         commandList->DrawIndexedInstanced(mesh.getIndexCount(), static_cast<UINT>(instance.second.get().size()), 0, 0,
+                                           0);
+      }
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                       normalsRenderTarget.getBuffer().Get(),
                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -255,7 +272,18 @@ void siRenderer::updatePipeline()
                                       renderTarget.getBuffer().Get(),
                                       D3D12_RESOURCE_STATE_RENDER_TARGET,
                                       D3D12_RESOURCE_STATE_COPY_DEST));
-      commandList->CopyResource(renderTarget.getBuffer().Get(), normalsRenderTarget.getBuffer().Get());
+   }
+
+   auto& depthPrepared = textures["#depthPrepared"];
+   // compute shaders
+   {
+      computeShaders["depthPrepare"].dispatch(commandList.get(), window->getWidth(), window->getHeight(),
+         D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+   }
+
+   // Copying compute shader results to render target
+   {
+      commandList->CopyResource(renderTarget.getBuffer().Get(), depthPrepared.getBuffer().Get());
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                       renderTarget.getBuffer().Get(),
                                       D3D12_RESOURCE_STATE_COPY_DEST,

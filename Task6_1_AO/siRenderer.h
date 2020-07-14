@@ -4,6 +4,7 @@
 #include "siCommandQueue.h"
 #include "siCommandAllocator.h"
 #include "siCommandList.h"
+#include "siComputeShader.h"
 #include "siConstBuffer.h"
 #include "siSwapChain.h"
 #include "siTexture2D.h"
@@ -47,6 +48,7 @@ class siRenderer
    std::map<std::string, siPipelineState> pipelineStates;
    std::map<int32_t, siMesh> meshes;
    std::map<int32_t, siInstance> instances;
+   std::map<std::string, siComputeShader> computeShaders;
 
    siCamera camera;
 
