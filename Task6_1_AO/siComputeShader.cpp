@@ -37,7 +37,7 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t 
    commandList->SetComputeRootDescriptorTable(slot++, output->getUavHandle().second);
    commandList->SetComputeRootDescriptorTable(slot++, input->getSrvHandle().second);
 
-   commandList->Dispatch(static_cast<UINT>(ceilf(width / 256.f)), height, 1);
+   commandList->Dispatch(static_cast<UINT>(ceilf(width / 8.f)), static_cast<UINT>(ceilf(height / 8.f)), 1);
 
 
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(

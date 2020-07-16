@@ -283,7 +283,7 @@ void siRenderer::updatePipeline()
 
    // Copying compute shader results to render target
    {
-      commandList->CopyResource(renderTarget.getBuffer().Get(), depthPrepared.getBuffer().Get());
+      //commandList->CopyResource(renderTarget.getBuffer().Get(), depthPrepared.getBuffer().Get());
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                       renderTarget.getBuffer().Get(),
                                       D3D12_RESOURCE_STATE_COPY_DEST,
