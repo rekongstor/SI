@@ -15,3 +15,10 @@ struct mainConstBuff
    XMFLOAT4 lightColor;
    XMFLOAT4 ambientColor;
 };
+
+struct csConstBuff
+{
+   XMFLOAT4X4 vpMatrixInv;
+   float width;
+   float height;
+};

@@ -91,6 +91,8 @@ void siPipelineState::createPso(
    ZeroMemory(&psoDesc, sizeof(D3D12_COMPUTE_PIPELINE_STATE_DESC));
    psoDesc.pRootSignature = rootSignature.Get();
    psoDesc.CS = CSShaderByteCode;
+   psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+   psoDesc.NodeMask = 0;
 
    hr = device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
    assert(hr == S_OK);

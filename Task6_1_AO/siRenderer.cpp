@@ -79,14 +79,46 @@ void siRenderer::onInit(siImgui* imgui)
       texture.createUav(device.get(), &descriptorMgr);
    }
 
+   // creating const buffers
+   {
+      mainConstBuffer.initBuffer(
+         {
+            XMFLOAT4X4(),
+            XMFLOAT4(),
+            {0.f, -1.f, 0.f, 0.f},
+            {5.f, 5.f, 5.f, 1.f},
+            {.1f, .1f, .1f, 1.f}
+         }, device.get());
+
+      csConstBuffer.initBuffer(
+         {
+            XMFLOAT4X4()
+         }, device.get());
+   }
+
    // creating root signatures
    {
       auto& rs = rootSignatures["default"];
       rs.onInit(device.get(), siRootSignature::createSampleRsBlob()); // blobs should be loaded from files
    }
    {
+
+      D3D12_STATIC_SAMPLER_DESC sampler;
+      sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+      sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+      sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+      sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+      sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+      sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+      sampler.MinLOD = 0.0f;
+      sampler.MaxLOD = D3D12_FLOAT32_MAX;
+      sampler.MipLODBias = 0;
+      sampler.MaxAnisotropy = 1;
+      sampler.ShaderRegister = 0;
+      sampler.RegisterSpace = 0;
+      sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
       auto& rsCs = rootSignatures["csCb1In1Out"];
-      rsCs.onInit(device.get(), siRootSignature::createCsRsBlobCb1In1Out());
+      rsCs.onInit(device.get(), siRootSignature::createCsRsBlobCb1In1Out(sampler));
    }
 
    // creating PSOs
@@ -117,7 +149,7 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& cs = computeShaders["depthPrepare"];
       cs.onInit(&rootSignatures["csCb1In1Out"], &pipelineStates["depthPrepare"], &textures["#depthPrepared"],
-                &textures["#depthStencil"], nullptr, mainConstBuffer[0].getGpuVirtualAddress());
+                &textures["#depthStencil"], nullptr, csConstBuffer.getGpuVirtualAddress());
    }
 
    siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
@@ -167,17 +199,7 @@ void siRenderer::onInit(siImgui* imgui)
       inst.initBuffer(device.get());
    }
 
-   for (uint32_t i = 0; i < bufferCount; ++i)
-   {
-      mainConstBuffer[i].initBuffer(
-         {
-            XMFLOAT4X4(),
-            XMFLOAT4(),
-            {0.f, -1.f, 0.f, 0.f},
-            {5.f, 5.f, 5.f, 1.f},
-            {.1f, .1f, .1f, 1.f}
-         }, device.get());
-   }
+   
 
    executePipeline();
    active = true;
@@ -191,10 +213,17 @@ void siRenderer::update()
    timeLeft += delta * 0.000001f;
 
    camera.update();
-   auto& cb = mainConstBuffer[currentFrame].get();
+   auto& cb = mainConstBuffer.get();
    cb.camPos = camera.position;
    cb.vpMatrix = camera.vpMatrix;
-   mainConstBuffer[currentFrame].gpuCopy();
+   mainConstBuffer.gpuCopy();
+
+   auto& csCb = csConstBuffer.get();
+   XMVECTOR det = XMMatrixDeterminant(XMLoadFloat4x4(&camera.vpMatrix));
+   XMStoreFloat4x4(&csCb.vpMatrixInv, XMMatrixTranspose(XMMatrixInverse(&det, XMLoadFloat4x4(&camera.vpMatrix))));
+   csCb.width = window->getWidth();
+   csCb.height = window->getHeight();
+   csConstBuffer.gpuCopy();
 
    for (auto& inst : instances)
    {
@@ -246,7 +275,7 @@ void siRenderer::updatePipeline()
 
       // Root signature [0]. Drawing meshes
       commandList->SetGraphicsRootSignature(rootSignatures["default"].get().Get());
-      commandList->SetGraphicsRootConstantBufferView(0, mainConstBuffer[currentFrame].getGpuVirtualAddress());
+      commandList->SetGraphicsRootConstantBufferView(0, mainConstBuffer.getGpuVirtualAddress());
 
       commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -278,12 +307,12 @@ void siRenderer::updatePipeline()
    // compute shaders
    {
       computeShaders["depthPrepare"].dispatch(commandList.get(), window->getWidth(), window->getHeight(),
-         D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+                                              D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
    }
 
    // Copying compute shader results to render target
    {
-      //commandList->CopyResource(renderTarget.getBuffer().Get(), depthPrepared.getBuffer().Get());
+      commandList->CopyResource(renderTarget.getBuffer().Get(), depthPrepared.getBuffer().Get());
       commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                       renderTarget.getBuffer().Get(),
                                       D3D12_RESOURCE_STATE_COPY_DEST,

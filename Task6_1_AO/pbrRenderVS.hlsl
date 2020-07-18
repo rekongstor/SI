@@ -11,6 +11,8 @@ struct PSInput
    float4 normal : NORMAL0;
    float4 view : NORMAL1;
    float2 uv : TEXCOORD;
+
+   float4 pos : POSITION;
 };
 
 struct InstanceData
@@ -93,7 +95,9 @@ PSInput main(VSInput input, uint instanceID : SV_InstanceID)
    InstanceData inst = gInstanceData[instanceID];
 
    output.position = mul(input.position, inst.world);
+   output.pos = output.position;
    output.position = mul(output.position, vpMatrix);
+   output.pos /= output.pos.w;
    output.normal = normalize(mul(normalize(input.normal), inst.worldIt));
 
    output.uv = input.uv;

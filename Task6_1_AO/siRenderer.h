@@ -52,7 +52,9 @@ class siRenderer
 
    siCamera camera;
 
-   siConstBuffer<mainConstBuff> mainConstBuffer[maxFrameBufferCount];
+   siConstBuffer<mainConstBuff> mainConstBuffer;
+
+   siConstBuffer<csConstBuff> csConstBuffer;
 
    void update();
    void updatePipeline();

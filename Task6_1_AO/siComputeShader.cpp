@@ -31,11 +31,12 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t 
       output->getBuffer().Get(), outputState,
       D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
-   commandList->SetPipelineState(pipelineState->getPipelineState().Get());
    uint32_t slot = 0;
-   commandList->SetGraphicsRootConstantBufferView(slot++, constBufferAddress);
+   commandList->SetComputeRootConstantBufferView(slot++, constBufferAddress);
    commandList->SetComputeRootDescriptorTable(slot++, output->getUavHandle().second);
    commandList->SetComputeRootDescriptorTable(slot++, input->getSrvHandle().second);
+
+   commandList->SetPipelineState(pipelineState->getPipelineState().Get());
 
    commandList->Dispatch(static_cast<UINT>(ceilf(width / 8.f)), static_cast<UINT>(ceilf(height / 8.f)), 1);
 

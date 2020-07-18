@@ -1,8 +1,8 @@
 #pragma once
 class siCamera
 {
-   XMMATRIX projMatrix;
 public:
+   XMMATRIX projMatrix;
    XMFLOAT4X4 vpMatrix;
    XMFLOAT4 position;
    XMFLOAT4 target;
