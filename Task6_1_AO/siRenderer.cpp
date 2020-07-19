@@ -49,7 +49,7 @@ void siRenderer::onInit(siImgui* imgui)
       auto& texture = swapChainTargets[i];
       texture.initFromBuffer(swapChain.getBuffer(i), DXGI_FORMAT_UNKNOWN, sampleDesc);
       texture.createRtv(device.get(), &descriptorMgr);
-      texture.createSrv(device.get(), &descriptorMgr);
+      //texture.createSrv(device.get(), &descriptorMgr);
    }
 
    // depth/stencil buffers
@@ -57,7 +57,6 @@ void siRenderer::onInit(siImgui* imgui)
       auto& depthStencilTarget = textures["#depthStencil"];
       depthStencilTarget.initDepthStencil(device.get(), window->getWidth(), window->getHeight());
       depthStencilTarget.createDsv(device.get(), &descriptorMgr);
-      depthStencilTarget.createSrv(device.get(), &descriptorMgr);
    }
 
    // cacao post-process buffers
@@ -68,7 +67,6 @@ void siRenderer::onInit(siImgui* imgui)
          DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE,
          sampleDesc);
       normalsRenderTarget.createRtv(device.get(), &descriptorMgr);
-      normalsRenderTarget.createSrv(device.get(), &descriptorMgr);
    }
    {
       auto& texture = textures["#depthPrepared"];
@@ -76,7 +74,6 @@ void siRenderer::onInit(siImgui* imgui)
          device.get(), window->getWidth(), window->getHeight(),
          DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE,
          sampleDesc);
-      texture.createUav(device.get(), &descriptorMgr);
    }
 
    // creating const buffers
@@ -101,25 +98,6 @@ void siRenderer::onInit(siImgui* imgui)
       auto& rs = rootSignatures["default"];
       rs.onInit(device.get(), siRootSignature::createSampleRsBlob()); // blobs should be loaded from files
    }
-   {
-
-      D3D12_STATIC_SAMPLER_DESC sampler;
-      sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-      sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-      sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-      sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-      sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-      sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-      sampler.MinLOD = 0.0f;
-      sampler.MaxLOD = D3D12_FLOAT32_MAX;
-      sampler.MipLODBias = 0;
-      sampler.MaxAnisotropy = 1;
-      sampler.ShaderRegister = 0;
-      sampler.RegisterSpace = 0;
-      sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-      auto& rsCs = rootSignatures["csCb1In1Out"];
-      rsCs.onInit(device.get(), siRootSignature::createCsRsBlobCb1In1Out(sampler));
-   }
 
    // creating PSOs
    {
@@ -140,16 +118,12 @@ void siRenderer::onInit(siImgui* imgui)
                     }
       );
    }
-   {
-      auto& pso = pipelineStates["depthPrepare"];
-      pso.createPso(device.get(), rootSignatures["csCb1In1Out"].get(), L"depthPrepare.hlsl");
-   }
 
    // creating compute shaders
    {
       auto& cs = computeShaders["depthPrepare"];
-      cs.onInit(&rootSignatures["csCb1In1Out"], &pipelineStates["depthPrepare"], &textures["#depthPrepared"],
-                &textures["#depthStencil"], nullptr, csConstBuffer.getGpuVirtualAddress());
+      cs.onInit(device.get(), &descriptorMgr, L"depthPrepare.hlsl",
+                {textures["#depthStencil"]}, { textures["#depthPrepared"] }, csConstBuffer.getGpuVirtualAddress());
    }
 
    siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
@@ -199,10 +173,137 @@ void siRenderer::onInit(siImgui* imgui)
       inst.initBuffer(device.get());
    }
 
-   
 
    executePipeline();
    active = true;
+}
+
+
+static void updateConstants(FfxCacaoConstants* consts, FfxCacaoSettings* settings, BufferSizeInfo* bufferSizeInfo,
+                            const FfxCacaoMatrix4x4* proj, const FfxCacaoMatrix4x4* normalsToView)
+{
+   consts->BilateralSigmaSquared = settings->bilateralSigmaSquared;
+   consts->BilateralSimilarityDistanceSigma = settings->bilateralSimilarityDistanceSigma;
+
+   // used to get average load per pixel; 9.0 is there to compensate for only doing every 9th InterlockedAdd in PSPostprocessImportanceMapB for performance reasons
+   consts->LoadCounterAvgDiv = 9.0f / (float)(bufferSizeInfo->importanceMapWidth * bufferSizeInfo->importanceMapHeight *
+      255.0);
+
+   float depthLinearizeMul = (MATRIX_ROW_MAJOR_ORDER) ? (-proj->elements[3][2]) : (-proj->elements[2][3]);
+   // float depthLinearizeMul = ( clipFar * clipNear ) / ( clipFar - clipNear );
+   float depthLinearizeAdd = (MATRIX_ROW_MAJOR_ORDER) ? (proj->elements[2][2]) : (proj->elements[2][2]);
+   // float depthLinearizeAdd = clipFar / ( clipFar - clipNear );
+   // correct the handedness issue. need to make sure this below is correct, but I think it is.
+   if (depthLinearizeMul * depthLinearizeAdd < 0)
+      depthLinearizeAdd = -depthLinearizeAdd;
+   consts->DepthUnpackConsts[0] = depthLinearizeMul;
+   consts->DepthUnpackConsts[1] = depthLinearizeAdd;
+
+   float tanHalfFOVY = 1.0f / proj->elements[1][1]; // = tanf( drawContext.Camera.GetYFOV( ) * 0.5f );
+   float tanHalfFOVX = 1.0F / proj->elements[0][0]; // = tanHalfFOVY * drawContext.Camera.GetAspect( );
+   consts->CameraTanHalfFOV[0] = tanHalfFOVX;
+   consts->CameraTanHalfFOV[1] = tanHalfFOVY;
+
+   consts->NDCToViewMul[0] = consts->CameraTanHalfFOV[0] * 2.0f;
+   consts->NDCToViewMul[1] = consts->CameraTanHalfFOV[1] * -2.0f;
+   consts->NDCToViewAdd[0] = consts->CameraTanHalfFOV[0] * -1.0f;
+   consts->NDCToViewAdd[1] = consts->CameraTanHalfFOV[1] * 1.0f;
+
+   float ratio = ((float)bufferSizeInfo->inputOutputBufferWidth) / ((float)bufferSizeInfo->depthBufferWidth);
+   float border = (1.0f - ratio) / 2.0f;
+   for (int i = 0; i < 2; ++i)
+   {
+      consts->DepthBufferUVToViewMul[i] = consts->NDCToViewMul[i] / ratio;
+      consts->DepthBufferUVToViewAdd[i] = consts->NDCToViewAdd[i] - consts->NDCToViewMul[i] * border / ratio;
+   }
+
+   consts->EffectRadius = FFX_CACAO_CLAMP(settings->radius, 0.0f, 100000.0f);
+   consts->EffectShadowStrength = FFX_CACAO_CLAMP(settings->shadowMultiplier * 4.3f, 0.0f, 10.0f);
+   consts->EffectShadowPow = FFX_CACAO_CLAMP(settings->shadowPower, 0.0f, 10.0f);
+   consts->EffectShadowClamp = FFX_CACAO_CLAMP(settings->shadowClamp, 0.0f, 1.0f);
+   consts->EffectFadeOutMul = -1.0f / (settings->fadeOutTo - settings->fadeOutFrom);
+   consts->EffectFadeOutAdd = settings->fadeOutFrom / (settings->fadeOutTo - settings->fadeOutFrom) + 1.0f;
+   consts->EffectHorizonAngleThreshold = FFX_CACAO_CLAMP(settings->horizonAngleThreshold, 0.0f, 1.0f);
+
+   // 1.2 seems to be around the best trade off - 1.0 means on-screen radius will stop/slow growing when the camera is at 1.0 distance, so, depending on FOV, basically filling up most of the screen
+   // This setting is viewspace-dependent and not screen size dependent intentionally, so that when you change FOV the effect stays (relatively) similar.
+   float effectSamplingRadiusNearLimit = (settings->radius * 1.2f);
+
+   // if the depth precision is switched to 32bit float, this can be set to something closer to 1 (0.9999 is fine)
+   consts->DepthPrecisionOffsetMod = 0.9992f;
+
+   // consts->RadiusDistanceScalingFunctionPow     = 1.0f - CLAMP( m_settings.RadiusDistanceScalingFunction, 0.0f, 1.0f );
+
+
+   // Special settings for lowest quality level - just nerf the effect a tiny bit
+   if (settings->qualityLevel <= FFX_CACAO_QUALITY_LOW)
+   {
+      //consts.EffectShadowStrength     *= 0.9f;
+      effectSamplingRadiusNearLimit *= 1.50f;
+
+      if (settings->qualityLevel == FFX_CACAO_QUALITY_LOWEST)
+         consts->EffectRadius *= 0.8f;
+   }
+
+   effectSamplingRadiusNearLimit /= tanHalfFOVY; // to keep the effect same regardless of FOV
+
+   consts->EffectSamplingRadiusNearLimitRec = 1.0f / effectSamplingRadiusNearLimit;
+
+   consts->AdaptiveSampleCountLimit = settings->adaptiveQualityLimit;
+
+   consts->NegRecEffectRadius = -1.0f / consts->EffectRadius;
+
+   consts->InvSharpness = FFX_CACAO_CLAMP(1.0f - settings->sharpness, 0.0f, 1.0f);
+
+   consts->DetailAOStrength = settings->detailShadowStrength;
+
+   // set buffer size constants.
+   consts->SSAOBufferDimensions[0] = (float)bufferSizeInfo->ssaoBufferWidth;
+   consts->SSAOBufferDimensions[1] = (float)bufferSizeInfo->ssaoBufferHeight;
+   consts->SSAOBufferInverseDimensions[0] = 1.0f / ((float)bufferSizeInfo->ssaoBufferWidth);
+   consts->SSAOBufferInverseDimensions[1] = 1.0f / ((float)bufferSizeInfo->ssaoBufferHeight);
+
+   consts->DepthBufferDimensions[0] = (float)bufferSizeInfo->depthBufferWidth;
+   consts->DepthBufferDimensions[1] = (float)bufferSizeInfo->depthBufferHeight;
+   consts->DepthBufferInverseDimensions[0] = 1.0f / ((float)bufferSizeInfo->depthBufferWidth);
+   consts->DepthBufferInverseDimensions[1] = 1.0f / ((float)bufferSizeInfo->depthBufferHeight);
+
+   consts->DepthBufferOffset[0] = bufferSizeInfo->depthBufferXOffset;
+   consts->DepthBufferOffset[1] = bufferSizeInfo->depthBufferYOffset;
+
+   consts->InputOutputBufferDimensions[0] = (float)bufferSizeInfo->inputOutputBufferWidth;
+   consts->InputOutputBufferDimensions[1] = (float)bufferSizeInfo->inputOutputBufferHeight;
+   consts->InputOutputBufferInverseDimensions[0] = 1.0f / ((float)bufferSizeInfo->inputOutputBufferWidth);
+   consts->InputOutputBufferInverseDimensions[1] = 1.0f / ((float)bufferSizeInfo->inputOutputBufferHeight);
+
+   consts->ImportanceMapDimensions[0] = (float)bufferSizeInfo->importanceMapWidth;
+   consts->ImportanceMapDimensions[1] = (float)bufferSizeInfo->importanceMapHeight;
+   consts->ImportanceMapInverseDimensions[0] = 1.0f / ((float)bufferSizeInfo->importanceMapWidth);
+   consts->ImportanceMapInverseDimensions[1] = 1.0f / ((float)bufferSizeInfo->importanceMapHeight);
+
+   consts->DeinterleavedDepthBufferDimensions[0] = (float)bufferSizeInfo->deinterleavedDepthBufferWidth;
+   consts->DeinterleavedDepthBufferDimensions[1] = (float)bufferSizeInfo->deinterleavedDepthBufferHeight;
+   consts->DeinterleavedDepthBufferInverseDimensions[0] = 1.0f / ((float)bufferSizeInfo->deinterleavedDepthBufferWidth);
+   consts->DeinterleavedDepthBufferInverseDimensions[1] = 1.0f / ((float)bufferSizeInfo->deinterleavedDepthBufferHeight
+   );
+
+   consts->DeinterleavedDepthBufferOffset[0] = (float)bufferSizeInfo->deinterleavedDepthBufferXOffset;
+   consts->DeinterleavedDepthBufferOffset[1] = (float)bufferSizeInfo->deinterleavedDepthBufferYOffset;
+   consts->DeinterleavedDepthBufferNormalisedOffset[0] = ((float)bufferSizeInfo->deinterleavedDepthBufferXOffset) / ((
+      float)bufferSizeInfo->deinterleavedDepthBufferWidth);
+   consts->DeinterleavedDepthBufferNormalisedOffset[1] = ((float)bufferSizeInfo->deinterleavedDepthBufferYOffset) / ((
+      float)bufferSizeInfo->deinterleavedDepthBufferHeight);
+
+   if (!settings->generateNormals)
+   {
+      consts->NormalsUnpackMul = 2.0f; // inputs->NormalsUnpackMul;
+      consts->NormalsUnpackAdd = -1.0f; // inputs->NormalsUnpackAdd;
+   }
+   else
+   {
+      consts->NormalsUnpackMul = 2.0f;
+      consts->NormalsUnpackAdd = -1.0f;
+   }
 }
 
 void siRenderer::update()
@@ -221,8 +322,35 @@ void siRenderer::update()
    auto& csCb = csConstBuffer.get();
    XMVECTOR det = XMMatrixDeterminant(XMLoadFloat4x4(&camera.vpMatrix));
    XMStoreFloat4x4(&csCb.vpMatrixInv, XMMatrixTranspose(XMMatrixInverse(&det, XMLoadFloat4x4(&camera.vpMatrix))));
+   XMStoreFloat4x4(&csCb.vMatrix, camera.viewMatrix);
    csCb.width = window->getWidth();
    csCb.height = window->getHeight();
+   FfxCacaoSettings settings = FFX_CACAO_DEFAULT_SETTINGS;
+   FfxCacaoMatrix4x4 proj;
+   FfxCacaoMatrix4x4 projInv;
+
+   BufferSizeInfo bsi = {};
+   bsi.inputOutputBufferWidth = window->getWidth();
+   bsi.inputOutputBufferHeight = window->getHeight();
+   bsi.depthBufferXOffset = 0;
+   bsi.depthBufferYOffset = 0;
+   bsi.depthBufferWidth = window->getWidth();
+   bsi.depthBufferHeight = window->getHeight();
+
+   bsi.ssaoBufferWidth = window->getWidth();
+   bsi.ssaoBufferHeight = window->getHeight();
+   bsi.deinterleavedDepthBufferXOffset = 0;
+   bsi.deinterleavedDepthBufferYOffset = 0;
+   bsi.deinterleavedDepthBufferWidth = window->getWidth();
+   bsi.deinterleavedDepthBufferHeight = window->getHeight();
+   bsi.importanceMapWidth = window->getWidth();
+   bsi.importanceMapHeight = window->getHeight();
+
+   memcpy(proj.elements, cb.vpMatrix.m, 16 * sizeof(float));
+   memcpy(projInv.elements, csCb.vpMatrixInv.m, 16 * sizeof(float));
+
+   updateConstants(&csCb.cacaoConst, &settings, &bsi, &proj, &projInv);
+
    csConstBuffer.gpuCopy();
 
    for (auto& inst : instances)
@@ -306,8 +434,7 @@ void siRenderer::updatePipeline()
    auto& depthPrepared = textures["#depthPrepared"];
    // compute shaders
    {
-      computeShaders["depthPrepare"].dispatch(commandList.get(), window->getWidth(), window->getHeight(),
-                                              D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+      computeShaders["depthPrepare"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
    }
 
    // Copying compute shader results to render target

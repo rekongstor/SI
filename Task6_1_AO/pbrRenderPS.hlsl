@@ -6,8 +6,6 @@ struct PSInput
    float4 normal : NORMAL0;
    float4 view : NORMAL1;
    float2 uv : TEXCOORD;
-
-   float4 pos : POSITION;
 };
 
 struct PSOutput
@@ -78,7 +76,7 @@ PSOutput main(PSInput input) : SV_TARGET
 
    color = color / (color + 1.f);
 
-   output.color = input.pos;//pow(color, 1.f / 2.2f);
+   output.color = pow(color, 1.f / 2.2f);
    output.normals = normalize(input.normal);
    return output;
 }

@@ -4,6 +4,14 @@
 #include "siCommandList.h"
 #include "siDescriptorMgr.h"
 
+void siTexture2D::initFromTexture(const siTexture2D& other)
+{
+   this->buffer = other.buffer;
+   this->format = other.format;
+   this->sampleDesc = other.sampleDesc;
+   this->state = other.state;
+}
+
 void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format,
                                  DXGI_SAMPLE_DESC sampleDesc)
 {
@@ -38,6 +46,7 @@ void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_
 
    this->sampleDesc = {1, 0};
    this->format = DXGI_FORMAT_D32_FLOAT;
+   this->state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 }
 
 void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
@@ -63,6 +72,7 @@ void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t hei
 
    this->sampleDesc = sampleDesc;
    this->format = format;
+   this->state = initState;
 }
 
 void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
@@ -324,6 +334,7 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
 
    sampleDesc = desc.SampleDesc;
    format = desc.Format;
+   this->state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 }
 
 void siTexture2D::releaseUploadBuffer()
