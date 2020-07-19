@@ -51,10 +51,11 @@ class siRenderer
    std::map<std::string, siComputeShader> computeShaders;
 
    siCamera camera;
+   int targetOutput;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
-
-   siConstBuffer<csConstBuff> csConstBuffer;
+   siConstBuffer<ssaoConstBuff> ssaoConstBuffer;
+   siConstBuffer<defRenderConstBuff> defRenderConstBuffer;
 
    void update();
    void updatePipeline();

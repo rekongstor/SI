@@ -1,10 +1,12 @@
 #pragma once
+#include "structures.h"
 class siWindow;
 
 class siImgui
 {
-   XMFLOAT3* camPos;
-   XMFLOAT3* camTarget;
+   float3* camPos;
+   float3* camTarget;
+   int* targetOutput;
 public:
    siImgui();
 
@@ -15,5 +17,5 @@ public:
    void onUpdate();
    void onRender(ID3D12GraphicsCommandList* commandList);
 
-   void bindVariables(void* cameraPos, void* cameraTarget);
+   void bindVariables(void* cameraPos, void* cameraTarget, int* targetOutput);
 };

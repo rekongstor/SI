@@ -26,9 +26,9 @@ PSOutput main(PSInput input) : SV_TARGET
    float roughness = 1.f - rough.Sample(s1, input.uv).x;
 
    PSOutput output;
-   output.position = input.position;
+   output.position = float4(input.position.xyz, roughness);
    output.normals = float4(normalize(input.normal).xyz, metalness);
-   output.color = float4(diffuseColor.xyz, roughness);
+   output.color = diffuseColor;
 
    return output;
 }

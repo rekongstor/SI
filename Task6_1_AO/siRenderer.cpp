@@ -21,18 +21,21 @@ void siRenderer::onInit(siImgui* imgui)
    HRESULT hr = S_OK;
 
    ComPtr<IDXGIFactory4> factory;
-   hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
-   assert(hr == S_OK);
+   // initializing main objects
+   {
+      hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+      assert(hr == S_OK);
 
-   device.onInit(factory.Get(), featureLevel, softwareAdapter);
-   commandQueue.onInit(device.get());
-   commandAllocator.onInit(device.get());
-   commandList.onInit(device.get(), commandAllocator.getAllocator(0));
+      device.onInit(factory.Get(), featureLevel, softwareAdapter);
+      commandQueue.onInit(device.get());
+      commandAllocator.onInit(device.get());
+      commandList.onInit(device.get(), commandAllocator.getAllocator(0));
 
-   swapChain.onInit(window, sampleDesc, bufferCount, factory.Get(), commandQueue.get().Get());
-   fenceMgr.onInit(device.get(), bufferCount, swapChain.get(), commandQueue.get());
+      swapChain.onInit(window, sampleDesc, bufferCount, factory.Get(), commandQueue.get().Get());
+      fenceMgr.onInit(device.get(), bufferCount, swapChain.get(), commandQueue.get());
 
-   descriptorMgr.onInit(device.get());
+      descriptorMgr.onInit(device.get());
+   }
 
    // imgui if exists
    if (imgui)
@@ -40,7 +43,7 @@ void siRenderer::onInit(siImgui* imgui)
       this->imgui = imgui;
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
                             descriptorMgr.getCbvSrvUavHandle());
-      imgui->bindVariables(&camera.position, &camera.target);
+      imgui->bindVariables(&camera.position, &camera.target, &targetOutput);
    }
 
    // swap chain buffers initialization
@@ -61,28 +64,26 @@ void siRenderer::onInit(siImgui* imgui)
 
    // G-buffer
    {
-      auto& texture = textures["#diffuseRenderTarget"];
-      texture.initTexture(
+      auto& diffuse = textures["#diffuseRenderTarget"];
+      diffuse.initTexture(
          device.get(), window->getWidth(), window->getHeight(),
          DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
          sampleDesc);
-      texture.createRtv(device.get(), &descriptorMgr);
-   }
-   {
-      auto& texture = textures["#positionRenderTarget"];
-      texture.initTexture(
+      diffuse.createRtv(device.get(), &descriptorMgr);
+
+      auto& positions = textures["#positionRenderTarget"];
+      positions.initTexture(
          device.get(), window->getWidth(), window->getHeight(),
          DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
          sampleDesc);
-      texture.createRtv(device.get(), &descriptorMgr);
-   }
-   {
-      auto& texture = textures["#normalsRenderTarget"];
-      texture.initTexture(
+      positions.createRtv(device.get(), &descriptorMgr);
+
+      auto& normals = textures["#normalsRenderTarget"];
+      normals.initTexture(
          device.get(), window->getWidth(), window->getHeight(),
          DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
          sampleDesc);
-      texture.createRtv(device.get(), &descriptorMgr);
+      normals.createRtv(device.get(), &descriptorMgr);
    }
 
    // SSAO
@@ -94,13 +95,27 @@ void siRenderer::onInit(siImgui* imgui)
          sampleDesc);
    }
 
+   // Deferred render target
+   {
+      auto& texture = textures["#deferredRenderTarget"];
+      texture.initTexture(
+         device.get(), window->getWidth(), window->getHeight(),
+         DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON,
+         sampleDesc);
+   }
+
    // creating const buffers
    {
-      mainConstBuffer.initBuffer(
-         {}, device.get());
+      mainConstBuffer.initBuffer({}, device.get());
 
-      csConstBuffer.initBuffer(
-         {}, device.get());
+      ssaoConstBuffer.initBuffer({}, device.get());
+      defRenderConstBuffer.initBuffer(
+         {
+            {},
+            {5.f, 5.f, 5.f, 1.f},
+            {0.1f, 0.1f, 0.1f, 1.f}
+         },
+         device.get());
    }
 
    // creating root signatures
@@ -115,7 +130,7 @@ void siRenderer::onInit(siImgui* imgui)
       DXGI_FORMAT rtvFormats[] = {
          DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT
       };
-      pso.createPso(device.get(), rootSignatures["default"].get(), L"pbrRenderVS.hlsl", L"pbrRenderPS.hlsl",
+      pso.createPso(device.get(), rootSignatures["default"].get(), L"defRenderVS.hlsl", L"defRenderPS.hlsl",
                     rtvFormats, _countof(rtvFormats),
                     sampleDesc, {
                        {
@@ -133,9 +148,20 @@ void siRenderer::onInit(siImgui* imgui)
 
    // creating compute shaders
    {
-      auto& cs = computeShaders["depthPrepare"];
-      cs.onInit(device.get(), &descriptorMgr, L"depthPrepare.hlsl",
-                {textures["#depthStencil"]}, {textures["#ssaoOutput"]}, csConstBuffer.getGpuVirtualAddress());
+      auto& ssao = computeShaders["ssao"];
+      ssao.onInit(device.get(), &descriptorMgr, L"ssao.hlsl",
+                  {textures["#depthStencil"], textures["#normalsRenderTarget"], textures["#positionRenderTarget"]},
+                  {textures["#ssaoOutput"]},
+                  ssaoConstBuffer.getGpuVirtualAddress());
+
+      auto& deferredRender = computeShaders["deferredRender"];
+      deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
+                            {
+                               textures["#diffuseRenderTarget"], textures["#positionRenderTarget"],
+                               textures["#normalsRenderTarget"], textures["#ssaoOutput"]
+                            },
+                            {textures["#deferredRenderTarget"]},
+                            defRenderConstBuffer.getGpuVirtualAddress());
    }
 
    siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
@@ -185,7 +211,6 @@ void siRenderer::onInit(siImgui* imgui)
       inst.initBuffer(device.get());
    }
 
-
    executePipeline();
    active = true;
 }
@@ -199,18 +224,24 @@ void siRenderer::update()
    timeLeft += delta * 0.000001f;
 
    camera.update();
-   auto& cb = mainConstBuffer.get();
-   XMStoreFloat4x4(&cb.viewMatrix, camera.viewMatrix);
-   XMStoreFloat4x4(&cb.projMatrix, camera.projMatrix);
+   auto& mainCb = mainConstBuffer.get();
+   XMStoreFloat4x4(&mainCb.viewMatrix, camera.viewMatrix);
+   XMStoreFloat4x4(&mainCb.projMatrix, camera.projMatrix);
    mainConstBuffer.gpuCopy();
 
-   auto& csCb = csConstBuffer.get();
-   XMVECTOR det = XMMatrixDeterminant(camera.viewMatrix);
-   XMStoreFloat4x4(&csCb.viewMatrixInv, XMMatrixTranspose(XMMatrixInverse(&det, camera.viewMatrix)));
-   XMStoreFloat4x4(&csCb.viewMatrix, camera.viewMatrix);
-   csCb.width = window->getWidth();
-   csCb.height = window->getHeight();
-   csConstBuffer.gpuCopy();
+   auto& ssaoCb = ssaoConstBuffer.get();
+   XMVECTOR det = XMMatrixDeterminant(camera.projMatrix);
+   XMStoreFloat4x4(&ssaoCb.projMatrixInv, XMMatrixTranspose(XMMatrixInverse(&det, camera.projMatrix)));
+   ssaoCb.width = window->getWidth();
+   ssaoCb.height = window->getHeight();
+   ssaoConstBuffer.gpuCopy();
+
+   auto& defRenCb = defRenderConstBuffer.get();
+   float4 lightDirection = { 0.f, -1.f, 0.f, 0.f };
+   XMStoreFloat4(&defRenCb.lightDirection,  XMVector4Transform(XMLoadFloat4(&lightDirection), XMMatrixTranspose(camera.viewMatrix)));
+   defRenCb.targetOutput = targetOutput;
+   defRenderConstBuffer.gpuCopy();
+
 
    for (auto& inst : instances)
    {
@@ -238,6 +269,7 @@ void siRenderer::updatePipeline()
    auto& normalsRenderTarget = textures["#normalsRenderTarget"];
    auto& diffuseRenderTarget = textures["#diffuseRenderTarget"];
 
+   auto& deferredRenderTarget = textures["#deferredRenderTarget"];
 
    // drawing
    {
@@ -291,16 +323,17 @@ void siRenderer::updatePipeline()
 
    // compute shaders
    {
-      computeShaders["depthPrepare"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
+      computeShaders["ssao"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
+      computeShaders["deferredRender"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
    }
 
    // Copying compute shader results to render target
    {
       swapChainTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COPY_DEST);
-      diffuseRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-      commandList->CopyResource(swapChainTarget.getBuffer().Get(), diffuseRenderTarget.getBuffer().Get());
+      deferredRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+      commandList->CopyResource(swapChainTarget.getBuffer().Get(), deferredRenderTarget.getBuffer().Get());
       swapChainTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-      diffuseRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COMMON);
+      deferredRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COMMON);
    }
 
    // imgui draw

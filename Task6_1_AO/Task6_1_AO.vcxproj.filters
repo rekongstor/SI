@@ -163,16 +163,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="pbrRenderVS.hlsl">
+    <FxCompile Include="ssao.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
-    <FxCompile Include="pbrRenderPS.hlsl">
+    <FxCompile Include="pbrRender.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
-    <FxCompile Include="depthPrepare.hlsl">
+    <FxCompile Include="defRenderPS.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
-    <FxCompile Include="deferredRender.hlsl">
+    <FxCompile Include="defRenderVS.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>

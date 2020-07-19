@@ -2,21 +2,28 @@
 
 struct siVertex
 {
-   XMFLOAT4 position;
-   XMFLOAT4 normal;
-   XMFLOAT2 uv;
+   float4 position;
+   float4 normal;
+   float2 uv;
 };
 
 struct mainConstBuff
 {
-   XMFLOAT4X4 viewMatrix;
-   XMFLOAT4X4 projMatrix;
+   float4x4 viewMatrix;
+   float4x4 projMatrix;
 };
 
-struct csConstBuff
+struct ssaoConstBuff
 {
-	XMFLOAT4X4 viewMatrixInv;
-	XMFLOAT4X4 viewMatrix;
-	float width;
-	float height;
+   float4x4 projMatrixInv;
+   float width;
+   float height;
+};
+
+struct defRenderConstBuff
+{
+   float4 lightDirection;
+   float4 lightColor;
+   float4 ambientColor;
+   int targetOutput;
 };

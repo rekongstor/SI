@@ -41,6 +41,16 @@ void siImgui::onInitRenderer(ID3D12Device* device, uint32_t bufferCount, ID3D12D
 
 void siImgui::onUpdate()
 {
+   const char* targets[] = {
+      "Color",
+      "Diffuse",
+      "Position",
+      "Normal",
+      "Ssao",
+      "Metalness",
+      "Roughness"
+   };
+
    ImGui_ImplDX12_NewFrame();
    ImGui_ImplWin32_NewFrame();
    ImGui::NewFrame();
@@ -48,6 +58,8 @@ void siImgui::onUpdate()
       ImGui::Begin("Imgui Debug");
       ImGui::DragFloat3("Camera position", &camPos->x,0.1f);
       ImGui::DragFloat3("Camera target", &camTarget->x, 0.1f);
+      ImGui::Combo("Target output", targetOutput,
+         targets, _countof(targets));
       ImGui::End();
    }
 }
@@ -58,8 +70,9 @@ void siImgui::onRender(ID3D12GraphicsCommandList* commandList)
    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }
 
-void siImgui::bindVariables(void* cameraPos, void* cameraTarget)
+void siImgui::bindVariables(void* cameraPos, void* cameraTarget, int* targetOutput)
 {
    camPos = static_cast<XMFLOAT3*>(cameraPos);
    camTarget = static_cast<XMFLOAT3*>(cameraTarget);
+   this->targetOutput = targetOutput;
 }

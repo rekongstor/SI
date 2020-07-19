@@ -15,3 +15,10 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 const uint32_t maxFrameBufferCount = 3;
+
+using float1 = float;
+using float2 = XMFLOAT2;
+using float3 = XMFLOAT3;
+using float4 = XMFLOAT4;
+using float4x4 = XMFLOAT4X4;
+using uint = unsigned int;
