@@ -27,6 +27,8 @@ public:
    void initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList);
    void releaseUploadBuffer();
 
+   void resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES targetState);
+
    void createDsv(ID3D12Device* device, siDescriptorMgr* descMgr);
    void createRtv(ID3D12Device* device, siDescriptorMgr* descMgr);
    void createSrv(ID3D12Device* device, siDescriptorMgr* descMgr);

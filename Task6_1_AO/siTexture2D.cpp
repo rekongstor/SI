@@ -343,6 +343,15 @@ void siTexture2D::releaseUploadBuffer()
    data.clear();
 }
 
+void siTexture2D::resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES targetState)
+{
+   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+                                   buffer.Get(),
+                                   state,
+                                   targetState));
+   setState(targetState);
+}
+
 
 void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
@@ -360,8 +369,13 @@ void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
 
 auto siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr) -> void
 {
+   D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+   rtvDesc.Format = format;
+   rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+   rtvDesc.Texture2D.MipSlice = 0;
+
    rtvHandle = descMgr->getRtvHandle();
-   device->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
+   device->CreateRenderTargetView(buffer.Get(), &rtvDesc, rtvHandle.first);
    auto hr = device->GetDeviceRemovedReason();
    assert(hr == S_OK);
 }

@@ -4,7 +4,6 @@ class siCamera
 public:
    XMMATRIX projMatrix;
    XMMATRIX viewMatrix;
-   XMFLOAT4X4 vpMatrix;
    XMFLOAT4 position;
    XMFLOAT4 target;
    XMFLOAT4 up;

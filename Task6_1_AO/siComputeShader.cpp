@@ -109,19 +109,15 @@ void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPC
 
 void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t width, uint32_t height)
 {
+   if (outputs.size() == 0)
+      return;
    commandList->SetComputeRootSignature(rootSignature.get().Get());
 
    for (auto& input : inputs)
-      commandList->ResourceBarrier(
-         1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            input.getBuffer().Get(),
-            input.getState(), D3D12_RESOURCE_STATE_GENERIC_READ));
+      input.resourceBarrier(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
 
    for (auto& output : outputs)
-      commandList->ResourceBarrier(
-         1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            output.getBuffer().Get(),
-            output.getState(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+      output.resourceBarrier(commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
 
    uint32_t slot = 0;
@@ -134,14 +130,8 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t 
    commandList->Dispatch(static_cast<UINT>(ceilf(width / 8.f)), static_cast<UINT>(ceilf(height / 8.f)), 1);
 
    for (auto& input : inputs)
-      commandList->ResourceBarrier(
-         1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            input.getBuffer().Get(),
-            D3D12_RESOURCE_STATE_GENERIC_READ, input.getState()));
+      input.resourceBarrier(commandList, D3D12_RESOURCE_STATE_COMMON);
 
    for (auto& output : outputs)
-      commandList->ResourceBarrier(
-         1, &CD3DX12_RESOURCE_BARRIER::Transition(
-            output.getBuffer().Get(),
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, output.getState()));
+      output.resourceBarrier(commandList, D3D12_RESOURCE_STATE_COMMON);
 }

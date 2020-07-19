@@ -172,5 +172,8 @@
     <FxCompile Include="depthPrepare.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
+    <FxCompile Include="deferredRender.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

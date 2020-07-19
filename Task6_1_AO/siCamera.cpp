@@ -10,6 +10,5 @@ siCamera::siCamera(const XMFLOAT4& position, const XMFLOAT4& target, float fovAn
 
 void siCamera::update()
 {
-   viewMatrix = XMMatrixLookAtLH(XMLoadFloat4(&position), XMLoadFloat4(&target), XMLoadFloat4(&up));;
-   XMStoreFloat4x4(&vpMatrix, XMMatrixTranspose(viewMatrix * projMatrix));
+   viewMatrix = XMMatrixLookAtLH(XMLoadFloat4(&position), XMLoadFloat4(&target), XMLoadFloat4(&up));
 }
