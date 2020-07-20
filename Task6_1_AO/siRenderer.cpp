@@ -97,6 +97,15 @@ void siRenderer::onInit(siImgui* imgui)
          sampleDesc);
    }
 
+   // SSAO blurred
+   {
+      auto& texture = textures["#ssaoOutputBlurred"];
+      texture.initTexture(
+         device.get(), window->getWidth(), window->getHeight(),
+         DXGI_FORMAT_R8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON,
+         sampleDesc);
+   }
+
    // Deferred render target
    {
       auto& texture = textures["#deferredRenderTarget"];
@@ -150,11 +159,17 @@ void siRenderer::onInit(siImgui* imgui)
                   {textures["#ssaoOutput"]},
                   ssaoConstBuffer.getGpuVirtualAddress());
 
+      auto& ssaoBlurred = computeShaders["ssaoBlur"];
+      ssaoBlurred.onInit(device.get(), &descriptorMgr, L"ssaoBlur.hlsl",
+         { textures["#ssaoOutput"]},
+         { textures["#ssaoOutputBlurred"] },
+         ssaoConstBuffer.getGpuVirtualAddress());
+
       auto& deferredRender = computeShaders["deferredRender"];
       deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
                             {
                                textures["#diffuseRenderTarget"], textures["#positionRenderTarget"],
-                               textures["#normalsRenderTarget"], textures["#ssaoOutput"]
+                               textures["#normalsRenderTarget"], textures["#ssaoOutputBlurred"]
                             },
                             {textures["#deferredRenderTarget"]},
                             defRenderConstBuffer.getGpuVirtualAddress());
@@ -324,6 +339,7 @@ void siRenderer::updatePipeline()
    // compute shaders
    {
       computeShaders["ssao"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
+      computeShaders["ssaoBlur"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
       computeShaders["deferredRender"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
    }
 

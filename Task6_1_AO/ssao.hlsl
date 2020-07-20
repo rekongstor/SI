@@ -1,8 +1,4 @@
 SamplerState gPointClampSampler : register(s0);
-SamplerState gPointMirrorSampler : register(s1);
-SamplerState gLinearClampSampler : register(s2);
-SamplerState gViewSpaceDepthTapSampler : register(s3);
-SamplerState gZeroTextureSampler : register(s4);
 
 cbuffer cbPass : register(b0)
 {
@@ -114,7 +110,7 @@ void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
    }
    float3 pos = positionRenderTarget[dTid.xy].xyz;
    float3 normal = normalsRenderTarget[dTid.xy].xyz;
-   float3 randomVec = normalize(ssaoNoise[(gTid.x * 8 + gTid.y) % 16]);
+   float3 randomVec = normalize(ssaoNoise[(gTid.x * 4 + gTid.y * 4) % 16]);
 
    float3 tangent = normalize(randomVec - mul(normal, dot(randomVec, normal)));
    float3 biTangent = mul(normal, tangent);
