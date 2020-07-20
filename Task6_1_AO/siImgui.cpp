@@ -61,6 +61,8 @@ void siImgui::onUpdate()
       ImGui::DragFloat3("Camera target", &camTarget->x, 0.1f);
       ImGui::DragFloat3("Light Color", &lightColor->x, 0.1f);
       ImGui::DragFloat("AO Power", aoPower, 0.1f);
+      ImGui::DragFloat("AO Radius", aoRadius, 0.01f);
+      ImGui::DragFloat("AO Bias", aoBias, 0.001f);
       ImGui::DragFloat3("Ambient Color", &ambientColor->x, 0.01f);
       ImGui::Combo("Target output", targetOutput,
          targets, _countof(targets));
@@ -74,7 +76,7 @@ void siImgui::onRender(ID3D12GraphicsCommandList* commandList)
    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }
 
-void siImgui::bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor, float4* ambientColor, float* aoPower)
+void siImgui::bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor, float4* ambientColor, float* aoPower, float* aoRadius, float* aoBias)
 {
    camPos = cameraPos;
    camTarget = cameraTarget;
@@ -82,4 +84,6 @@ void siImgui::bindVariables(float4* cameraPos, float4* cameraTarget, int* target
    this->lightColor = lightColor;
    this->ambientColor = ambientColor;
    this->aoPower = aoPower;
+   this->aoRadius = aoRadius;
+   this->aoBias = aoBias;
 }

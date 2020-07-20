@@ -10,6 +10,8 @@ class siImgui
    float4* lightColor;
    float4* ambientColor;
    float* aoPower;
+   float* aoRadius;
+   float* aoBias;
 public:
    siImgui();
 
@@ -19,6 +21,8 @@ public:
                               std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> handles);
    void onUpdate();
    void onRender(ID3D12GraphicsCommandList* commandList);
+   void bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor,
+                      float4* ambientColor,
+                      float* aoPower, float* aoRadius, float* aoBias);
 
-   void bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor, float4* ambientColor, float* aoPower);
 };

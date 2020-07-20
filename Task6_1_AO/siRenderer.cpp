@@ -45,7 +45,8 @@ void siRenderer::onInit(siImgui* imgui)
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
                             descriptorMgr.getCbvSrvUavHandle());
       imgui->bindVariables(&camera.position, &camera.target, &targetOutput, &defRenderConstBuffer.get().lightColor,
-                           &defRenderConstBuffer.get().ambientColor, &defRenderConstBuffer.get().aoPower);
+                           &defRenderConstBuffer.get().ambientColor, &defRenderConstBuffer.get().aoPower,
+                           &ssaoConstBuffer.get().radius, &ssaoConstBuffer.get().bias);
    }
 
    // swap chain buffers initialization
@@ -119,7 +120,7 @@ void siRenderer::onInit(siImgui* imgui)
    {
       mainConstBuffer.initBuffer({}, device.get());
 
-      ssaoConstBuffer.initBuffer({}, device.get());
+      ssaoConstBuffer.initBuffer({{},{},{},0.5,0.025}, device.get());
       defRenderConstBuffer.initBuffer({{}, {5, 5, 5, 1}, {1, 1, 1, 1}, 1}, device.get());
    }
 
@@ -224,6 +225,30 @@ void siRenderer::onInit(siImgui* imgui)
 
    executePipeline();
    active = true;
+
+   {
+      std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
+      std::default_random_engine generator;
+      for (unsigned int i = 0; i < 64; ++i)
+      {
+         float3 sample(
+            randomFloats(generator) * 2.0 - 1.0,
+            randomFloats(generator) * 2.0 - 1.0,
+            randomFloats(generator)
+         );
+         auto lerp = [](float a, float b, float f)
+         {
+            return a + f * (b - a);
+         };
+         auto s = XMVector3Normalize(XMLoadFloat3(&sample));
+         s *= randomFloats(generator);
+         float scale = (float)i / 64.0;
+         scale = lerp(0.1f, 1.0f, scale * scale);
+         s *= scale;
+         XMStoreFloat3(&sample, s);
+         printf("%f, %f, %f,\n", sample.x, sample.y, sample.z);
+      }
+   }
 }
 
 
@@ -273,6 +298,7 @@ void siRenderer::updatePipeline()
    assert(hr == S_OK);
 
    const float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+   const float clearColorWhite[] = {1.0f, 1.0f, 1.0f, 1.0f};
    auto& swapChainTarget = swapChainTargets[currentFrame];
    auto& depthStencil = textures["#depthStencil"];
 
@@ -300,7 +326,7 @@ void siRenderer::updatePipeline()
 
 
       commandList->ClearRenderTargetView(diffuseRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
-      commandList->ClearRenderTargetView(positionRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
+      commandList->ClearRenderTargetView(positionRenderTarget.getRtvHandle().first, clearColorWhite, 0, nullptr);
       commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
       commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 

@@ -18,6 +18,8 @@ struct ssaoConstBuff
    float4x4 projMatrix;
    float width;
    float height;
+   float radius;
+   float bias;
 };
 
 struct defRenderConstBuff
