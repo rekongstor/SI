@@ -15,7 +15,7 @@ struct mainConstBuff
 
 struct ssaoConstBuff
 {
-   float4x4 projMatrixInv;
+   float4x4 projMatrix;
    float width;
    float height;
 };

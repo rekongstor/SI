@@ -4,9 +4,11 @@ class siWindow;
 
 class siImgui
 {
-   float3* camPos;
-   float3* camTarget;
+   float4* camPos;
+   float4* camTarget;
    int* targetOutput;
+   float4* lightColor;
+   float4* ambientColor;
 public:
    siImgui();
 
@@ -17,5 +19,5 @@ public:
    void onUpdate();
    void onRender(ID3D12GraphicsCommandList* commandList);
 
-   void bindVariables(void* cameraPos, void* cameraTarget, int* targetOutput);
+   void bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor, float4* ambientColor);
 };

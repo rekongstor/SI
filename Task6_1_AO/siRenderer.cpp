@@ -3,6 +3,7 @@
 #include "siImgui.h"
 #include "siSceneLoader.h"
 #include "siTimer.h"
+#include <random>
 
 siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    window(window),
@@ -43,7 +44,8 @@ void siRenderer::onInit(siImgui* imgui)
       this->imgui = imgui;
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
                             descriptorMgr.getCbvSrvUavHandle());
-      imgui->bindVariables(&camera.position, &camera.target, &targetOutput);
+      imgui->bindVariables(&camera.position, &camera.target, &targetOutput, &defRenderConstBuffer.get().lightColor,
+                           &defRenderConstBuffer.get().ambientColor);
    }
 
    // swap chain buffers initialization
@@ -109,13 +111,7 @@ void siRenderer::onInit(siImgui* imgui)
       mainConstBuffer.initBuffer({}, device.get());
 
       ssaoConstBuffer.initBuffer({}, device.get());
-      defRenderConstBuffer.initBuffer(
-         {
-            {},
-            {5.f, 5.f, 5.f, 1.f},
-            {0.1f, 0.1f, 0.1f, 1.f}
-         },
-         device.get());
+      defRenderConstBuffer.initBuffer({}, device.get());
    }
 
    // creating root signatures
@@ -230,16 +226,20 @@ void siRenderer::update()
    mainConstBuffer.gpuCopy();
 
    auto& ssaoCb = ssaoConstBuffer.get();
-   XMVECTOR det = XMMatrixDeterminant(camera.projMatrix);
-   XMStoreFloat4x4(&ssaoCb.projMatrixInv, XMMatrixTranspose(XMMatrixInverse(&det, camera.projMatrix)));
+   XMStoreFloat4x4(&ssaoCb.projMatrix, camera.projMatrix);
    ssaoCb.width = window->getWidth();
    ssaoCb.height = window->getHeight();
    ssaoConstBuffer.gpuCopy();
 
    auto& defRenCb = defRenderConstBuffer.get();
-   float4 lightDirection = { 0.f, -1.f, 0.f, 0.f };
-   XMStoreFloat4(&defRenCb.lightDirection,  XMVector4Transform(XMLoadFloat4(&lightDirection), XMMatrixTranspose(camera.viewMatrix)));
+   float4 lightDirection = {0.f, -1.f, 0.f, 0.f};
+   float4 lightColor = { 0.f, 0.f, 0.f, 1.f };
+   float4 ambientColor = { 1.1f, 1.1f, 1.1f, 1.f };
+   XMStoreFloat4(&defRenCb.lightDirection,
+                 XMVector4Transform(XMLoadFloat4(&lightDirection), XMMatrixTranspose(camera.viewMatrix)));
    defRenCb.targetOutput = targetOutput;
+   defRenCb.lightColor = lightColor;
+   defRenCb.ambientColor = ambientColor;
    defRenderConstBuffer.gpuCopy();
 
 

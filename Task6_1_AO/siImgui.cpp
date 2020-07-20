@@ -58,6 +58,8 @@ void siImgui::onUpdate()
       ImGui::Begin("Imgui Debug");
       ImGui::DragFloat3("Camera position", &camPos->x,0.1f);
       ImGui::DragFloat3("Camera target", &camTarget->x, 0.1f);
+      ImGui::DragFloat3("Light Color", &lightColor->x, 0.1f);
+      ImGui::DragFloat3("Ambient Color", &ambientColor->x, 0.01f);
       ImGui::Combo("Target output", targetOutput,
          targets, _countof(targets));
       ImGui::End();
@@ -70,9 +72,11 @@ void siImgui::onRender(ID3D12GraphicsCommandList* commandList)
    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }
 
-void siImgui::bindVariables(void* cameraPos, void* cameraTarget, int* targetOutput)
+void siImgui::bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor, float4* ambientColor)
 {
-   camPos = static_cast<XMFLOAT3*>(cameraPos);
-   camTarget = static_cast<XMFLOAT3*>(cameraTarget);
+   camPos = cameraPos;
+   camTarget = cameraTarget;
    this->targetOutput = targetOutput;
+   this->lightColor = lightColor;
+   this->ambientColor = ambientColor;
 }

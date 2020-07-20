@@ -69,7 +69,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
    float4 specular = F * NDF * G / max(4.f * dotNV * dotNL, 0.001f);
    float4 kD = (1.f - F) * (1.f - normMetalness);
 
-   float4 color = ambientColor * normDiffuseColor + (normDiffuseColor * kD / PI + specular) * lightColor * dotNL;
+   float4 color = ao * ambientColor * normDiffuseColor + (normDiffuseColor * kD / PI + specular) * lightColor * dotNL;
 
    color = pow(color / (color + 1.f), 1.f / 2.2f);
    switch (targetOutput)
@@ -81,13 +81,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
       deferredRenderTarget[DTid.xy] = diffuse;
       break;
    case 2:
-      deferredRenderTarget[DTid.xy] = normalize(position);
+      deferredRenderTarget[DTid.xy] = position;
       break;
    case 3:
-      deferredRenderTarget[DTid.xy] = normal;
+      deferredRenderTarget[DTid.xy] = abs(normal);
       break;
    case 4:
-      deferredRenderTarget[DTid.xy] = ao;
+      deferredRenderTarget[DTid.xy] = ssaoOutput[DTid.xy];
       break;
    case 5:
       deferredRenderTarget[DTid.xy] = metalness;
