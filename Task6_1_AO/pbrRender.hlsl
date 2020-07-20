@@ -9,12 +9,13 @@ cbuffer cbPass : register(b0)
 float4 lightDirection;
 float4 lightColor;
 float4 ambientColor;
+float aoPower;
 int targetOutput;
 }
 
-Texture2D<float4> diffuseRenderTarget : register(t0);
-Texture2D<float4> positionRenderTarget : register(t1);
-Texture2D<float4> normalsRenderTarget : register(t2);
+Texture2D diffuseRenderTarget : register(t0);
+Texture2D positionRenderTarget : register(t1);
+Texture2D normalsRenderTarget : register(t2);
 Texture2D<float1> ssaoOutput : register(t3);
 RWTexture2D<float4> deferredRenderTarget: register(u0);
 
@@ -35,27 +36,23 @@ void main(uint3 DTid : SV_DispatchThreadID)
    float4 position = positionRenderTarget[DTid.xy];
    float4 normal = normalsRenderTarget[DTid.xy];
    float ao = ssaoOutput[DTid.xy];
-   float4 view = position;
 
    float roughness = position.w;
-   position.w = 1.f;
    float metalness = normal.w;
-   normal.w = 0.f;
 
-   float4 normDiffuseColor = pow(diffuse, 2.2f);
+   float3 normDiffuseColor = pow(diffuse, 2.2f);
 
-   float4 L = -lightDirection;
-   float4 N = normalize(normal);
-   float4 V = normalize(view);
-   float4 H = normalize(L + V);
+   float3 L = -lightDirection.xyz;
+   float3 N = normal.xyz;
+   float3 V = normalize(-position.xyz);
+   float3 H = normalize(L + V);
    float dotLH = max(dot(L, H), 0.001f);
    float dotNH = max(dot(N, H), 0.001f);
    float dotNV = max(dot(N, V), 0.001f);
    float dotNL = max(dot(N, L), 0.001f);
 
    float normMetalness = 0.05f + clamp(metalness, 0.f, 1.f) * 0.94f;
-   float4 F = normMetalness * normDiffuseColor + (1.f - normMetalness * normDiffuseColor) * pow(1.f - dotLH, 5.f);
-
+   float3 F = normMetalness * normDiffuseColor + (1.f - normMetalness * normDiffuseColor) * pow(1.f - dotLH, 5.f);
 
    float normRoughness = 0.05f + clamp(roughness, 0.f, 1.f) * 0.95f;
    float a4 = pow(normRoughness, 4.f);
@@ -66,34 +63,38 @@ void main(uint3 DTid : SV_DispatchThreadID)
    float G = GGX_PartialGeometry(dotNV, normRoughness * normRoughness) * GGX_PartialGeometry(
       dotNL, normRoughness * normRoughness);
 
-   float4 specular = F * NDF * G / max(4.f * dotNV * dotNL, 0.001f);
-   float4 kD = (1.f - F) * (1.f - normMetalness);
+   float3 specular = F * NDF * G / max(4.f * dotNV * dotNL, 0.001f);
+   float3 kD = (1.f - F) * (1.f - normMetalness);
 
-   float4 color = ao * ambientColor * normDiffuseColor + (normDiffuseColor * kD / PI + specular) * lightColor * dotNL;
+   float3 color = pow(ao, aoPower) * ambientColor * normDiffuseColor * kD +
+      (normDiffuseColor * kD / PI + specular) * lightColor * dotNL;
 
    color = pow(color / (color + 1.f), 1.f / 2.2f);
    switch (targetOutput)
    {
    case 0:
-      deferredRenderTarget[DTid.xy] = color;
-      break;
+      deferredRenderTarget[DTid.xy] = float4(color, 1);
+      return;
    case 1:
       deferredRenderTarget[DTid.xy] = diffuse;
-      break;
+      return;
    case 2:
       deferredRenderTarget[DTid.xy] = position;
-      break;
+      return;
    case 3:
       deferredRenderTarget[DTid.xy] = abs(normal);
-      break;
+      return;
    case 4:
       deferredRenderTarget[DTid.xy] = ssaoOutput[DTid.xy];
-      break;
+      return;
    case 5:
       deferredRenderTarget[DTid.xy] = metalness;
-      break;
+      return;
    case 6:
       deferredRenderTarget[DTid.xy] = roughness;
-      break;
+      return;
+   case 7:
+      deferredRenderTarget[DTid.xy] = float4(specular, 1);
+      return;
    }
 }

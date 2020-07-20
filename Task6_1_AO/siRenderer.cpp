@@ -45,7 +45,7 @@ void siRenderer::onInit(siImgui* imgui)
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
                             descriptorMgr.getCbvSrvUavHandle());
       imgui->bindVariables(&camera.position, &camera.target, &targetOutput, &defRenderConstBuffer.get().lightColor,
-                           &defRenderConstBuffer.get().ambientColor);
+                           &defRenderConstBuffer.get().ambientColor, &defRenderConstBuffer.get().aoPower);
    }
 
    // swap chain buffers initialization
@@ -120,7 +120,7 @@ void siRenderer::onInit(siImgui* imgui)
       mainConstBuffer.initBuffer({}, device.get());
 
       ssaoConstBuffer.initBuffer({}, device.get());
-      defRenderConstBuffer.initBuffer({}, device.get());
+      defRenderConstBuffer.initBuffer({{}, {5, 5, 5, 1}, {1, 1, 1, 1}, 1}, device.get());
    }
 
    // creating root signatures
@@ -161,9 +161,9 @@ void siRenderer::onInit(siImgui* imgui)
 
       auto& ssaoBlurred = computeShaders["ssaoBlur"];
       ssaoBlurred.onInit(device.get(), &descriptorMgr, L"ssaoBlur.hlsl",
-         { textures["#ssaoOutput"]},
-         { textures["#ssaoOutputBlurred"] },
-         ssaoConstBuffer.getGpuVirtualAddress());
+                         {textures["#ssaoOutput"]},
+                         {textures["#ssaoOutputBlurred"]},
+                         ssaoConstBuffer.getGpuVirtualAddress());
 
       auto& deferredRender = computeShaders["deferredRender"];
       deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
@@ -248,13 +248,9 @@ void siRenderer::update()
 
    auto& defRenCb = defRenderConstBuffer.get();
    float4 lightDirection = {0.f, -1.f, 0.f, 0.f};
-   float4 lightColor = { 0.f, 0.f, 0.f, 1.f };
-   float4 ambientColor = { 1.1f, 1.1f, 1.1f, 1.f };
    XMStoreFloat4(&defRenCb.lightDirection,
-                 XMVector4Transform(XMLoadFloat4(&lightDirection), XMMatrixTranspose(camera.viewMatrix)));
+                 XMVector4Transform(XMLoadFloat4(&lightDirection), (camera.viewMatrix)));
    defRenCb.targetOutput = targetOutput;
-   defRenCb.lightColor = lightColor;
-   defRenCb.ambientColor = ambientColor;
    defRenderConstBuffer.gpuCopy();
 
 

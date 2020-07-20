@@ -7,7 +7,7 @@ float width;
 float height;
 }
 
-Texture2D<float1> ssaoInput : register(t0);
+Texture2D ssaoInput : register(t0);
 RWTexture2D<float1> ssaoBlurredOutput: register(u0);
 
 [numthreads(8, 8, 1)]

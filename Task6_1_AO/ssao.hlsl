@@ -7,9 +7,9 @@ float width;
 float height;
 }
 
-Texture2D<float1> depthStencil : register(t0);
-Texture2D<float4> normalsRenderTarget : register(t1);
-Texture2D<float4> positionRenderTarget : register(t2);
+Texture2D depthStencil : register(t0);
+Texture2D normalsRenderTarget : register(t1);
+Texture2D positionRenderTarget : register(t2);
 RWTexture2D<float1> ssaoOutput: register(u0);
 
 static const float3 ssaoKernel[] =
@@ -112,29 +112,28 @@ void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
    float3 normal = normalsRenderTarget[dTid.xy].xyz;
    float3 randomVec = normalize(ssaoNoise[(gTid.x * 4 + gTid.y * 4) % 16]);
 
-   float3 tangent = normalize(randomVec - mul(normal, dot(randomVec, normal)));
-   float3 biTangent = mul(normal, tangent);
-   float3x3 TBN = float3x3(tangent, biTangent, normal);
-
-   float radius = 0.25f;
-   float bias = 0.0025f;
+   float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+   float3 biTangent = cross(normal, tangent);
+   float3x3 tbn = transpose(float3x3(tangent, biTangent, normal));
+   float radius = 0.5f;
+   float bias = 0.025f;
    uint kernel = 64;
 
    float occlusion = 0.f;
    for (int i = 0; i < kernel; ++i)
    {
-      float3 sampleTap = mul(TBN, ssaoKernel[i]);
+      float3 sampleTap = mul(tbn, ssaoKernel[i]);
       sampleTap = pos + sampleTap * radius;
 
       float4 offset = mul(projMatrix, float4(sampleTap, 1.f));
       offset.xyz /= offset.w;
       offset.xy = offset.xy * 0.5 + 0.5;
       offset.y = 1.f - offset.y;
-      float depth = positionRenderTarget.GatherBlue(gPointClampSampler, offset.xy);
+      float depth = positionRenderTarget.SampleLevel(gPointClampSampler, offset.xy, 0).z;
       float rangeCheck = smoothstep(0.0, 1.0, radius / abs(pos.z - depth));
-      occlusion += (depth >= sampleTap.z + bias ? 1.0 : 0.0) * rangeCheck;
+      occlusion += (depth <= sampleTap.z + bias) * rangeCheck;
    }
-   occlusion = occlusion / float(kernel);
+   occlusion = 1.f - occlusion / float(kernel);
 
    ssaoOutput[dTid.xy] = occlusion;
 }

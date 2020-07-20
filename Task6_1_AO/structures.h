@@ -25,5 +25,6 @@ struct defRenderConstBuff
    float4 lightDirection;
    float4 lightColor;
    float4 ambientColor;
+   float aoPower;
    int targetOutput;
 };
