@@ -51,7 +51,7 @@ class siRenderer
    std::map<std::string, siComputeShader> computeShaders;
 
    siCamera camera;
-   int targetOutput = 4;
+   int targetOutput = 0;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer;

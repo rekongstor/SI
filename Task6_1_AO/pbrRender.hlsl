@@ -6,17 +6,20 @@ SamplerState g_ZeroTextureSampler : register(s4);
 
 cbuffer cbPass : register(b0)
 {
+float4x4 projMatrixInv;
 float4 lightDirection;
 float4 lightColor;
 float4 ambientColor;
 float aoPower;
 int targetOutput;
+float width;
+float height;
 }
 
 Texture2D diffuseRenderTarget : register(t0);
-Texture2D positionRenderTarget : register(t1);
+Texture2D depthStencil : register(t1);
 Texture2D normalsRenderTarget : register(t2);
-Texture2D<float1> ssaoOutput : register(t3);
+Texture2D ssaoOutput : register(t3);
 RWTexture2D<float4> deferredRenderTarget: register(u0);
 
 #define PI 3.14159265f
@@ -29,13 +32,24 @@ float GGX_PartialGeometry(float cosThetaN, float alpha)
    return GP;
 }
 
-[numthreads(8, 8, 1)]
-void main(uint3 DTid : SV_DispatchThreadID)
+float3 getPosFromNdc(uint2 dTid)
 {
-   float4 diffuse = diffuseRenderTarget[DTid.xy];
-   float4 position = positionRenderTarget[DTid.xy];
-   float4 normal = normalsRenderTarget[DTid.xy];
-   float ao = ssaoOutput[DTid.xy];
+   float depthSample = depthStencil.GatherRed(gPointClampSampler, dTid / float2(width, height), int2(0, 0));
+   float4 ndcPos = float4(dTid / float2(width, height) * 2.f - 1.f, depthSample, 1.f);
+   float4 viewPos = mul(projMatrixInv, ndcPos);
+   viewPos.y = -viewPos.y;
+   if (depthSample == 1.f)
+      viewPos = float4(1, 1, 1, 1);
+   return viewPos.xyz / viewPos.w;
+}
+
+[numthreads(8, 8, 1)]
+void main(uint3 dTid : SV_DispatchThreadID)
+{
+   float4 diffuse = diffuseRenderTarget[dTid.xy];
+   float4 position = float4(getPosFromNdc(dTid.xy), 1.f);
+   float4 normal = normalsRenderTarget[dTid.xy];
+   float ao = ssaoOutput[dTid.xy];
 
    float roughness = position.w;
    float metalness = normal.w;
@@ -66,35 +80,36 @@ void main(uint3 DTid : SV_DispatchThreadID)
    float3 specular = F * NDF * G / max(4.f * dotNV * dotNL, 0.001f);
    float3 kD = (1.f - F) * (1.f - normMetalness);
 
-   float3 color = pow(ao, aoPower) * ambientColor * normDiffuseColor * kD +
+   float3 color = pow(ao, aoPower) * ambientColor * normDiffuseColor +
       (normDiffuseColor * kD / PI + specular) * lightColor * dotNL;
 
    color = pow(color / (color + 1.f), 1.f / 2.2f);
+
    switch (targetOutput)
    {
    case 0:
-      deferredRenderTarget[DTid.xy] = float4(color, 1);
+      deferredRenderTarget[dTid.xy] = float4(color, 1);
       return;
    case 1:
-      deferredRenderTarget[DTid.xy] = diffuse;
+      deferredRenderTarget[dTid.xy] = diffuse;
       return;
    case 2:
-      deferredRenderTarget[DTid.xy] = position;
+      deferredRenderTarget[dTid.xy] = position;
       return;
    case 3:
-      deferredRenderTarget[DTid.xy] = abs(normal);
+      deferredRenderTarget[dTid.xy] = normal;
       return;
    case 4:
-      deferredRenderTarget[DTid.xy] = ssaoOutput[DTid.xy];
+      deferredRenderTarget[dTid.xy] = ssaoOutput[dTid.xy];
       return;
    case 5:
-      deferredRenderTarget[DTid.xy] = metalness;
+      deferredRenderTarget[dTid.xy] = metalness;
       return;
    case 6:
-      deferredRenderTarget[DTid.xy] = roughness;
+      deferredRenderTarget[dTid.xy] = roughness;
       return;
    case 7:
-      deferredRenderTarget[DTid.xy] = float4(specular, 1);
+      deferredRenderTarget[dTid.xy] = float4(specular, 1);
       return;
    }
 }

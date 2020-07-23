@@ -78,6 +78,7 @@ std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> siDescri
    auto ret = cbvSrvUavHandle;
    cbvSrvUavHandle.first.Offset(1, cbvSrvUavDescriptorSize);
    cbvSrvUavHandle.second.Offset(1, cbvSrvUavDescriptorSize);
+   std::cout << cbvSrvUavHeapLeft << std::endl;
    return ret;
 }
 

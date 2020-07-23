@@ -30,22 +30,31 @@ void siSceneLoader::loadScene(LPCSTR filename, std::map<int32_t, siMesh>& meshes
       dstMesh.initBuffer(device, commandList);
 
       dstMesh.diffuseMap = mesh.MeshMaterial.map_Kd;
-      dstMesh.roughnessMap = mesh.MeshMaterial.map_Ns;
+      dstMesh.roughnessMap = mesh.MeshMaterial.map_Ka;
       dstMesh.metalnessMap = mesh.MeshMaterial.map_Ka;
       {
          auto& tex = textures[dstMesh.diffuseMap];
-         tex.initFromFile(device, dstMesh.diffuseMap, commandList);
-         tex.createSrv(device, descriptorMgr);
+         if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+         {
+            tex.initFromFile(device, dstMesh.diffuseMap, commandList);
+            tex.createSrv(device, descriptorMgr);
+         }
       }
       {
          auto& tex = textures[dstMesh.roughnessMap];
-         tex.initFromFile(device, dstMesh.roughnessMap, commandList);
-         tex.createSrv(device, descriptorMgr);
+         if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+         {
+            tex.initFromFile(device, dstMesh.roughnessMap, commandList);
+            tex.createSrv(device, descriptorMgr);
+         }
       }
       {
          auto& tex = textures[dstMesh.metalnessMap];
-         tex.initFromFile(device, dstMesh.metalnessMap, commandList);
-         tex.createSrv(device, descriptorMgr);
+         if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+         {
+            tex.initFromFile(device, dstMesh.metalnessMap, commandList);
+            tex.createSrv(device, descriptorMgr);
+         }
       }
    }
 }

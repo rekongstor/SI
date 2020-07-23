@@ -29,6 +29,7 @@ PSOutput main(PSInput input) : SV_TARGET
    output.color = diffuseColor;
    output.position = float4(input.pos.xyz, roughness);
    output.normals = float4(input.normal.xyz, metalness);
-
+   if (diffuseColor.w < 0.1f)
+      discard;
    return output;
 }

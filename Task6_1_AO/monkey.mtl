@@ -10,6 +10,5 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd rustediron2_basecolor.png
-map_Ns rustediron2_roughness.png
-map_Ka rustediron2_metallic.png
+map_Kd textures/sponza_fabric_green_diff.tga.png
+map_Ka textures/sponza_fabric_green_diff.tga.png

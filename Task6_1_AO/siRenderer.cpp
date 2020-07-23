@@ -9,9 +9,9 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    window(window),
    bufferCount(bufferCount),
    commandAllocator(bufferCount),
-   descriptorMgr(50, 50, 50, 50),
+   descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
-   camera({13.f, 4.f, 9.f, 1.f}, {0.f, 0.f, 0.f, 1.f}, 75.f,
+   camera({1.f, 1.f, 2.f, 1.f}, {0.f, 0.f, 0.f, 1.f}, 75.f,
           static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
 }
@@ -89,6 +89,23 @@ void siRenderer::onInit(siImgui* imgui)
       normals.createRtv(device.get(), &descriptorMgr);
    }
 
+   // Z- & G-buffer downsampling
+   //{
+   //   auto& positions = textures["#positionRenderTargetMip1"];
+   //   positions.initTexture(
+   //      device.get(), window->getWidth() / 2, window->getHeight() / 2,
+   //      DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
+   //      sampleDesc);
+   //   positions.createRtv(device.get(), &descriptorMgr);
+
+   //   auto& normals = textures["#normalsRenderTargetMip1"];
+   //   normals.initTexture(
+   //      device.get(), window->getWidth() / 2, window->getHeight() / 2,
+   //      DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
+   //      sampleDesc);
+   //   normals.createRtv(device.get(), &descriptorMgr);
+   //}
+
    // SSAO
    {
       auto& texture = textures["#ssaoOutput"];
@@ -119,9 +136,9 @@ void siRenderer::onInit(siImgui* imgui)
    // creating const buffers
    {
       mainConstBuffer.initBuffer({}, device.get());
-
-      ssaoConstBuffer.initBuffer({{},{},{},0.5,0.025}, device.get());
-      defRenderConstBuffer.initBuffer({{}, {5, 5, 5, 1}, {1, 1, 1, 1}, 1}, device.get());
+      ssaoConstBuffer.initBuffer({{}, {}, {}, {}, 3, 0.5}, device.get());
+      defRenderConstBuffer.initBuffer(
+         {{}, {}, {0, 0, 0, 1}, {1, 1, 1, 1}, 10}, device.get());
    }
 
    // creating root signatures
@@ -156,7 +173,7 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& ssao = computeShaders["ssao"];
       ssao.onInit(device.get(), &descriptorMgr, L"ssao.hlsl",
-                  {textures["#depthStencil"], textures["#normalsRenderTarget"], textures["#positionRenderTarget"]},
+                  {textures["#depthStencil"], textures["#normalsRenderTarget"]},
                   {textures["#ssaoOutput"]},
                   ssaoConstBuffer.getGpuVirtualAddress());
 
@@ -169,20 +186,21 @@ void siRenderer::onInit(siImgui* imgui)
       auto& deferredRender = computeShaders["deferredRender"];
       deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
                             {
-                               textures["#diffuseRenderTarget"], textures["#positionRenderTarget"],
+                               textures["#diffuseRenderTarget"], textures["#depthStencil"],
                                textures["#normalsRenderTarget"], textures["#ssaoOutputBlurred"]
                             },
                             {textures["#deferredRenderTarget"]},
                             defRenderConstBuffer.getGpuVirtualAddress());
    }
 
-   siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
+   siSceneLoader::loadScene("sponza.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
 
-   // creating instances for [0] mesh
+   // creating instances
+   for (int i = 0; i < meshes.size(); ++i)
    {
-      auto& inst = instances[0];
-      const uint32_t x = 3;
-      const uint32_t y = 3;
+      auto& inst = instances[i];
+      const uint32_t x = 1;
+      const uint32_t y = 1;
       float scale = 1.f;
       XMFLOAT4 position = XMFLOAT4();
       XMFLOAT4 rotation = XMFLOAT4();
@@ -225,30 +243,6 @@ void siRenderer::onInit(siImgui* imgui)
 
    executePipeline();
    active = true;
-
-   {
-      std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
-      std::default_random_engine generator;
-      for (unsigned int i = 0; i < 64; ++i)
-      {
-         float3 sample(
-            randomFloats(generator) * 2.0 - 1.0,
-            randomFloats(generator) * 2.0 - 1.0,
-            randomFloats(generator)
-         );
-         auto lerp = [](float a, float b, float f)
-         {
-            return a + f * (b - a);
-         };
-         auto s = XMVector3Normalize(XMLoadFloat3(&sample));
-         s *= randomFloats(generator);
-         float scale = (float)i / 64.0;
-         scale = lerp(0.1f, 1.0f, scale * scale);
-         s *= scale;
-         XMStoreFloat3(&sample, s);
-         printf("%f, %f, %f,\n", sample.x, sample.y, sample.z);
-      }
-   }
 }
 
 
@@ -269,6 +263,9 @@ void siRenderer::update()
    XMStoreFloat4x4(&ssaoCb.projMatrix, camera.projMatrix);
    ssaoCb.width = window->getWidth();
    ssaoCb.height = window->getHeight();
+   auto det = XMMatrixDeterminant(camera.projMatrix);
+   auto projInv = XMMatrixInverse(&det, camera.projMatrix);
+   XMStoreFloat4x4(&ssaoCb.projMatrixInv, projInv);
    ssaoConstBuffer.gpuCopy();
 
    auto& defRenCb = defRenderConstBuffer.get();
@@ -276,6 +273,9 @@ void siRenderer::update()
    XMStoreFloat4(&defRenCb.lightDirection,
                  XMVector4Transform(XMLoadFloat4(&lightDirection), (camera.viewMatrix)));
    defRenCb.targetOutput = targetOutput;
+   defRenCb.width = window->getWidth();
+   defRenCb.height = window->getHeight();
+   defRenCb.projMatrixInv = ssaoCb.projMatrixInv;
    defRenderConstBuffer.gpuCopy();
 
 
