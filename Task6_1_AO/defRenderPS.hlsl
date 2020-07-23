@@ -1,7 +1,6 @@
 struct PSInput
 {
    float4 position : SV_POSITION;
-   float4 pos : POSITION;
    float4 normal : NORMAL0;
    float2 uv : TEXCOORD;
 };
@@ -9,8 +8,7 @@ struct PSInput
 struct PSOutput
 {
    float4 color : SV_TARGET0;
-   float4 position : SV_TARGET1;
-   float4 normals : SV_TARGET2;
+   float4 normals : SV_TARGET1;
 };
 
 Texture2D albedo : register(t0, space1);
@@ -26,8 +24,7 @@ PSOutput main(PSInput input) : SV_TARGET
    float roughness = 1.f - rough.Sample(s1, input.uv).x;
 
    PSOutput output;
-   output.color = diffuseColor;
-   output.position = float4(input.pos.xyz, roughness);
+   output.color = float4(diffuseColor.xyz, roughness);
    output.normals = float4(input.normal.xyz, metalness);
    if (diffuseColor.w < 0.1f)
       discard;

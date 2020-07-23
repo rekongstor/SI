@@ -1,8 +1,8 @@
 SamplerState gPointClampSampler : register(s0); // corresponds to SSAO_SAMPLERS_SLOT0
-SamplerState g_PointMirrorSampler : register(s1); // corresponds to SSAO_SAMPLERS_SLOT2
-SamplerState g_LinearClampSampler : register(s2); // corresponds to SSAO_SAMPLERS_SLOT1
-SamplerState g_ViewspaceDepthTapSampler : register(s3); // corresponds to SSAO_SAMPLERS_SLOT3
-SamplerState g_ZeroTextureSampler : register(s4);
+SamplerState gPointMirrorSampler : register(s1); // corresponds to SSAO_SAMPLERS_SLOT2
+SamplerState gLinearClampSampler : register(s2); // corresponds to SSAO_SAMPLERS_SLOT1
+SamplerState gViewspaceDepthTapSampler : register(s3); // corresponds to SSAO_SAMPLERS_SLOT3
+SamplerState gZeroTextureSampler : register(s4);
 
 cbuffer cbPass : register(b0)
 {
@@ -49,9 +49,9 @@ void main(uint3 dTid : SV_DispatchThreadID)
    float4 diffuse = diffuseRenderTarget[dTid.xy];
    float4 position = float4(getPosFromNdc(dTid.xy), 1.f);
    float4 normal = normalsRenderTarget[dTid.xy];
-   float ao = ssaoOutput[dTid.xy];
+   float ao = ssaoOutput.GatherRed(gLinearClampSampler,dTid.xy / float2(width, height));
 
-   float roughness = position.w;
+   float roughness = diffuse.w;
    float metalness = normal.w;
 
    float3 normDiffuseColor = pow(diffuse, 2.2f);
@@ -100,7 +100,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[dTid.xy] = normal;
       return;
    case 4:
-      deferredRenderTarget[dTid.xy] = ssaoOutput[dTid.xy];
+      deferredRenderTarget[dTid.xy] = ao;
       return;
    case 5:
       deferredRenderTarget[dTid.xy] = metalness;

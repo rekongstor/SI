@@ -121,7 +121,7 @@ void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
       return;
    }
    float3 pos = getPosFromNdc(dTid.xy);
-   float3 normal = normalsRenderTarget[dTid.xy].xyz;
+   float3 normal = normalsRenderTarget.SampleLevel(gPointClampSampler, dTid.xy / float2(width, height), 0).xyz;
    float3 randomVec = normalize(ssaoNoise[(gTid.x * 4 + gTid.y * 4) % 16]);
 
    float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
@@ -136,7 +136,7 @@ void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
    float4 offset;
    for (int i = 0; i < kernel; ++i)
    {
-      sampleTap = mul(tbn, ssaoKernel[i]);
+      sampleTap = mul(tbn, ssaoKernel[i % 64]);
       sampleTap = pos + sampleTap * radius;
 
       offset = mul(projMatrix, float4(sampleTap, 1.f));

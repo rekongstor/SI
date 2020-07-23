@@ -8,7 +8,6 @@ struct VSInput
 struct PSInput
 {
    float4 position : SV_POSITION;
-   float4 pos : POSITION;
    float4 normal : NORMAL0;
    float2 uv : TEXCOORD;
 };
@@ -32,9 +31,7 @@ PSInput main(VSInput input, uint instanceID : SV_InstanceID)
    PSInput output;
    InstanceData inst = gInstanceData[instanceID];
 
-   output.pos = mul(viewMatrix, mul(inst.world, input.position));
-   output.position = mul(projMatrix, output.pos);
-   output.pos /= output.pos.w;
+   output.position = mul(projMatrix, mul(viewMatrix, mul(inst.world, input.position)));
    output.normal = normalize(mul(viewMatrix, mul(inst.worldIt, input.normal)));
    output.uv = input.uv;
    return output;

@@ -119,7 +119,6 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t 
    for (auto& output : outputs)
       output.resourceBarrier(commandList, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-
    uint32_t slot = 0;
    commandList->SetComputeRootConstantBufferView(slot++, constBufferAddress);
    commandList->SetComputeRootDescriptorTable(slot++, outputs[0].getUavHandle().second);

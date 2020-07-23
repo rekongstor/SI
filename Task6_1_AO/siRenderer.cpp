@@ -11,7 +11,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    commandAllocator(bufferCount),
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
-   camera({1.f, 1.f, 2.f, 1.f}, {0.f, 0.f, 0.f, 1.f}, 75.f,
+   camera({1.f, -1.f, 2.f, 1.f}, {0.f, 2.f, 0.f, 1.f}, 75.f,
           static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
 }
@@ -74,13 +74,6 @@ void siRenderer::onInit(siImgui* imgui)
          sampleDesc);
       diffuse.createRtv(device.get(), &descriptorMgr);
 
-      auto& positions = textures["#positionRenderTarget"];
-      positions.initTexture(
-         device.get(), window->getWidth(), window->getHeight(),
-         DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
-         sampleDesc);
-      positions.createRtv(device.get(), &descriptorMgr);
-
       auto& normals = textures["#normalsRenderTarget"];
       normals.initTexture(
          device.get(), window->getWidth(), window->getHeight(),
@@ -90,27 +83,27 @@ void siRenderer::onInit(siImgui* imgui)
    }
 
    // Z- & G-buffer downsampling
-   //{
-   //   auto& positions = textures["#positionRenderTargetMip1"];
-   //   positions.initTexture(
-   //      device.get(), window->getWidth() / 2, window->getHeight() / 2,
-   //      DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
-   //      sampleDesc);
-   //   positions.createRtv(device.get(), &descriptorMgr);
+   {
+      auto& depthStencil = textures["#depthStencilMip1"];
+      depthStencil.initTexture(
+         device.get(), window->getWidth() / 2, window->getHeight() / 2,
+         DXGI_FORMAT_R8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
+         sampleDesc);
+      depthStencil.createRtv(device.get(), &descriptorMgr);
 
-   //   auto& normals = textures["#normalsRenderTargetMip1"];
-   //   normals.initTexture(
-   //      device.get(), window->getWidth() / 2, window->getHeight() / 2,
-   //      DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
-   //      sampleDesc);
-   //   normals.createRtv(device.get(), &descriptorMgr);
-   //}
+      auto& normals = textures["#normalsRenderTargetMip1"];
+      normals.initTexture(
+         device.get(), window->getWidth() / 2, window->getHeight() / 2,
+         DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
+         sampleDesc);
+      normals.createRtv(device.get(), &descriptorMgr);
+   }
 
    // SSAO
    {
       auto& texture = textures["#ssaoOutput"];
       texture.initTexture(
-         device.get(), window->getWidth(), window->getHeight(),
+         device.get(), window->getWidth() / 2, window->getHeight() / 2,
          DXGI_FORMAT_R8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON,
          sampleDesc);
    }
@@ -119,7 +112,7 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& texture = textures["#ssaoOutputBlurred"];
       texture.initTexture(
-         device.get(), window->getWidth(), window->getHeight(),
+         device.get(), window->getWidth() / 2, window->getHeight() / 2,
          DXGI_FORMAT_R8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON,
          sampleDesc);
    }
@@ -261,8 +254,8 @@ void siRenderer::update()
 
    auto& ssaoCb = ssaoConstBuffer.get();
    XMStoreFloat4x4(&ssaoCb.projMatrix, camera.projMatrix);
-   ssaoCb.width = window->getWidth();
-   ssaoCb.height = window->getHeight();
+   ssaoCb.width = window->getWidth() / 2.f;
+   ssaoCb.height = window->getHeight() / 2.f;
    auto det = XMMatrixDeterminant(camera.projMatrix);
    auto projInv = XMMatrixInverse(&det, camera.projMatrix);
    XMStoreFloat4x4(&ssaoCb.projMatrixInv, projInv);
@@ -302,7 +295,6 @@ void siRenderer::updatePipeline()
    auto& swapChainTarget = swapChainTargets[currentFrame];
    auto& depthStencil = textures["#depthStencil"];
 
-   auto& positionRenderTarget = textures["#positionRenderTarget"];
    auto& normalsRenderTarget = textures["#normalsRenderTarget"];
    auto& diffuseRenderTarget = textures["#diffuseRenderTarget"];
 
@@ -311,12 +303,10 @@ void siRenderer::updatePipeline()
    // drawing
    {
       diffuseRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-      positionRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
       normalsRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
       D3D12_CPU_DESCRIPTOR_HANDLE rts[] = {
          diffuseRenderTarget.getRtvHandle().first,
-         positionRenderTarget.getRtvHandle().first,
          normalsRenderTarget.getRtvHandle().first
       };
       commandList->OMSetRenderTargets(_countof(rts),
@@ -326,7 +316,6 @@ void siRenderer::updatePipeline()
 
 
       commandList->ClearRenderTargetView(diffuseRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
-      commandList->ClearRenderTargetView(positionRenderTarget.getRtvHandle().first, clearColorWhite, 0, nullptr);
       commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
       commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
@@ -354,14 +343,13 @@ void siRenderer::updatePipeline()
                                            0);
       }
       diffuseRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COMMON);
-      positionRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COMMON);
       normalsRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COMMON);
    }
 
    // compute shaders
    {
-      computeShaders["ssao"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
-      computeShaders["ssaoBlur"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
+      computeShaders["ssao"].dispatch(commandList.get(), window->getWidth() / 2, window->getHeight() / 2);
+      computeShaders["ssaoBlur"].dispatch(commandList.get(), window->getWidth() / 2, window->getHeight() / 2);
       computeShaders["deferredRender"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
    }
 
