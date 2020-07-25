@@ -9,7 +9,6 @@ class siTexture2D
    std::vector<BYTE> data;
 
    DXGI_FORMAT format;
-   DXGI_SAMPLE_DESC sampleDesc;
    D3D12_RESOURCE_STATES state;
 
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> dsvHandle;
@@ -19,11 +18,11 @@ class siTexture2D
 
 public:
    void initFromTexture(const siTexture2D& other);
-   void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, DXGI_SAMPLE_DESC sampleDesc);
+   void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format);
    void initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height);
-   void initTexture(ID3D12Device* device, uint32_t width, uint32_t height, DXGI_FORMAT format,
-                    D3D12_RESOURCE_FLAGS flags,
-                    D3D12_RESOURCE_STATES initState, DXGI_SAMPLE_DESC sampleDesc);
+   void initTexture(ID3D12Device* device, uint32_t width, uint32_t height, uint32_t arraySize,
+                    uint32_t mipLevels,
+                    DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState, DXGI_SAMPLE_DESC sampleDesc);
    void initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList);
    void releaseUploadBuffer();
 

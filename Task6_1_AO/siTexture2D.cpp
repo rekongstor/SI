@@ -8,16 +8,13 @@ void siTexture2D::initFromTexture(const siTexture2D& other)
 {
    this->buffer = other.buffer;
    this->format = other.format;
-   this->sampleDesc = other.sampleDesc;
    this->state = other.state;
 }
 
-void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format,
-                                 DXGI_SAMPLE_DESC sampleDesc)
+void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format)
 {
    buffer = existingBuffer;
    this->format = format;
-   this->sampleDesc = sampleDesc;
 }
 
 void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height)
@@ -44,14 +41,13 @@ void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_
    );
    assert(hr == S_OK);
 
-   this->sampleDesc = {1, 0};
    this->format = DXGI_FORMAT_D32_FLOAT;
    this->state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 }
 
 void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
-                              DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState,
-                              DXGI_SAMPLE_DESC sampleDesc)
+                              uint32_t arraySize, uint32_t mipLevels, DXGI_FORMAT format,
+                              D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState, DXGI_SAMPLE_DESC sampleDesc)
 {
    HRESULT hr = S_OK;
 
@@ -62,7 +58,7 @@ void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t hei
          format,
          width,
          height,
-         1, 1, sampleDesc.Count, sampleDesc.Quality,
+         arraySize, mipLevels, sampleDesc.Count, sampleDesc.Quality,
          flags),
       initState,
       nullptr,
@@ -70,7 +66,6 @@ void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t hei
    );
    assert(hr == S_OK);
 
-   this->sampleDesc = sampleDesc;
    this->format = format;
    this->state = initState;
 }
@@ -332,7 +327,6 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
    commandList.updateSubresource(buffer.Get(), textureUploadHeap.Get(),
                                  {data.data(), bytesPerRow, bytesPerRow * desc.Height});
 
-   sampleDesc = desc.SampleDesc;
    format = desc.Format;
    this->state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 }
@@ -355,27 +349,16 @@ void siTexture2D::resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_
 
 void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
-   D3D12_DEPTH_STENCIL_VIEW_DESC desc;
-   ZeroMemory(&desc, sizeof(desc));
-   desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-   desc.Format = format;
-   desc.Flags = D3D12_DSV_FLAG_NONE;
-
    dsvHandle = descMgr->getDsvHandle();
-   device->CreateDepthStencilView(buffer.Get(), &desc, dsvHandle.first);
+   device->CreateDepthStencilView(buffer.Get(), nullptr, dsvHandle.first);
    auto hr = device->GetDeviceRemovedReason();
    assert(hr == S_OK);
 }
 
 auto siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr) -> void
 {
-   D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-   rtvDesc.Format = format;
-   rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-   rtvDesc.Texture2D.MipSlice = 0;
-
    rtvHandle = descMgr->getRtvHandle();
-   device->CreateRenderTargetView(buffer.Get(), &rtvDesc, rtvHandle.first);
+   device->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
    auto hr = device->GetDeviceRemovedReason();
    assert(hr == S_OK);
 }
@@ -398,7 +381,9 @@ void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
       srvformat = DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
       break;
    default:
-      srvformat = format;
+      srvHandle = descMgr->getCbvSrvUavHandle();
+      device->CreateShaderResourceView(buffer.Get(), nullptr, srvHandle.first);
+      return;
    }
 
    D3D12_SHADER_RESOURCE_VIEW_DESC desc;
@@ -417,12 +402,6 @@ void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
 
 void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
-   //D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
-   //ZeroMemory(&desc, sizeof(desc));
-   //desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-   //desc.Format = format;
-   //desc.Texture2D.MipSlice = 0;
-
    uavHandle = descMgr->getCbvSrvUavHandle();
    device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
    auto hr = device->GetDeviceRemovedReason();

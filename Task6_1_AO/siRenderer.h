@@ -1,4 +1,5 @@
 #pragma once
+#include "cacao.h"
 #include "siCamera.h"
 #include "siDevice.h"
 #include "siCommandQueue.h"
@@ -51,11 +52,14 @@ class siRenderer
    std::map<std::string, siComputeShader> computeShaders;
 
    siCamera camera;
-   int targetOutput = 0;
+   int targetOutput = 4;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer;
    siConstBuffer<defRenderConstBuff> defRenderConstBuffer;
+
+   FfxCacaoSettings cacaoSettings;
+   BufferSizeInfo bufferSizeInfo;
 
    void update();
    void updatePipeline();

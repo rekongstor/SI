@@ -1,4 +1,5 @@
 #pragma once
+#include "cacao.h"
 
 struct siVertex
 {
@@ -15,12 +16,7 @@ struct mainConstBuff
 
 struct ssaoConstBuff
 {
-   float4x4 projMatrix;
-   float4x4 projMatrixInv;
-   float width;
-   float height;
-   float radius;
-   float bias;
+   FfxCacaoConstants consts;
 };
 
 struct defRenderConstBuff

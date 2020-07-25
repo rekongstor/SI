@@ -8,6 +8,8 @@ float width;
 float height;
 float radius;
 float bias;
+float widthInv;
+float heightInv;
 }
 
 Texture2D depthStencil : register(t0);
@@ -104,7 +106,8 @@ static const float gNumTaps[] = {4, 6, 42, 12};
 
 float3 getPosFromNdc(uint2 dTid)
 {
-   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), int2(0, 0));
+   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height),
+                                              int2(0, 0));
    float4 ndcPos = float4((float2(dTid.xy) + 0.5f) / float2(width, height) * 2.f - 1.f, depthSample, 1.f);
    float4 viewPos = mul(projMatrixInv, ndcPos);
    viewPos.y = -viewPos.y;
@@ -135,14 +138,16 @@ float tap(uint kernelId, float3x3 tbn, float3 pos)
 [numthreads(8, 8, 1)]
 void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
 {
-   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), int2(0, 0));
+   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height),
+                                              int2(0, 0));
    if (depthSample == 1.f)
    {
       ssaoOutput[dTid.xy] = 1.f;
       return;
    }
    float3 pos = getPosFromNdc(dTid.xy);
-   float3 normal = normalsRenderTarget.SampleLevel(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), 0).xyz;
+   float3 normal = normalsRenderTarget.SampleLevel(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height),
+                                                   0).xyz;
    float3 randomVec = normalize(ssaoNoise[(gTid.x * 4 + gTid.y * 4) % 16]);
 
    float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
@@ -167,7 +172,8 @@ void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
    float minV = min(min(occlusion[0], occlusion[1]), min(occlusion[2], occlusion[3]));
    float maxV = max(max(occlusion[0], occlusion[1]), max(occlusion[2], occlusion[3]));
 
-   uint importanceKernel = 0; max(min(pow(saturate(maxV - minV), 0.8f) * 128.f, 32), 8);
+   uint importanceKernel = 0;
+   max(min(pow(saturate(maxV - minV), 0.8f) * 128.f, 32), 8);
 
    if (importanceKernel == 0)
    {

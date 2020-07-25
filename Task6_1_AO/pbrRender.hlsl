@@ -19,7 +19,7 @@ float height;
 Texture2D diffuseRenderTarget : register(t0);
 Texture2D depthStencil : register(t1);
 Texture2D normalsRenderTarget : register(t2);
-Texture2D ssaoOutput : register(t3);
+Texture2DArray ssaoOutput : register(t3);
 RWTexture2D<float4> deferredRenderTarget: register(u0);
 
 #define PI 3.14159265f
@@ -34,7 +34,8 @@ float GGX_PartialGeometry(float cosThetaN, float alpha)
 
 float3 getPosFromNdc(uint2 dTid)
 {
-   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), int2(0, 0));
+   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height),
+                                              int2(0, 0));
    float4 ndcPos = float4((float2(dTid.xy) + 0.5f) / float2(width, height) * 2.f - 1.f, depthSample, 1.f);
    float4 viewPos = mul(projMatrixInv, ndcPos);
    viewPos.y = -viewPos.y;
@@ -49,7 +50,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
    float4 diffuse = diffuseRenderTarget[dTid.xy];
    float4 position = float4(getPosFromNdc(dTid.xy), 1.f);
    float4 normal = normalsRenderTarget[dTid.xy];
-   float ao = ssaoOutput.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), int2(0, -4));
+   float ao = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 1), 0);
 
    float roughness = diffuse.w;
    float metalness = normal.w;
@@ -100,7 +101,9 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[dTid.xy] = normal;
       return;
    case 4:
-      deferredRenderTarget[dTid.xy] = ao;
+      deferredRenderTarget[dTid.xy] = float4(
+         ssaoOutput[int3(dTid.xy, 0)].x, ssaoOutput[int3(dTid.xy, 1)].x, 
+         ssaoOutput[int3(dTid.xy, 2)].x, ssaoOutput[int3(dTid.xy, 3)].x);
       return;
    case 5:
       deferredRenderTarget[dTid.xy] = metalness;
