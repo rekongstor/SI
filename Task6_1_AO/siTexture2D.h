@@ -10,6 +10,8 @@ class siTexture2D
 
    DXGI_FORMAT format;
    D3D12_RESOURCE_STATES state;
+   uint32_t width;
+   uint32_t height;
 
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> dsvHandle;
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rtvHandle;
@@ -18,7 +20,7 @@ class siTexture2D
 
 public:
    void initFromTexture(const siTexture2D& other);
-   void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format);
+   void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height);
    void initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height);
    void initTexture(ID3D12Device* device, uint32_t width, uint32_t height, uint32_t arraySize,
                     uint32_t mipLevels,
@@ -38,6 +40,8 @@ public:
    [[nodiscard]] const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& getRtvHandle() const;
    [[nodiscard]] const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& getSrvHandle() const;
    [[nodiscard]] const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& getUavHandle() const;
+   [[nodiscard]] uint32_t getWidth() const;
+   [[nodiscard]] uint32_t getHeight() const;
 
    [[nodiscard]] D3D12_RESOURCE_STATES getState() const { return state; }
    void setState(const D3D12_RESOURCE_STATES state) { this->state = state; }

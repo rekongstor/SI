@@ -51,9 +51,30 @@ void main(uint3 dTid : SV_DispatchThreadID)
    float4 position = float4(getPosFromNdc(dTid.xy), 1.f);
    float4 normal = normalsRenderTarget[dTid.xy];
    float ao = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 1), 0);
-
    float roughness = diffuse.w;
    float metalness = normal.w;
+
+   switch (targetOutput)
+   {
+   case 1:
+      deferredRenderTarget[dTid.xy] = diffuse;
+      return;
+   case 2:
+      deferredRenderTarget[dTid.xy] = position;
+      return;
+   case 3:
+      deferredRenderTarget[dTid.xy] = normal;
+      return;
+   case 4:
+      deferredRenderTarget[dTid.xy] = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 3), 0);
+      return;
+   case 5:
+      deferredRenderTarget[dTid.xy] = metalness;
+      return;
+   case 6:
+      deferredRenderTarget[dTid.xy] = roughness;
+      return;
+   }
 
    float3 normDiffuseColor = pow(diffuse, 2.2f);
 
@@ -79,6 +100,11 @@ void main(uint3 dTid : SV_DispatchThreadID)
       dotNL, normRoughness * normRoughness);
 
    float3 specular = F * NDF * G / max(4.f * dotNV * dotNL, 0.001f);
+   if (targetOutput == 7)
+   {
+      deferredRenderTarget[dTid.xy] = float4(specular, 1);
+      return;
+   }
    float3 kD = (1.f - F) * (1.f - normMetalness);
 
    float3 color = pow(ao, aoPower) * ambientColor * normDiffuseColor +
@@ -86,33 +112,5 @@ void main(uint3 dTid : SV_DispatchThreadID)
 
    color = pow(color / (color + 1.f), 1.f / 2.2f);
 
-   switch (targetOutput)
-   {
-   case 0:
-      deferredRenderTarget[dTid.xy] = float4(color, 1);
-      return;
-   case 1:
-      deferredRenderTarget[dTid.xy] = diffuse;
-      return;
-   case 2:
-      deferredRenderTarget[dTid.xy] = position;
-      return;
-   case 3:
-      deferredRenderTarget[dTid.xy] = normal;
-      return;
-   case 4:
-      deferredRenderTarget[dTid.xy] = float4(
-         ssaoOutput[int3(dTid.xy, 0)].x, ssaoOutput[int3(dTid.xy, 1)].x, 
-         ssaoOutput[int3(dTid.xy, 2)].x, ssaoOutput[int3(dTid.xy, 3)].x);
-      return;
-   case 5:
-      deferredRenderTarget[dTid.xy] = metalness;
-      return;
-   case 6:
-      deferredRenderTarget[dTid.xy] = roughness;
-      return;
-   case 7:
-      deferredRenderTarget[dTid.xy] = float4(specular, 1);
-      return;
-   }
+   deferredRenderTarget[dTid.xy] = float4(color, 1);
 }

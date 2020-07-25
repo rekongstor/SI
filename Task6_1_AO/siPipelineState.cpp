@@ -75,7 +75,7 @@ void siPipelineState::createPso(
    ID3DBlob* computeShader;
    hr = D3DCompileFromFile(csFileName,
       nullptr,
-      nullptr,
+      D3D_COMPILE_STANDARD_FILE_INCLUDE,
       "main",
       "cs_5_1",
       D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,

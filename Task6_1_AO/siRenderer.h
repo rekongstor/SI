@@ -59,7 +59,7 @@ class siRenderer
    siConstBuffer<defRenderConstBuff> defRenderConstBuffer;
 
    FfxCacaoSettings cacaoSettings;
-   BufferSizeInfo bufferSizeInfo;
+   BufferSizeInfo bsInfo;
 
    void update();
    void updatePipeline();

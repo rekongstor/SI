@@ -4,17 +4,31 @@
 #include "siCommandList.h"
 #include "siDescriptorMgr.h"
 
+uint32_t siTexture2D::getWidth() const
+{
+   return width;
+}
+
+uint32_t siTexture2D::getHeight() const
+{
+   return height;
+}
+
 void siTexture2D::initFromTexture(const siTexture2D& other)
 {
    this->buffer = other.buffer;
    this->format = other.format;
    this->state = other.state;
+   this->width = other.width;
+   this->height = other.height;
 }
 
-void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format)
+void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height)
 {
    buffer = existingBuffer;
    this->format = format;
+   this->width = width;
+   this->height = height;
 }
 
 void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height)
@@ -43,6 +57,8 @@ void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_
 
    this->format = DXGI_FORMAT_D32_FLOAT;
    this->state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+   this->width = width;
+   this->height = height;
 }
 
 void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
@@ -68,6 +84,8 @@ void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t hei
 
    this->format = format;
    this->state = initState;
+   this->width = width;
+   this->height = height;
 }
 
 void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
@@ -329,6 +347,8 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
 
    format = desc.Format;
    this->state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+   this->width = width;
+   this->height = height;
 }
 
 void siTexture2D::releaseUploadBuffer()

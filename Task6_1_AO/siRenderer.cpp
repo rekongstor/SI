@@ -181,7 +181,7 @@ void siRenderer::onInit(siImgui* imgui)
    for (uint32_t i = 0; i < bufferCount; ++i)
    {
       auto& texture = swapChainTargets[i];
-      texture.initFromBuffer(swapChain.getBuffer(i), DXGI_FORMAT_UNKNOWN);
+      texture.initFromBuffer(swapChain.getBuffer(i), DXGI_FORMAT_UNKNOWN, window->getWidth(), window->getHeight());
       texture.createRtv(device.get(), &descriptorMgr);
       texture.setState(D3D12_RESOURCE_STATE_PRESENT);
    }
@@ -244,7 +244,7 @@ void siRenderer::onInit(siImgui* imgui)
       );
    }
 
-   // Cacao
+   // Cacao initialization
    {
       uint32_t width = window->getWidth();
       uint32_t height = window->getHeight();
@@ -286,27 +286,33 @@ void siRenderer::onInit(siImgui* imgui)
       bsi.importanceMapWidth = quarterWidth;
       bsi.importanceMapHeight = quarterHeight;
 
-      this->bufferSizeInfo = bsi;
+      this->bsInfo = bsi;
 
       cacaoSettings = FFX_CACAO_DEFAULT_SETTINGS;
+   }
 
-
+   // Cacao prepare depths
+   {
       auto& g_PrepareDepthsAndMips_OutMip0 = textures["#g_PrepareDepthsAndMips_OutMip0"];
       g_PrepareDepthsAndMips_OutMip0.initTexture(
-         device.get(), window->getWidth(), window->getHeight(), 4, 1, DXGI_FORMAT_R16_FLOAT,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+         device.get(),
+         bsInfo.deinterleavedDepthBufferWidth, bsInfo.deinterleavedDepthBufferHeight, 4, 1,
+         DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
       auto& g_PrepareDepthsAndMips_OutMip1 = textures["#g_PrepareDepthsAndMips_OutMip1"];
       g_PrepareDepthsAndMips_OutMip1.initTexture(
-         device.get(), window->getWidth() / 2, window->getHeight() / 2, 4, 1, DXGI_FORMAT_R16_FLOAT,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+         device.get(),
+         bsInfo.deinterleavedDepthBufferWidth / 2, bsInfo.deinterleavedDepthBufferHeight / 2, 4, 1,
+         DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
       auto& g_PrepareDepthsAndMips_OutMip2 = textures["#g_PrepareDepthsAndMips_OutMip2"];
       g_PrepareDepthsAndMips_OutMip2.initTexture(
-         device.get(), window->getWidth() / 4, window->getHeight() / 4, 4, 1, DXGI_FORMAT_R16_FLOAT,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+         device.get(),
+         bsInfo.deinterleavedDepthBufferWidth / 4, bsInfo.deinterleavedDepthBufferHeight / 4, 4, 1,
+         DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
       auto& g_PrepareDepthsAndMips_OutMip3 = textures["#g_PrepareDepthsAndMips_OutMip3"];
       g_PrepareDepthsAndMips_OutMip3.initTexture(
-         device.get(), window->getWidth() / 8, window->getHeight() / 8, 4, 1, DXGI_FORMAT_R16_FLOAT,
-         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+         device.get(),
+         bsInfo.deinterleavedDepthBufferWidth / 8, bsInfo.deinterleavedDepthBufferHeight / 8, 4, 1,
+         DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
 
       auto& cacaoDownscaleDepth = computeShaders["cacaoPrepareDepths"];
       cacaoDownscaleDepth.onInit(device.get(), &descriptorMgr, L"cacaoPrepareDepths.hlsl",
@@ -316,6 +322,23 @@ void siRenderer::onInit(siImgui* imgui)
                                  {
                                     g_PrepareDepthsAndMips_OutMip0, g_PrepareDepthsAndMips_OutMip1,
                                     g_PrepareDepthsAndMips_OutMip2, g_PrepareDepthsAndMips_OutMip3
+                                 },
+                                 ssaoConstBuffer.getGpuVirtualAddress());
+   }
+
+   // Cacao prepare normals
+   {
+      auto& deinterlacedNormals = textures["#deinterlacedNormals"];
+      deinterlacedNormals.initTexture(
+         device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8B8A8_SNORM,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+      auto& cacaoDownscaleDepth = computeShaders["cacaoPrepareNormals"];
+      cacaoDownscaleDepth.onInit(device.get(), &descriptorMgr, L"cacaoPrepareNormals.hlsl",
+                                 {
+                                    textures["#normalsRenderTarget"]
+                                 },
+                                 {
+                                    deinterlacedNormals
                                  },
                                  ssaoConstBuffer.getGpuVirtualAddress());
    }
@@ -331,7 +354,7 @@ void siRenderer::onInit(siImgui* imgui)
       deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
                             {
                                textures["#diffuseRenderTarget"], textures["#depthStencil"],
-                               textures["#normalsRenderTarget"], textures["#g_PrepareDepthsAndMips_OutMip0"]
+                               textures["#normalsRenderTarget"], textures["#deinterlacedNormals"]
                             },
                             {texture},
                             defRenderConstBuffer.getGpuVirtualAddress());
@@ -407,7 +430,7 @@ void siRenderer::update()
 
    FfxCacaoMatrix4x4 proj;
    memcpy(proj.elements, mainCb.projMatrix.m, sizeof(float) * 16);
-   updateConstants(&ssaoCb.consts, &this->cacaoSettings, &this->bufferSizeInfo, &proj);
+   updateConstants(&ssaoCb.consts, &this->cacaoSettings, &this->bsInfo, &proj);
    ssaoConstBuffer.gpuCopy();
 
    auto& defRenCb = defRenderConstBuffer.get();
@@ -499,8 +522,9 @@ void siRenderer::updatePipeline()
 
    // compute shaders
    {
-      computeShaders["cacaoPrepareDepths"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
-      computeShaders["deferredRender"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
+      computeShaders["cacaoPrepareDepths"].dispatch(commandList.get());
+      computeShaders["cacaoPrepareNormals"].dispatch(commandList.get());
+      computeShaders["deferredRender"].dispatch(commandList.get());
    }
 
    // Copying compute shader results to render target

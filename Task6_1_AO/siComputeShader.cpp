@@ -107,7 +107,7 @@ void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPC
    pipelineState.createPso(device, rootSignature.get(), filename);
 }
 
-void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t width, uint32_t height)
+void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList)
 {
    if (outputs.size() == 0)
       return;
@@ -126,7 +126,7 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t 
 
    commandList->SetPipelineState(pipelineState.getPipelineState().Get());
 
-   commandList->Dispatch(static_cast<UINT>(ceilf(width / 8.f)), static_cast<UINT>(ceilf(height / 8.f)), 1);
+   commandList->Dispatch(static_cast<UINT>(ceilf(outputs[0].getWidth() / 8.f)), static_cast<UINT>(ceilf(outputs[0].getHeight() / 8.f)), 1);
 
    for (auto& input : inputs)
       input.resourceBarrier(commandList, D3D12_RESOURCE_STATE_COMMON);

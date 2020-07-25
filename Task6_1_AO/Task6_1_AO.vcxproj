@@ -110,6 +110,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cacao.h" />
+    <FxCompile Include="cacaoHLSL.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <ClInclude Include="siCamera.h" />
     <ClInclude Include="siCommandAllocator.h" />
     <ClInclude Include="siCommandList.h" />
