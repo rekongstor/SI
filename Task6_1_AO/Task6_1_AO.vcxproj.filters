@@ -25,6 +25,9 @@
     <Filter Include="Source Files\PSO">
       <UniqueIdentifier>{6f10dcd5-054a-47ea-a9ce-8f368c2a4a86}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\cacao">
+      <UniqueIdentifier>{24cd7761-47ed-4817-80d1-e868d3899504}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -177,6 +180,12 @@
     </FxCompile>
     <FxCompile Include="ssaoBlur.hlsl">
       <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoDepthDownscale.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoNormalsDownscale.hlsl">
+      <Filter>Resource Files\cacao</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

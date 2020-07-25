@@ -17,10 +17,10 @@ RWTexture2D<float1> ssaoBlurredOutput: register(u0);
 void main(uint3 dTid : SV_DispatchThreadID)
 {
    float result = 0.0;
-   for (int x = -2; x < 2; ++x)
-      for (int y = -2; y < 2; ++y)
+   for (int x = -1; x < 3; ++x)
+      for (int y = -1; y < 3; ++y)
       {
-         result += ssaoInput.GatherRed(gPointClampSampler, dTid.xy / float2(width, height), int2(x,y));
+         result += ssaoInput.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), int2(x, y));
       }
    ssaoBlurredOutput[dTid.xy] = result / 16.f;
 }

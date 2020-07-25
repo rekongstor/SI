@@ -11,7 +11,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    commandAllocator(bufferCount),
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
-   camera({1.f, -1.f, 2.f, 1.f}, {0.f, 2.f, 0.f, 1.f}, 75.f,
+   camera({24.f, 12.f, 2.f, 1.f}, {0.f, 5.f, 17.f, 1.f}, 75.f,
           static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
 }
@@ -82,28 +82,11 @@ void siRenderer::onInit(siImgui* imgui)
       normals.createRtv(device.get(), &descriptorMgr);
    }
 
-   // Z- & G-buffer downsampling
-   {
-      auto& depthStencil = textures["#depthStencilMip1"];
-      depthStencil.initTexture(
-         device.get(), window->getWidth() / 2, window->getHeight() / 2,
-         DXGI_FORMAT_R8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
-         sampleDesc);
-      depthStencil.createRtv(device.get(), &descriptorMgr);
-
-      auto& normals = textures["#normalsRenderTargetMip1"];
-      normals.initTexture(
-         device.get(), window->getWidth() / 2, window->getHeight() / 2,
-         DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON,
-         sampleDesc);
-      normals.createRtv(device.get(), &descriptorMgr);
-   }
-
    // SSAO
    {
       auto& texture = textures["#ssaoOutput"];
       texture.initTexture(
-         device.get(), window->getWidth() / 2, window->getHeight() / 2,
+         device.get(), window->getWidth(), window->getHeight(),
          DXGI_FORMAT_R8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON,
          sampleDesc);
    }
@@ -112,7 +95,7 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& texture = textures["#ssaoOutputBlurred"];
       texture.initTexture(
-         device.get(), window->getWidth() / 2, window->getHeight() / 2,
+         device.get(), window->getWidth(), window->getHeight(),
          DXGI_FORMAT_R8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON,
          sampleDesc);
    }
@@ -129,9 +112,9 @@ void siRenderer::onInit(siImgui* imgui)
    // creating const buffers
    {
       mainConstBuffer.initBuffer({}, device.get());
-      ssaoConstBuffer.initBuffer({{}, {}, {}, {}, 3, 0.5}, device.get());
+      ssaoConstBuffer.initBuffer({{}, {}, {}, {}, 3, 0.25}, device.get());
       defRenderConstBuffer.initBuffer(
-         {{}, {}, {0, 0, 0, 1}, {1, 1, 1, 1}, 10}, device.get());
+         {{}, {}, {0, 0, 0, 1}, {1, 1, 1, 1}, 4}, device.get());
    }
 
    // creating root signatures
@@ -166,7 +149,9 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& ssao = computeShaders["ssao"];
       ssao.onInit(device.get(), &descriptorMgr, L"ssao.hlsl",
-                  {textures["#depthStencil"], textures["#normalsRenderTarget"]},
+                  {
+                     textures["#depthStencil"], textures["#normalsRenderTarget"]
+                  },
                   {textures["#ssaoOutput"]},
                   ssaoConstBuffer.getGpuVirtualAddress());
 
@@ -254,8 +239,8 @@ void siRenderer::update()
 
    auto& ssaoCb = ssaoConstBuffer.get();
    XMStoreFloat4x4(&ssaoCb.projMatrix, camera.projMatrix);
-   ssaoCb.width = window->getWidth() / 2.f;
-   ssaoCb.height = window->getHeight() / 2.f;
+   ssaoCb.width = window->getWidth();
+   ssaoCb.height = window->getHeight();
    auto det = XMMatrixDeterminant(camera.projMatrix);
    auto projInv = XMMatrixInverse(&det, camera.projMatrix);
    XMStoreFloat4x4(&ssaoCb.projMatrixInv, projInv);
@@ -348,8 +333,8 @@ void siRenderer::updatePipeline()
 
    // compute shaders
    {
-      computeShaders["ssao"].dispatch(commandList.get(), window->getWidth() / 2, window->getHeight() / 2);
-      computeShaders["ssaoBlur"].dispatch(commandList.get(), window->getWidth() / 2, window->getHeight() / 2);
+      computeShaders["ssao"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
+      computeShaders["ssaoBlur"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
       computeShaders["deferredRender"].dispatch(commandList.get(), window->getWidth(), window->getHeight());
    }
 

@@ -100,10 +100,12 @@ static const float3 ssaoNoise[] = {
    -0.990433, -0.716227, 0.000000,
 };
 
+static const float gNumTaps[] = {4, 6, 42, 12};
+
 float3 getPosFromNdc(uint2 dTid)
 {
-   float depthSample = depthStencil.GatherRed(gPointClampSampler, dTid / float2(width, height), int2(0, 0));
-   float4 ndcPos = float4(dTid / float2(width, height) * 2.f - 1.f, depthSample, 1.f);
+   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), int2(0, 0));
+   float4 ndcPos = float4((float2(dTid.xy) + 0.5f) / float2(width, height) * 2.f - 1.f, depthSample, 1.f);
    float4 viewPos = mul(projMatrixInv, ndcPos);
    viewPos.y = -viewPos.y;
    if (depthSample == 1.f)
@@ -111,43 +113,81 @@ float3 getPosFromNdc(uint2 dTid)
    return viewPos.xyz / viewPos.w;
 }
 
+float tap(uint kernelId, float3x3 tbn, float3 pos)
+{
+   float rangeCheck;
+   float depth;
+   float3 sampleTap;
+   float4 offset;
+
+   sampleTap = mul(tbn, ssaoKernel[kernelId % 64]);
+   sampleTap = pos + sampleTap * radius;
+
+   offset = mul(projMatrix, float4(sampleTap, 1.f));
+   offset.xyz /= offset.w;
+   offset.xy = offset.xy * 0.5 + 0.5;
+   offset.y = 1.f - offset.y;
+   depth = getPosFromNdc(offset.xy * float2(width, height)).z;
+   rangeCheck = clamp(smoothstep(0.0, 1.0, radius / abs(pos.z - depth)), 0.f, 1.f);
+   return (depth >= sampleTap.z - bias ? 0.f : 1.f) * rangeCheck;
+}
+
 [numthreads(8, 8, 1)]
 void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
 {
-   float depthSample = depthStencil.GatherRed(gPointClampSampler, dTid.xy / float2(width, height), int2(0, 0));
+   float depthSample = depthStencil.GatherRed(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), int2(0, 0));
    if (depthSample == 1.f)
    {
       ssaoOutput[dTid.xy] = 1.f;
       return;
    }
    float3 pos = getPosFromNdc(dTid.xy);
-   float3 normal = normalsRenderTarget.SampleLevel(gPointClampSampler, dTid.xy / float2(width, height), 0).xyz;
+   float3 normal = normalsRenderTarget.SampleLevel(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height), 0).xyz;
    float3 randomVec = normalize(ssaoNoise[(gTid.x * 4 + gTid.y * 4) % 16]);
 
    float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
    float3 biTangent = cross(normal, tangent);
    float3x3 tbn = transpose(float3x3(tangent, biTangent, normal));
-   uint kernel = 64;
 
-   float occlusion = 0.f;
-   float rangeCheck;
-   float depth;
-   float3 sampleTap;
-   float4 offset;
-   for (int i = 0; i < kernel; ++i)
+
+   float occlusion[4] = {0, 0, 0, 0};
+   uint kernelOffset = 0;
+
+   //[unroll]
+   for (int i = 0; i < 4; ++i)
    {
-      sampleTap = mul(tbn, ssaoKernel[i % 64]);
-      sampleTap = pos + sampleTap * radius;
-
-      offset = mul(projMatrix, float4(sampleTap, 1.f));
-      offset.xyz /= offset.w;
-      offset.xy = offset.xy * 0.5 + 0.5;
-      offset.y = 1.f - offset.y;
-      depth = getPosFromNdc(offset.xy * float2(width, height)).z;
-      rangeCheck = clamp(smoothstep(0.0, 1.0, radius / abs(pos.z - depth)), 0.f, 1.f) * (abs(offset.x - 0.5f) + 0.5f) * (abs(offset.y - 0.5f) + 0.5f);
-      occlusion += (depth >= sampleTap.z - bias ? 0.f : 1.f) * rangeCheck;
+      for (int j = 0; j < gNumTaps[i]; ++j)
+      {
+         occlusion[i] += tap(kernelOffset + j, tbn, pos);
+      }
+      occlusion[i] = occlusion[i] / gNumTaps[i];
+      kernelOffset += gNumTaps[i];
    }
-   occlusion = 1.f - occlusion / float(kernel);
 
-   ssaoOutput[dTid.xy] = occlusion;
+   float minV = min(min(occlusion[0], occlusion[1]), min(occlusion[2], occlusion[3]));
+   float maxV = max(max(occlusion[0], occlusion[1]), max(occlusion[2], occlusion[3]));
+
+   uint importanceKernel = 0; max(min(pow(saturate(maxV - minV), 0.8f) * 128.f, 32), 8);
+
+   if (importanceKernel == 0)
+   {
+      ssaoOutput[dTid.xy] = 1.f -
+         (occlusion[0] * gNumTaps[0] + occlusion[1] * gNumTaps[1] +
+            occlusion[2] * gNumTaps[2] + occlusion[3] * gNumTaps[3]) /
+         (gNumTaps[0] + gNumTaps[1] + gNumTaps[2] + gNumTaps[3]);
+   }
+   else
+   {
+      float finalOcclusion = 0.f;
+      for (int j = 0; j < importanceKernel; ++j)
+      {
+         finalOcclusion += tap(kernelOffset + j, tbn, pos);
+      }
+      ssaoOutput[dTid.xy] =
+         1.f -
+         (finalOcclusion +
+            occlusion[0] * gNumTaps[0] + occlusion[1] * gNumTaps[1] +
+            occlusion[2] * gNumTaps[2] + occlusion[3] * gNumTaps[3]) /
+         (gNumTaps[0] + gNumTaps[1] + gNumTaps[2] + gNumTaps[3] + importanceKernel);
+   }
 }
