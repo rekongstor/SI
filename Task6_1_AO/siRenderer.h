@@ -55,7 +55,7 @@ class siRenderer
    int targetOutput = 4;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
-   siConstBuffer<ssaoConstBuff> ssaoConstBuffer;
+   siConstBuffer<ssaoConstBuff> ssaoConstBuffer[4];
    siConstBuffer<defRenderConstBuff> defRenderConstBuffer;
 
    FfxCacaoSettings cacaoSettings;

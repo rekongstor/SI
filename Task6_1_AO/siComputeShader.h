@@ -17,4 +17,5 @@ public:
                const std::vector<siTexture>& inputs, const std::vector<siTexture>& outputs,
                D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress);
    void dispatch(ID3D12GraphicsCommandList* commandList);
+   void dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress);
 };

@@ -109,6 +109,11 @@ void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPC
 
 void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList)
 {
+   dispatch(commandList, constBufferAddress);
+}
+
+void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress)
+{
    if (outputs.size() == 0)
       return;
    commandList->SetComputeRootSignature(rootSignature.get().Get());

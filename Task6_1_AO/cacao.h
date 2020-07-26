@@ -4,6 +4,9 @@ typedef uint8_t FfxCacaoBool;
 static const FfxCacaoBool FFX_CACAO_TRUE = 1;
 static const FfxCacaoBool FFX_CACAO_FALSE = 0;
 
+#define FFX_CACAO_COS(x) cosf(x)
+#define FFX_CACAO_SIN(x) sinf(x)
+
 typedef enum FfxCacaoQuality {
 	FFX_CACAO_QUALITY_LOWEST = 0,
 	FFX_CACAO_QUALITY_LOW = 1,

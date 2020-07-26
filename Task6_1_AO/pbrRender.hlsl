@@ -19,7 +19,7 @@ float height;
 Texture2D diffuseRenderTarget : register(t0);
 Texture2D depthStencil : register(t1);
 Texture2D normalsRenderTarget : register(t2);
-Texture2DArray ssaoOutput : register(t3);
+Texture2D ssaoOutput : register(t3);
 RWTexture2D<float4> deferredRenderTarget: register(u0);
 
 #define PI 3.14159265f
@@ -66,7 +66,8 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[dTid.xy] = normal;
       return;
    case 4:
-      deferredRenderTarget[dTid.xy] = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 0), 0);
+      deferredRenderTarget[dTid.xy] = ssaoOutput.SampleLevel(gPointClampSampler,
+                                                             int3(dTid.xy, 0) / float3(width, height, 1), 0);
       return;
    case 5:
       deferredRenderTarget[dTid.xy] = metalness;

@@ -164,12 +164,6 @@
     <ClInclude Include="cacao.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cacaoHLSL.h">
-      <Filter>Resource Files\cacao</Filter>
-    </ClInclude>
-    <ClInclude Include="cacaoSSAO.h">
-      <Filter>Resource Files\cacao</Filter>
-    </ClInclude>
     <ClInclude Include="siTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -197,6 +191,21 @@
       <Filter>Resource Files\cacao</Filter>
     </FxCompile>
     <FxCompile Include="cacaoSSAOq3Base.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoGenerateImportanceMap.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoHLSL.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoSSAO.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoPostprocessImportanceA.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoPostprocessImportanceB.hlsl">
       <Filter>Resource Files\cacao</Filter>
     </FxCompile>
   </ItemGroup>
