@@ -1,4 +1,4 @@
-#include "cacaoHLSL.h"
+#include "cacaoHLSL.hlsl"
 Texture2D<float4>        g_PrepareNormalsFromNormalsInput  : register(t0);
 RWTexture2DArray<float4> g_PrepareNormalsFromNormalsOutput : register(u0);
 

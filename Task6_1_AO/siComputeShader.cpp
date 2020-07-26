@@ -3,25 +3,25 @@
 #include <utility>
 #include "siRootSignature.h"
 #include "siPipelineState.h"
-#include "siTexture2D.h"
+#include "siTexture.h"
 
 
 void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPCWSTR filename,
-                             const std::vector<siTexture2D>& inputs,
-                             const std::vector<siTexture2D>& outputs,
+                             const std::vector<siTexture>& inputs,
+                             const std::vector<siTexture>& outputs,
                              D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress)
 {
    this->constBufferAddress = constBufferAddress;
 
    for (auto& input : inputs)
    {
-      auto& tex = this->inputs.emplace_back(siTexture2D());
+      auto& tex = this->inputs.emplace_back(siTexture());
       tex.initFromTexture(input);
       tex.createSrv(device, descMgr);
    }
    for (auto& output : outputs)
    {
-      auto& tex = this->outputs.emplace_back(siTexture2D());
+      auto& tex = this->outputs.emplace_back(siTexture());
       tex.initFromTexture(output);
       tex.createUav(device, descMgr);
    }

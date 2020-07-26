@@ -8,7 +8,7 @@
 #include "siComputeShader.h"
 #include "siConstBuffer.h"
 #include "siSwapChain.h"
-#include "siTexture2D.h"
+#include "siTexture.h"
 #include "siDescriptorMgr.h"
 #include "siFenceMgr.h"
 #include "siInstance.h"
@@ -43,8 +43,8 @@ class siRenderer
 
    siViewportScissor viewportScissor;
 
-   siTexture2D swapChainTargets[maxFrameBufferCount];
-   std::map<std::string, siTexture2D> textures;
+   siTexture swapChainTargets[maxFrameBufferCount];
+   std::map<std::string, siTexture> textures;
    std::map<std::string, siRootSignature> rootSignatures;
    std::map<std::string, siPipelineState> pipelineStates;
    std::map<int32_t, siMesh> meshes;

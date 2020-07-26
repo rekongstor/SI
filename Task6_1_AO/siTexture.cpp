@@ -1,20 +1,20 @@
-#include "siTexture2D.h"
+#include "siTexture.h"
 #include <wincodec.h>
 #include <codecvt>
 #include "siCommandList.h"
 #include "siDescriptorMgr.h"
 
-uint32_t siTexture2D::getWidth() const
+uint32_t siTexture::getWidth() const
 {
    return width;
 }
 
-uint32_t siTexture2D::getHeight() const
+uint32_t siTexture::getHeight() const
 {
    return height;
 }
 
-void siTexture2D::initFromTexture(const siTexture2D& other)
+void siTexture::initFromTexture(const siTexture& other)
 {
    this->buffer = other.buffer;
    this->format = other.format;
@@ -23,7 +23,7 @@ void siTexture2D::initFromTexture(const siTexture2D& other)
    this->height = other.height;
 }
 
-void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height)
+void siTexture::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height)
 {
    buffer = existingBuffer;
    this->format = format;
@@ -31,7 +31,7 @@ void siTexture2D::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FO
    this->height = height;
 }
 
-void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height)
+void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height)
 {
    HRESULT hr = S_OK;
 
@@ -61,34 +61,53 @@ void siTexture2D::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_
    this->height = height;
 }
 
-void siTexture2D::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
+void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
                               uint32_t arraySize, uint32_t mipLevels, DXGI_FORMAT format,
                               D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState, DXGI_SAMPLE_DESC sampleDesc)
 {
    HRESULT hr = S_OK;
 
-   hr = device->CreateCommittedResource(
-      &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-      D3D12_HEAP_FLAG_NONE,
-      &CD3DX12_RESOURCE_DESC::Tex2D(
-         format,
-         width,
-         height,
-         arraySize, mipLevels, sampleDesc.Count, sampleDesc.Quality,
-         flags),
-      initState,
-      nullptr,
-      IID_PPV_ARGS(&buffer)
-   );
-   assert(hr == S_OK);
-
+   if (height)
+   {
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+         D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC::Tex2D(
+            format,
+            width,
+            height,
+            arraySize, mipLevels, sampleDesc.Count, sampleDesc.Quality,
+            flags),
+         initState,
+         nullptr,
+         IID_PPV_ARGS(&buffer)
+      );
+      assert(hr == S_OK);
+   }
+   else
+   {
+      hr = device->CreateCommittedResource(
+         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+         D3D12_HEAP_FLAG_NONE,
+         &CD3DX12_RESOURCE_DESC::Tex1D(
+            format,
+            width,
+            arraySize, mipLevels,
+            flags),
+         initState,
+         nullptr,
+         IID_PPV_ARGS(&buffer)
+      );
+      assert(hr == S_OK);
+   }
    this->format = format;
    this->state = initState;
    this->width = width;
    this->height = height;
+
 }
 
-void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
+void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
 {
    HRESULT hr = S_OK;
    IWICImagingFactory* wicFactory;
@@ -351,13 +370,13 @@ void siTexture2D::initFromFile(ID3D12Device* device, std::string_view filename, 
    this->height = height;
 }
 
-void siTexture2D::releaseUploadBuffer()
+void siTexture::releaseUploadBuffer()
 {
    textureUploadHeap.Reset();
    data.clear();
 }
 
-void siTexture2D::resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES targetState)
+void siTexture::resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES targetState)
 {
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                    buffer.Get(),
@@ -367,7 +386,7 @@ void siTexture2D::resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_
 }
 
 
-void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
    dsvHandle = descMgr->getDsvHandle();
    device->CreateDepthStencilView(buffer.Get(), nullptr, dsvHandle.first);
@@ -375,7 +394,7 @@ void siTexture2D::createDsv(ID3D12Device* device, siDescriptorMgr* descMgr)
    assert(hr == S_OK);
 }
 
-auto siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr) -> void
+auto siTexture::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr) -> void
 {
    rtvHandle = descMgr->getRtvHandle();
    device->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
@@ -383,7 +402,7 @@ auto siTexture2D::createRtv(ID3D12Device* device, siDescriptorMgr* descMgr) -> v
    assert(hr == S_OK);
 }
 
-void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
    DXGI_FORMAT srvformat;
    switch (format)
@@ -420,7 +439,7 @@ void siTexture2D::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
    assert(hr == S_OK);
 }
 
-void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
 {
    uavHandle = descMgr->getCbvSrvUavHandle();
    device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
@@ -428,27 +447,27 @@ void siTexture2D::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
    assert(hr == S_OK);
 }
 
-const ComPtr<ID3D12Resource>& siTexture2D::getBuffer() const
+const ComPtr<ID3D12Resource>& siTexture::getBuffer() const
 {
    return buffer;
 }
 
-const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getDsvHandle() const
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture::getDsvHandle() const
 {
    return dsvHandle;
 }
 
-const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getRtvHandle() const
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture::getRtvHandle() const
 {
    return rtvHandle;
 }
 
-const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getSrvHandle() const
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture::getSrvHandle() const
 {
    return srvHandle;
 }
 
-const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture2D::getUavHandle() const
+const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& siTexture::getUavHandle() const
 {
    return uavHandle;
 }

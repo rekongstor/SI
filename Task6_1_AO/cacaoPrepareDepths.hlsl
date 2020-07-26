@@ -1,4 +1,4 @@
-#include "cacaoHLSL.h"
+#include "cacaoHLSL.hlsl"
 Texture2D g_DepthSource : register(t0);
 RWTexture2DArray<float> g_PrepareDepthsAndMips_OutMip0: register(u0);
 RWTexture2DArray<float> g_PrepareDepthsAndMips_OutMip1: register(u1);

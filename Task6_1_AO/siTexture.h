@@ -2,7 +2,7 @@
 #include "siCommandList.h"
 class siDescriptorMgr;
 
-class siTexture2D
+class siTexture
 {
    ComPtr<ID3D12Resource> buffer;
    ComPtr<ID3D12Resource> textureUploadHeap;
@@ -19,7 +19,7 @@ class siTexture2D
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> uavHandle;
 
 public:
-   void initFromTexture(const siTexture2D& other);
+   void initFromTexture(const siTexture& other);
    void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height);
    void initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height);
    void initTexture(ID3D12Device* device, uint32_t width, uint32_t height, uint32_t arraySize,

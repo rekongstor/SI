@@ -103,16 +103,24 @@
     <ClCompile Include="siRootSignature.cpp" />
     <ClCompile Include="siSceneLoader.cpp" />
     <ClCompile Include="siSwapChain.cpp" />
-    <ClCompile Include="siTexture2D.cpp" />
+    <ClCompile Include="siTexture.cpp" />
     <ClCompile Include="siTimer.cpp" />
     <ClCompile Include="siViewportScissor.cpp" />
     <ClCompile Include="siWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cacao.h" />
-    <FxCompile Include="cacaoHLSL.h">
+    <FxCompile Include="cacaoHLSL.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="cacaoSSAO.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
     </FxCompile>
     <ClInclude Include="siCamera.h" />
     <ClInclude Include="siCommandAllocator.h" />
@@ -131,7 +139,7 @@
     <ClInclude Include="siRootSignature.h" />
     <ClInclude Include="siSceneLoader.h" />
     <ClInclude Include="siSwapChain.h" />
-    <ClInclude Include="siTexture2D.h" />
+    <ClInclude Include="siTexture.h" />
     <ClInclude Include="siTimer.h" />
     <ClInclude Include="siViewportScissor.h" />
     <ClInclude Include="siWindow.h" />
@@ -146,6 +154,12 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
     </FxCompile>
     <FxCompile Include="cacaoPrepareNormals.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="cacaoSSAOq3Base.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>

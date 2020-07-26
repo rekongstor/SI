@@ -50,7 +50,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
    float4 diffuse = diffuseRenderTarget[dTid.xy];
    float4 position = float4(getPosFromNdc(dTid.xy), 1.f);
    float4 normal = normalsRenderTarget[dTid.xy];
-   float ao = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 1), 0);
+   float ao = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 0), 0);
    float roughness = diffuse.w;
    float metalness = normal.w;
 
@@ -66,7 +66,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[dTid.xy] = normal;
       return;
    case 4:
-      deferredRenderTarget[dTid.xy] = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 3), 0);
+      deferredRenderTarget[dTid.xy] = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 0), 0);
       return;
    case 5:
       deferredRenderTarget[dTid.xy] = metalness;

@@ -343,6 +343,39 @@ void siRenderer::onInit(siImgui* imgui)
                                  ssaoConstBuffer.getGpuVirtualAddress());
    }
 
+   // Cacao first SSAO pass
+   {
+      auto& g_LoadCounter = textures["#g_LoadCounter"];
+      g_LoadCounter.initTexture(
+         device.get(), 1, 0, 1, 1, DXGI_FORMAT_R32_UINT,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+
+      auto& g_ImportanceMap = textures["#g_ImportanceMap"];
+      g_ImportanceMap.initTexture(
+         device.get(), bsInfo.importanceMapWidth, bsInfo.importanceMapHeight, 1, 1, DXGI_FORMAT_R8_UNORM,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+
+      auto& g_FinalSSAO = textures["#g_FinalSSAO"];
+      g_FinalSSAO.initTexture(
+         device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8_UNORM,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+
+      auto& cacaoSSAOq3Base = computeShaders["cacaoSSAOq3Base"];
+      cacaoSSAOq3Base.onInit(device.get(), &descriptorMgr, L"cacaoSSAOq3Base.hlsl",
+                             {
+                                textures["#depthStencil"],
+                                textures["#normalsRenderTarget"],
+                                textures["#g_LoadCounter"],
+                                textures["#g_ImportanceMap"],
+                                textures["#g_FinalSSAO"],
+                                textures["#deinterlacedNormals"],
+                             },
+                             {
+                                textures["#g_FinalSSAO"]
+                             },
+                             ssaoConstBuffer.getGpuVirtualAddress());
+   }
+
    // creating compute shaders
    {
       auto& texture = textures["#deferredRenderTarget"];
@@ -354,7 +387,7 @@ void siRenderer::onInit(siImgui* imgui)
       deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
                             {
                                textures["#diffuseRenderTarget"], textures["#depthStencil"],
-                               textures["#normalsRenderTarget"], textures["#deinterlacedNormals"]
+                               textures["#normalsRenderTarget"], textures["#g_FinalSSAO"]
                             },
                             {texture},
                             defRenderConstBuffer.getGpuVirtualAddress());
@@ -524,6 +557,7 @@ void siRenderer::updatePipeline()
    {
       computeShaders["cacaoPrepareDepths"].dispatch(commandList.get());
       computeShaders["cacaoPrepareNormals"].dispatch(commandList.get());
+      computeShaders["cacaoSSAOq3Base"].dispatch(commandList.get());
       computeShaders["deferredRender"].dispatch(commandList.get());
    }
 

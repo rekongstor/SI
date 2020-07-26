@@ -36,9 +36,6 @@
     <ClCompile Include="siSwapChain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="siTexture2D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="siDescriptorMgr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -93,6 +90,9 @@
     <ClCompile Include="siComputeShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="siTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -111,9 +111,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="siSwapChain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="siTexture2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="siDescriptorMgr.h">
@@ -170,6 +167,12 @@
     <ClInclude Include="cacaoHLSL.h">
       <Filter>Resource Files\cacao</Filter>
     </ClInclude>
+    <ClInclude Include="cacaoSSAO.h">
+      <Filter>Resource Files\cacao</Filter>
+    </ClInclude>
+    <ClInclude Include="siTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ssao.hlsl">
@@ -191,6 +194,9 @@
       <Filter>Resource Files\cacao</Filter>
     </FxCompile>
     <FxCompile Include="cacaoPrepareNormals.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoSSAOq3Base.hlsl">
       <Filter>Resource Files\cacao</Filter>
     </FxCompile>
   </ItemGroup>
