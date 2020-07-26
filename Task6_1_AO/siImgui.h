@@ -1,5 +1,5 @@
 #pragma once
-#include "structures.h"
+#include "cacao.h"
 class siWindow;
 
 class siImgui
@@ -9,7 +9,7 @@ class siImgui
    int* targetOutput;
    float4* lightColor;
    float4* ambientColor;
-   int* targetArr;
+   FfxCacaoSettings* settings;
 public:
    siImgui();
 
@@ -20,5 +20,5 @@ public:
    void onUpdate();
    void onRender(ID3D12GraphicsCommandList* commandList);
    void bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor,
-                      float4* ambientColor, int* targetArr);
+                      float4* ambientColor, FfxCacaoSettings* settings);
 };
