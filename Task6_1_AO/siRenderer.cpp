@@ -325,27 +325,13 @@ void siRenderer::onInit(siImgui* imgui)
       cacaoSettings = FFX_CACAO_DEFAULT_SETTINGS;
    }
 
-   // Cacao prepare depths
+   // Cacao resources and CS
    {
+   // Cacao prepare depths
       auto& g_PrepareDepthsAndMips_OutMip0 = textures["#g_PrepareDepthsAndMips_OutMip0"];
       g_PrepareDepthsAndMips_OutMip0.initTexture(
          device.get(),
          bsInfo.deinterleavedDepthBufferWidth, bsInfo.deinterleavedDepthBufferHeight, 4, 1,
-         DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
-      auto& g_PrepareDepthsAndMips_OutMip1 = textures["#g_PrepareDepthsAndMips_OutMip1"];
-      g_PrepareDepthsAndMips_OutMip1.initTexture(
-         device.get(),
-         bsInfo.deinterleavedDepthBufferWidth / 2, bsInfo.deinterleavedDepthBufferHeight / 2, 4, 1,
-         DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
-      auto& g_PrepareDepthsAndMips_OutMip2 = textures["#g_PrepareDepthsAndMips_OutMip2"];
-      g_PrepareDepthsAndMips_OutMip2.initTexture(
-         device.get(),
-         bsInfo.deinterleavedDepthBufferWidth / 4, bsInfo.deinterleavedDepthBufferHeight / 4, 4, 1,
-         DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
-      auto& g_PrepareDepthsAndMips_OutMip3 = textures["#g_PrepareDepthsAndMips_OutMip3"];
-      g_PrepareDepthsAndMips_OutMip3.initTexture(
-         device.get(),
-         bsInfo.deinterleavedDepthBufferWidth / 8, bsInfo.deinterleavedDepthBufferHeight / 8, 4, 1,
          DXGI_FORMAT_R16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
 
       auto& cacaoDownscaleDepth = computeShaders["cacaoPrepareDepths"];
@@ -354,14 +340,13 @@ void siRenderer::onInit(siImgui* imgui)
                                     textures["#depthStencil"]
                                  },
                                  {
-                                    g_PrepareDepthsAndMips_OutMip0, g_PrepareDepthsAndMips_OutMip1,
-                                    g_PrepareDepthsAndMips_OutMip2, g_PrepareDepthsAndMips_OutMip3
+                                    g_PrepareDepthsAndMips_OutMip0
                                  },
                                  ssaoConstBuffer[0].getGpuVirtualAddress());
-   }
+   
 
    // Cacao prepare normals
-   {
+   
       auto& deinterlacedNormals = textures["#deinterlacedNormals"];
       deinterlacedNormals.initTexture(
          device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8B8A8_SNORM,
@@ -375,10 +360,10 @@ void siRenderer::onInit(siImgui* imgui)
                                     deinterlacedNormals
                                  },
                                  ssaoConstBuffer[0].getGpuVirtualAddress());
-   }
+   
 
    // Cacao first SSAO pass
-   {
+   
       auto& g_LoadCounter = textures["#g_LoadCounter"];
       g_LoadCounter.initTexture(
          device.get(), 1, 0, 1, 1, DXGI_FORMAT_R32_UINT,
@@ -408,46 +393,46 @@ void siRenderer::onInit(siImgui* imgui)
       auto& cacaoSSAOq3Base = computeShaders["cacaoSSAOq3Base"];
       cacaoSSAOq3Base.onInit(device.get(), &descriptorMgr, L"cacaoSSAOq3Base.hlsl",
                              {
-                                textures["#g_PrepareDepthsAndMips_OutMip0"],
-                                textures["#normalsRenderTarget"],
-                                textures["#g_LoadCounter"],
-                                textures["#g_ImportanceMap"],
-                                textures["#g_FinalSSAO"],
-                                textures["#deinterlacedNormals"],
+                                g_PrepareDepthsAndMips_OutMip0,
+                                deinterlacedNormals,
+                                g_LoadCounter,
+                                g_ImportanceMap,
+                                g_FinalSSAO,
+                                deinterlacedNormals,
                              },
                              {
-                                textures["#g_FinalSSAO"]
+                                g_FinalSSAO
                              },
                              ssaoConstBuffer[0].getGpuVirtualAddress());
 
       auto& cacaoGenerateImportanceMap = computeShaders["cacaoGenerateImportanceMap"];
       cacaoGenerateImportanceMap.onInit(device.get(), &descriptorMgr, L"cacaoGenerateImportanceMap.hlsl",
                                         {
-                                           textures["#g_FinalSSAO"],
+                                           g_FinalSSAO,
                                         },
                                         {
-                                           textures["#g_ImportanceMap"]
+                                           g_ImportanceMap
                                         },
                                         ssaoConstBuffer[0].getGpuVirtualAddress());
 
       auto& cacaoPostprocessImportanceA = computeShaders["cacaoPostprocessImportanceA"];
       cacaoPostprocessImportanceA.onInit(device.get(), &descriptorMgr, L"cacaoPostprocessImportanceA.hlsl",
                                          {
-                                            textures["#g_ImportanceMap"],
+                                            g_ImportanceMap,
                                          },
                                          {
-                                            textures["#g_ImportanceMapPong"]
+                                            g_ImportanceMapPong
                                          },
                                          ssaoConstBuffer[0].getGpuVirtualAddress());
 
       auto& cacaoPostprocessImportanceB = computeShaders["cacaoPostprocessImportanceB"];
       cacaoPostprocessImportanceB.onInit(device.get(), &descriptorMgr, L"cacaoPostprocessImportanceB.hlsl",
                                          {
-                                            textures["#g_ImportanceMapPong"],
+                                            g_ImportanceMapPong,
                                          },
                                          {
-                                            textures["#g_ImportanceMap"],
-                                            textures["#g_LoadCounter"],
+                                            g_ImportanceMap,
+                                            g_LoadCounter,
                                          },
                                          ssaoConstBuffer[0].getGpuVirtualAddress());
 
@@ -455,25 +440,25 @@ void siRenderer::onInit(siImgui* imgui)
       auto& cacaoSSAOq3 = computeShaders["cacaoSSAOq3"];
       cacaoSSAOq3.onInit(device.get(), &descriptorMgr, L"cacaoSSAOq3.hlsl",
                          {
-                                textures["#g_PrepareDepthsAndMips_OutMip0"],
-                                textures["#normalsRenderTarget"],
-                                textures["#g_LoadCounter"],
-                                textures["#g_ImportanceMap"],
-                                textures["#g_FinalSSAO"],
-                                textures["#deinterlacedNormals"],
-                         },
-                         {
-                            textures["#g_FinalSSAO"]
+                                g_PrepareDepthsAndMips_OutMip0,
+                                deinterlacedNormals,
+                                g_LoadCounter,
+                                g_ImportanceMap,
+                                g_FinalSSAO,
+                                deinterlacedNormals,
+         },
+                             {
+                                g_FinalSSAO
                          },
                          ssaoConstBuffer[0].getGpuVirtualAddress());
 
       auto& cacaoApply = computeShaders["cacaoApply"];
       cacaoApply.onInit(device.get(), &descriptorMgr, L"cacaoApply.hlsl",
                         {
-                           textures["#g_FinalSSAO"],
+                           g_FinalSSAO,
                         },
                         {
-                           textures["#g_SSAOOutput"],
+                           g_SSAOOutput,
                         },
                         ssaoConstBuffer[0].getGpuVirtualAddress());
    }

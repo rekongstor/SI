@@ -68,7 +68,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
       return;
    case 4:
       deferredRenderTarget[dTid.xy] = abs(ssaoOutput.SampleLevel(gPointClampSampler,
-                                                             int3(dTid.xy, targetArray) / float3(width, height, 1), 0));
+                                                             int3(dTid.xy, targetArray) / float3(width, height, 1), 0)).x;
       return;
    case 5:
       deferredRenderTarget[dTid.xy] = metalness;
