@@ -19,7 +19,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
 }
 
 static void updateConstants(FfxCacaoConstants* consts, FfxCacaoSettings* settings, BufferSizeInfo* bufferSizeInfo,
-                            const FfxCacaoMatrix4x4* proj)
+                            const FfxCacaoMatrix4x4* proj, const FfxCacaoMatrix4x4* normalsToView)
 {
    consts->BilateralSigmaSquared = settings->bilateralSigmaSquared;
    consts->BilateralSimilarityDistanceSigma = settings->bilateralSimilarityDistanceSigma;
@@ -133,34 +133,30 @@ static void updateConstants(FfxCacaoConstants* consts, FfxCacaoSettings* setting
    consts->DeinterleavedDepthBufferNormalisedOffset[1] = ((float)bufferSizeInfo->deinterleavedDepthBufferYOffset) / ((
       float)bufferSizeInfo->deinterleavedDepthBufferHeight);
 
-   if (!settings->generateNormals)
-   {
-      consts->NormalsUnpackMul = 2.0f; // inputs->NormalsUnpackMul;
-      consts->NormalsUnpackAdd = -1.0f; // inputs->NormalsUnpackAdd;
-   }
-   else
-   {
-      consts->NormalsUnpackMul = 2.0f;
-      consts->NormalsUnpackAdd = -1.0f;
-   }
+
+   consts->NormalsUnpackMul = 1.0f;
+   consts->NormalsUnpackAdd = 0.0f;
 }
 
-static void updatePerPassConstants(FfxCacaoConstants* consts, FfxCacaoSettings* settings, BufferSizeInfo* bufferSizeInfo, int pass)
+static void updatePerPassConstants(FfxCacaoConstants* consts, FfxCacaoSettings* settings,
+                                   BufferSizeInfo* bufferSizeInfo, int pass)
 {
    consts->PerPassFullResUVOffset[0] = ((float)(pass % 2)) / (float)bufferSizeInfo->ssaoBufferWidth;
    consts->PerPassFullResUVOffset[1] = ((float)(pass / 2)) / (float)bufferSizeInfo->ssaoBufferHeight;
 
    consts->PassIndex = pass;
 
-   float additionalAngleOffset = settings->temporalSupersamplingAngleOffset;  // if using temporal supersampling approach (like "Progressive Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
-   float additionalRadiusScale = settings->temporalSupersamplingRadiusOffset; // if using temporal supersampling approach (like "Progressive Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
+   float additionalAngleOffset = settings->temporalSupersamplingAngleOffset;
+   // if using temporal supersampling approach (like "Progressive Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
+   float additionalRadiusScale = settings->temporalSupersamplingRadiusOffset;
+   // if using temporal supersampling approach (like "Progressive Rendering Using Multi-frame Sampling" from GPU Pro 7, etc.)
    const int subPassCount = 5;
    for (int subPass = 0; subPass < subPassCount; subPass++)
    {
       int a = pass;
       int b = subPass;
 
-      int spmap[5]{ 0, 1, 4, 3, 2 };
+      int spmap[5]{0, 1, 4, 3, 2};
       b = spmap[subPass];
 
       float ca, sa;
@@ -209,7 +205,7 @@ void siRenderer::onInit(siImgui* imgui)
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
                             descriptorMgr.getCbvSrvUavHandle());
       imgui->bindVariables(&camera.position, &camera.target, &targetOutput, &defRenderConstBuffer.get().lightColor,
-                           &defRenderConstBuffer.get().ambientColor);
+                           &defRenderConstBuffer.get().ambientColor, &targetArray);
    }
 
    // swap chain buffers initialization
@@ -238,7 +234,7 @@ void siRenderer::onInit(siImgui* imgui)
 
       auto& normals = textures["#normalsRenderTarget"];
       normals.initTexture(
-         device.get(), window->getWidth(), window->getHeight(), 1, 1, DXGI_FORMAT_R32G32B32A32_FLOAT,
+         device.get(), window->getWidth(), window->getHeight(), 1, 1, DXGI_FORMAT_R8G8B8A8_SNORM,
          D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
       normals.createRtv(device.get(), &descriptorMgr);
    }
@@ -370,8 +366,8 @@ void siRenderer::onInit(siImgui* imgui)
       deinterlacedNormals.initTexture(
          device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8B8A8_SNORM,
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
-      auto& cacaoDownscaleDepth = computeShaders["cacaoPrepareNormals"];
-      cacaoDownscaleDepth.onInit(device.get(), &descriptorMgr, L"cacaoPrepareNormals.hlsl",
+      auto& cacaoPrepareNormals = computeShaders["cacaoPrepareNormals"];
+      cacaoPrepareNormals.onInit(device.get(), &descriptorMgr, L"cacaoPrepareNormals.hlsl",
                                  {
                                     textures["#normalsRenderTarget"]
                                  },
@@ -387,6 +383,7 @@ void siRenderer::onInit(siImgui* imgui)
       g_LoadCounter.initTexture(
          device.get(), 1, 0, 1, 1, DXGI_FORMAT_R32_UINT,
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+      g_LoadCounter.createUav(device.get(), &descriptorMgr);
 
       auto& g_ImportanceMap = textures["#g_ImportanceMap"];
       g_ImportanceMap.initTexture(
@@ -403,22 +400,25 @@ void siRenderer::onInit(siImgui* imgui)
          device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8_UNORM,
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
 
-      {
-         auto& cacaoSSAOq3Base = computeShaders["cacaoSSAOq3Base"];
-         cacaoSSAOq3Base.onInit(device.get(), &descriptorMgr, L"cacaoSSAOq3Base.hlsl",
-            {
-               textures["#depthStencil"],
-               textures["#normalsRenderTarget"],
-               textures["#g_LoadCounter"],
-               textures["#g_ImportanceMap"],
-               textures["#g_FinalSSAO"],
-               textures["#deinterlacedNormals"],
-            },
+      auto& g_SSAOOutput = textures["#g_SSAOOutput"];
+      g_SSAOOutput.initTexture(
+         device.get(), window->getWidth(), window->getHeight(), 1, 1, DXGI_FORMAT_R8_UNORM,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+
+      auto& cacaoSSAOq3Base = computeShaders["cacaoSSAOq3Base"];
+      cacaoSSAOq3Base.onInit(device.get(), &descriptorMgr, L"cacaoSSAOq3Base.hlsl",
+                             {
+                                textures["#g_PrepareDepthsAndMips_OutMip0"],
+                                textures["#normalsRenderTarget"],
+                                textures["#g_LoadCounter"],
+                                textures["#g_ImportanceMap"],
+                                textures["#g_FinalSSAO"],
+                                textures["#deinterlacedNormals"],
+                             },
                              {
                                 textures["#g_FinalSSAO"]
                              },
-            ssaoConstBuffer[0].getGpuVirtualAddress());
-      }
+                             ssaoConstBuffer[0].getGpuVirtualAddress());
 
       auto& cacaoGenerateImportanceMap = computeShaders["cacaoGenerateImportanceMap"];
       cacaoGenerateImportanceMap.onInit(device.get(), &descriptorMgr, L"cacaoGenerateImportanceMap.hlsl",
@@ -432,24 +432,50 @@ void siRenderer::onInit(siImgui* imgui)
 
       auto& cacaoPostprocessImportanceA = computeShaders["cacaoPostprocessImportanceA"];
       cacaoPostprocessImportanceA.onInit(device.get(), &descriptorMgr, L"cacaoPostprocessImportanceA.hlsl",
-                                        {
-                                           textures["#g_ImportanceMap"],
-                                        },
-                                        {
-                                           textures["#g_ImportanceMapPong"]
-                                        },
-                                        ssaoConstBuffer[0].getGpuVirtualAddress());
+                                         {
+                                            textures["#g_ImportanceMap"],
+                                         },
+                                         {
+                                            textures["#g_ImportanceMapPong"]
+                                         },
+                                         ssaoConstBuffer[0].getGpuVirtualAddress());
 
       auto& cacaoPostprocessImportanceB = computeShaders["cacaoPostprocessImportanceB"];
       cacaoPostprocessImportanceB.onInit(device.get(), &descriptorMgr, L"cacaoPostprocessImportanceB.hlsl",
-                                        {
-                                           textures["#g_ImportanceMapPong"],
-                                        },
-                                        {
-                                           textures["#g_ImportanceMap"],
-                                           textures["#g_LoadCounter"],
-                                        },
-                                        ssaoConstBuffer[0].getGpuVirtualAddress());
+                                         {
+                                            textures["#g_ImportanceMapPong"],
+                                         },
+                                         {
+                                            textures["#g_ImportanceMap"],
+                                            textures["#g_LoadCounter"],
+                                         },
+                                         ssaoConstBuffer[0].getGpuVirtualAddress());
+
+
+      auto& cacaoSSAOq3 = computeShaders["cacaoSSAOq3"];
+      cacaoSSAOq3.onInit(device.get(), &descriptorMgr, L"cacaoSSAOq3.hlsl",
+                         {
+                                textures["#g_PrepareDepthsAndMips_OutMip0"],
+                                textures["#normalsRenderTarget"],
+                                textures["#g_LoadCounter"],
+                                textures["#g_ImportanceMap"],
+                                textures["#g_FinalSSAO"],
+                                textures["#deinterlacedNormals"],
+                         },
+                         {
+                            textures["#g_FinalSSAO"]
+                         },
+                         ssaoConstBuffer[0].getGpuVirtualAddress());
+
+      auto& cacaoApply = computeShaders["cacaoApply"];
+      cacaoApply.onInit(device.get(), &descriptorMgr, L"cacaoApply.hlsl",
+                        {
+                           textures["#g_FinalSSAO"],
+                        },
+                        {
+                           textures["#g_SSAOOutput"],
+                        },
+                        ssaoConstBuffer[0].getGpuVirtualAddress());
    }
 
    // creating compute shaders
@@ -463,7 +489,7 @@ void siRenderer::onInit(siImgui* imgui)
       deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
                             {
                                textures["#diffuseRenderTarget"], textures["#depthStencil"],
-                               textures["#normalsRenderTarget"], textures["#g_ImportanceMap"]
+                               textures["#normalsRenderTarget"], textures["#g_SSAOOutput"]
                             },
                             {texture},
                             defRenderConstBuffer.getGpuVirtualAddress());
@@ -535,10 +561,24 @@ void siRenderer::update()
    DirectX::XMStoreFloat4x4(&mainCb.projMatrix, camera.projMatrix);
    mainConstBuffer.gpuCopy();
 
+   auto& defRenCb = defRenderConstBuffer.get();
+   float4 lightDirection = {0.f, -1.f, 0.f, 0.f};
+   XMStoreFloat4(&defRenCb.lightDirection,
+                 XMVector4Transform(XMLoadFloat4(&lightDirection), (camera.viewMatrix)));
+   defRenCb.targetOutput = targetOutput;
+   defRenCb.targetArray = targetArray;
+   defRenCb.width = window->getWidth();
+   defRenCb.height = window->getHeight();
+   auto det = XMMatrixDeterminant(camera.projMatrix);
+   auto projInv = XMMatrixTranspose(XMMatrixInverse(&det, camera.projMatrix));
+   DirectX::XMStoreFloat4x4(&defRenCb.projMatrixInv, projInv);
+   defRenderConstBuffer.gpuCopy();
+
+
    auto& ssaoCb = ssaoConstBuffer[0].get();
    FfxCacaoMatrix4x4 proj;
    memcpy(proj.elements, mainCb.projMatrix.m, sizeof(float) * 16);
-   updateConstants(&ssaoCb.consts, &this->cacaoSettings, &this->bsInfo, &proj);
+   updateConstants(&ssaoCb.consts, &this->cacaoSettings, &this->bsInfo, &proj, &FFX_CACAO_IDENTITY_MATRIX);
    updatePerPassConstants(&ssaoCb.consts, &cacaoSettings, &bsInfo, 0);
    ssaoConstBuffer[0].gpuCopy();
    for (int i = 1; i < 4; ++i)
@@ -548,19 +588,6 @@ void siRenderer::update()
       updatePerPassConstants(&ssaoCbPerPass.consts, &cacaoSettings, &bsInfo, i);
       ssaoConstBuffer[i].gpuCopy();
    }
-
-   auto& defRenCb = defRenderConstBuffer.get();
-   float4 lightDirection = {0.f, -1.f, 0.f, 0.f};
-   XMStoreFloat4(&defRenCb.lightDirection,
-                 XMVector4Transform(XMLoadFloat4(&lightDirection), (camera.viewMatrix)));
-   defRenCb.targetOutput = targetOutput;
-   defRenCb.width = window->getWidth();
-   defRenCb.height = window->getHeight();
-   auto det = XMMatrixDeterminant(camera.projMatrix);
-   auto projInv = XMMatrixInverse(&det, camera.projMatrix);
-   DirectX::XMStoreFloat4x4(&defRenCb.projMatrixInv, projInv);
-   defRenderConstBuffer.gpuCopy();
-
 
    for (auto& inst : instances)
    {
@@ -638,6 +665,12 @@ void siRenderer::updatePipeline()
 
    // compute shaders
    {
+      UINT clearValue[] = {0, 0, 0, 0};
+      auto& loadCounter = textures["#g_LoadCounter"];
+      commandList->ClearUnorderedAccessViewUint(loadCounter.getUavHandle().second, loadCounter.getUavHandle().first,
+                                                loadCounter.getBuffer().Get(), clearValue, 0, NULL);
+
+
       computeShaders["cacaoPrepareDepths"].dispatch(commandList.get());
       computeShaders["cacaoPrepareNormals"].dispatch(commandList.get());
       for (int i = 0; i < 4; ++i)
@@ -645,6 +678,9 @@ void siRenderer::updatePipeline()
       computeShaders["cacaoGenerateImportanceMap"].dispatch(commandList.get());
       computeShaders["cacaoPostprocessImportanceA"].dispatch(commandList.get());
       computeShaders["cacaoPostprocessImportanceB"].dispatch(commandList.get());
+      for (int i = 0; i < 4; ++i)
+         computeShaders["cacaoSSAOq3"].dispatch(commandList.get(), ssaoConstBuffer[i].getGpuVirtualAddress());
+      computeShaders["cacaoApply"].dispatch(commandList.get());
       computeShaders["deferredRender"].dispatch(commandList.get());
    }
 
@@ -667,7 +703,12 @@ void siRenderer::updatePipeline()
          imgui->onRender(commandList.get());
    }
 
-   swapChainTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_PRESENT);
+   swapChainTarget
+      .
+      resourceBarrier(commandList
+                      .
+                      get(), D3D12_RESOURCE_STATE_PRESENT
+      );
 }
 
 void siRenderer::executePipeline()

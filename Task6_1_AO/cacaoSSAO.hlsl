@@ -11,6 +11,16 @@ Texture2DArray g_deinterlacedNormals : register(t5);
 
 RWTexture2DArray<float2> g_SSAOOutput : register(u0);
 
+// packing/unpacking for edges; 2 bits per edge mean 4 gradient values (0, 0.33, 0.66, 1) for smoother transitions!
+float PackEdges(float4 edgesLRTB)
+{
+   //    int4 edgesLRTBi = int4( saturate( edgesLRTB ) * 3.0 + 0.5 );
+   //    return ( (edgesLRTBi.x << 6) + (edgesLRTBi.y << 4) + (edgesLRTBi.z << 2) + (edgesLRTBi.w << 0) ) / 255.0;
+
+      // optimized, should be same as above
+   edgesLRTB = round(saturate(edgesLRTB) * 3.05);
+   return dot(edgesLRTB, float4(64.0 / 255.0, 16.0 / 255.0, 4.0 / 255.0, 1.0 / 255.0));
+}
 
 float4 CalculateEdges(const float centerZ, const float leftZ, const float rightZ, const float topZ, const float bottomZ)
 {
@@ -71,9 +81,6 @@ float3 DecodeNormal(float3 encodedNormal)
 {
    float3 normal = encodedNormal * g_CACAOConsts.NormalsUnpackMul.xxx + g_CACAOConsts.NormalsUnpackAdd.xxx;
 
-#if SSAO_ENABLE_NORMAL_WORLD_TO_VIEW_CONVERSION
-	normal = mul(normal, (float3x3)g_CACAOConsts.NormalsWorldToViewspaceMatrix).xyz;
-#endif
 
    // normal = normalize( normal );    // normalize adds around 2.5% cost on High settings but makes little (PSNR 66.7) visual difference when normals are as in the sample (stored in R8G8B8A8_UNORM,
    //                                  // decoded in the shader), however it will likely be required if using different encoding/decoding or the inputs are not normalized, etc.
@@ -112,7 +119,7 @@ void SSAOTapInner(const int qualityLevel, inout float obscuranceSum, inout float
                   const float falloffCalcMulSq, const float weightMod, const int dbgTapIndex)
 {
    // get depth at sample
-   float viewspaceSampleZ = g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, samplingUV.xy, mipLevel).x;
+   float viewspaceSampleZ = g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, samplingUV.xy, 0).x;
    // * g_CACAOConsts.MaxViewspaceDepth;
 
    // convert to viewspace
@@ -213,11 +220,11 @@ SSAOHits SSAOGetHits(const int qualityLevel, const float2 depthBufferUV, const i
 
    float2 sampleUV = depthBufferUV + sampleOffset;
    result.hits[0] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, mipLevel).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
 
    sampleUV = depthBufferUV - sampleOffset;
    result.hits[1] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, mipLevel).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
 
    return result;
 }
@@ -253,10 +260,10 @@ SSAOHits SSAOGetHits2(SSAOSampleData data, const float2 depthBufferUV)
    result.weightMod = data.weightMod;
    float2 sampleUV = depthBufferUV + data.uvOffset;
    result.hits[0] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, data.mipLevel).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
    sampleUV = depthBufferUV - data.uvOffset;
    result.hits[1] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, data.mipLevel).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
    return result;
 }
 

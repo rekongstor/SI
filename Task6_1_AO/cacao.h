@@ -127,6 +127,7 @@ typedef struct FfxCacaoConstants {
 
 	float                   DeinterleavedDepthBufferOffset[2];
 	float                   DeinterleavedDepthBufferNormalisedOffset[2];
+
 } FfxCacaoConstants;
 
 typedef struct ScreenSizeInfo {
@@ -150,7 +151,7 @@ typedef struct ScreenSizeInfo {
 	uint32_t depthBufferHalfOffsetY;
 } ScreenSizeInfo;
 
-typedef struct BufferSizeInfo {
+struct BufferSizeInfo {
 	uint32_t inputOutputBufferWidth;
 	uint32_t inputOutputBufferHeight;
 
@@ -171,6 +172,13 @@ typedef struct BufferSizeInfo {
 
 	uint32_t importanceMapWidth;
 	uint32_t importanceMapHeight;
+};
+
+static const FfxCacaoMatrix4x4 FFX_CACAO_IDENTITY_MATRIX = {
+	{ { 1.0f, 0.0f, 0.0f, 0.0f },
+	  { 0.0f, 1.0f, 0.0f, 0.0f },
+	  { 0.0f, 0.0f, 1.0f, 0.0f },
+	  { 0.0f, 0.0f, 0.0f, 1.0f } }
 };
 
 inline static uint32_t dispatchSize(uint32_t tileSize, uint32_t totalSize)

@@ -59,9 +59,6 @@ struct CACAOConstants
 	float2                  DeinterleavedDepthBufferOffset;
 	float2                  DeinterleavedDepthBufferNormalisedOffset;
 
-#if SSAO_ENABLE_NORMAL_WORLD_TO_VIEW_CONVERSION
-	float4x4                NormalsWorldToViewspaceMatrix;
-#endif
 };
 
 static const float4 g_samplePatternMain[] =

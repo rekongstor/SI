@@ -208,5 +208,11 @@
     <FxCompile Include="cacaoPostprocessImportanceB.hlsl">
       <Filter>Resource Files\cacao</Filter>
     </FxCompile>
+    <FxCompile Include="cacaoSSAOq3.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoApply.hlsl">
+      <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

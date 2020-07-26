@@ -27,6 +27,7 @@ struct defRenderConstBuff
    float4 ambientColor;
    float aoPower;
    int targetOutput;
+   int targetArray;
    float width;
    float height;
 };
