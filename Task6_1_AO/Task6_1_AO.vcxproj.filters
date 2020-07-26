@@ -28,6 +28,9 @@
     <Filter Include="Resource Files\cacao">
       <UniqueIdentifier>{24cd7761-47ed-4817-80d1-e868d3899504}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\cacao\blur">
+      <UniqueIdentifier>{f9cc408d-c168-45ac-859b-e65bbba8f97c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -213,6 +216,12 @@
     </FxCompile>
     <FxCompile Include="cacaoApply.hlsl">
       <Filter>Resource Files\cacao</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur4.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

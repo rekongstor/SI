@@ -327,7 +327,7 @@ void siRenderer::onInit(siImgui* imgui)
 
    // Cacao resources and CS
    {
-   // Cacao prepare depths
+      // Cacao prepare depths
       auto& g_PrepareDepthsAndMips_OutMip0 = textures["#g_PrepareDepthsAndMips_OutMip0"];
       g_PrepareDepthsAndMips_OutMip0.initTexture(
          device.get(),
@@ -343,10 +343,10 @@ void siRenderer::onInit(siImgui* imgui)
                                     g_PrepareDepthsAndMips_OutMip0
                                  },
                                  ssaoConstBuffer[0].getGpuVirtualAddress());
-   
 
-   // Cacao prepare normals
-   
+
+      // Cacao prepare normals
+
       auto& deinterlacedNormals = textures["#deinterlacedNormals"];
       deinterlacedNormals.initTexture(
          device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8B8A8_SNORM,
@@ -360,10 +360,10 @@ void siRenderer::onInit(siImgui* imgui)
                                     deinterlacedNormals
                                  },
                                  ssaoConstBuffer[0].getGpuVirtualAddress());
-   
 
-   // Cacao first SSAO pass
-   
+
+      // Cacao first SSAO pass
+
       auto& g_LoadCounter = textures["#g_LoadCounter"];
       g_LoadCounter.initTexture(
          device.get(), 1, 0, 1, 1, DXGI_FORMAT_R32_UINT,
@@ -382,6 +382,11 @@ void siRenderer::onInit(siImgui* imgui)
 
       auto& g_FinalSSAO = textures["#g_FinalSSAO"];
       g_FinalSSAO.initTexture(
+         device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8_UNORM,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
+
+      auto& g_FinalSSAOBlurPong = textures["#g_FinalSSAOBlurPong"];
+      g_FinalSSAOBlurPong.initTexture(
          device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8_UNORM,
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
 
@@ -440,22 +445,34 @@ void siRenderer::onInit(siImgui* imgui)
       auto& cacaoSSAOq3 = computeShaders["cacaoSSAOq3"];
       cacaoSSAOq3.onInit(device.get(), &descriptorMgr, L"cacaoSSAOq3.hlsl",
                          {
-                                g_PrepareDepthsAndMips_OutMip0,
-                                deinterlacedNormals,
-                                g_LoadCounter,
-                                g_ImportanceMap,
-                                g_FinalSSAO,
-                                deinterlacedNormals,
-         },
-                             {
-                                g_FinalSSAO
+                            g_PrepareDepthsAndMips_OutMip0,
+                            deinterlacedNormals,
+                            g_LoadCounter,
+                            g_ImportanceMap,
+                            g_FinalSSAO,
+                            deinterlacedNormals,
+                         },
+                         {
+                            g_FinalSSAO
                          },
                          ssaoConstBuffer[0].getGpuVirtualAddress());
+
+
+      auto& cacaoBlur = computeShaders["cacaoBlur"];
+      cacaoBlur.onInit(device.get(), &descriptorMgr, L"cacaoBlur4.hlsl",
+                        {
+                           g_FinalSSAO,
+                        },
+                        {
+                           g_FinalSSAOBlurPong
+                        },
+                        ssaoConstBuffer[0].getGpuVirtualAddress());
+
 
       auto& cacaoApply = computeShaders["cacaoApply"];
       cacaoApply.onInit(device.get(), &descriptorMgr, L"cacaoApply.hlsl",
                         {
-                           g_FinalSSAO,
+                           g_FinalSSAOBlurPong,
                         },
                         {
                            g_SSAOOutput,
@@ -665,6 +682,8 @@ void siRenderer::updatePipeline()
       computeShaders["cacaoPostprocessImportanceB"].dispatch(commandList.get());
       for (int i = 0; i < 4; ++i)
          computeShaders["cacaoSSAOq3"].dispatch(commandList.get(), ssaoConstBuffer[i].getGpuVirtualAddress());
+      for (int i = 0; i < 4; ++i)
+         computeShaders["cacaoBlur"].dispatch(commandList.get(), ssaoConstBuffer[i].getGpuVirtualAddress());
       computeShaders["cacaoApply"].dispatch(commandList.get());
       computeShaders["deferredRender"].dispatch(commandList.get());
    }
