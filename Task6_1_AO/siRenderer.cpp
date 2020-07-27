@@ -203,9 +203,7 @@ void siRenderer::onInit(siImgui* imgui)
    {
       this->imgui = imgui;
       imgui->onInitRenderer(device.get(), bufferCount, descriptorMgr.getCbvSrvUavHeap().Get(),
-                            descriptorMgr.getCbvSrvUavHandle());
-      imgui->bindVariables(&camera.position, &camera.target, &targetOutput, &defRenderConstBuffer.get().lightColor,
-                           &defRenderConstBuffer.get().ambientColor, &cacaoSettings);
+                            descriptorMgr.getCbvSrvUavHandle(), this);
    }
 
    // swap chain buffers initialization

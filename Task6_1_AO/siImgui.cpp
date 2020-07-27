@@ -1,5 +1,6 @@
 #include "siImgui.h"
 #include "siWindow.h"
+#include "siRenderer.h"
 #include <imgui.h>
 #include <examples/imgui_impl_dx12.h>
 #include <examples/imgui_impl_win32.h>
@@ -31,7 +32,8 @@ void siImgui::onInitWindow(HWND window)
 }
 
 void siImgui::onInitRenderer(ID3D12Device* device, uint32_t bufferCount, ID3D12DescriptorHeap* heap,
-                             std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> handles)
+                             std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> handles,
+                             siRenderer* renderer)
 {
    std::cout << "Initializing ImGUI renderer" << std::endl;
 
@@ -39,6 +41,7 @@ void siImgui::onInitRenderer(ID3D12Device* device, uint32_t bufferCount, ID3D12D
                        DXGI_FORMAT_R8G8B8A8_UNORM, heap,
                        handles.first,
                        handles.second);
+   this->renderer = renderer;
 }
 
 void siImgui::onUpdate()
@@ -59,25 +62,25 @@ void siImgui::onUpdate()
    ImGui::NewFrame();
    {
       ImGui::Begin("Imgui Debug");
-      ImGui::DragFloat3("Camera position", &camPos->x, 0.1f);
-      ImGui::DragFloat3("Camera target", &camTarget->x, 0.1f);
-      ImGui::DragFloat3("Light Color", &lightColor->x, 0.1f);
-      ImGui::DragFloat3("Ambient Color", &ambientColor->x, 0.01f);
-      ImGui::Combo("Target output", targetOutput, targets, _countof(targets));
+      ImGui::DragFloat3("Camera position", &renderer->camera.position.x, 0.1f);
+      ImGui::DragFloat3("Camera target", &renderer->camera.target.x, 0.1f);
+      ImGui::DragFloat3("Light Color", &renderer->defRenderConstBuffer.get().lightColor.x, 0.1f);
+      ImGui::DragFloat3("Ambient Color", &renderer->defRenderConstBuffer.get().ambientColor.x, 0.01f);
+      ImGui::Combo("Target output", &renderer->targetOutput, targets, _countof(targets));
       ImGui::End();
    }
    {
       ImGui::Begin("Cacao");
-      ImGui::DragFloat("radius", &settings->radius, 0.01);
-      ImGui::DragFloat("adaptiveQualityLimit", &settings->adaptiveQualityLimit, 0.01);
-      ImGui::DragFloat("detailShadowStrength", &settings->detailShadowStrength, 0.01);
-      ImGui::DragFloat("fadeOutFrom", &settings->fadeOutFrom, 0.1);
-      ImGui::DragFloat("fadeOutTo", &settings->fadeOutTo, 0.1);
-      ImGui::DragFloat("horizonAngleThreshold", &settings->horizonAngleThreshold, 0.001);
-      ImGui::DragFloat("shadowClamp", &settings->shadowClamp, 0.001);
-      ImGui::DragFloat("shadowPower", &settings->shadowPower, 0.01);
-      ImGui::DragFloat("shadowMultiplier", &settings->shadowMultiplier, 0.01);
-      ImGui::DragFloat("sharpness", &settings->sharpness, 0.01);
+      ImGui::DragFloat("radius", &renderer->cacaoSettings.radius, 0.01);
+      ImGui::DragFloat("adaptiveQualityLimit", &renderer->cacaoSettings.adaptiveQualityLimit, 0.01);
+      ImGui::DragFloat("detailShadowStrength", &renderer->cacaoSettings.detailShadowStrength, 0.01);
+      ImGui::DragFloat("fadeOutFrom", &renderer->cacaoSettings.fadeOutFrom, 0.1);
+      ImGui::DragFloat("fadeOutTo", &renderer->cacaoSettings.fadeOutTo, 0.1);
+      ImGui::DragFloat("horizonAngleThreshold", &renderer->cacaoSettings.horizonAngleThreshold, 0.001);
+      ImGui::DragFloat("shadowClamp", &renderer->cacaoSettings.shadowClamp, 0.001);
+      ImGui::DragFloat("shadowPower", &renderer->cacaoSettings.shadowPower, 0.01);
+      ImGui::DragFloat("shadowMultiplier", &renderer->cacaoSettings.shadowMultiplier, 0.01);
+      ImGui::DragFloat("sharpness", &renderer->cacaoSettings.sharpness, 0.01);
       ImGui::End();
    }
 }
@@ -86,15 +89,4 @@ void siImgui::onRender(ID3D12GraphicsCommandList* commandList)
 {
    ImGui::Render();
    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
-}
-
-void siImgui::bindVariables(float4* cameraPos, float4* cameraTarget, int* targetOutput, float4* lightColor,
-                            float4* ambientColor, FfxCacaoSettings* settings)
-{
-   camPos = cameraPos;
-   camTarget = cameraTarget;
-   this->targetOutput = targetOutput;
-   this->lightColor = lightColor;
-   this->ambientColor = ambientColor;
-   this->settings = settings;
 }

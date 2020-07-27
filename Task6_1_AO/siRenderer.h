@@ -22,6 +22,7 @@ class siImgui;
 
 class siRenderer
 {
+   friend class siImgui;
    siWindow* window = nullptr;
    siImgui* imgui = nullptr;
    uint32_t bufferCount;
