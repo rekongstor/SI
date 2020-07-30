@@ -148,6 +148,7 @@ void main(uint3 dTid : SV_DispatchThreadID, uint2 gTid : SV_GroupThreadID)
    float3 pos = getPosFromNdc(dTid.xy);
    float3 normal = normalsRenderTarget.SampleLevel(gPointClampSampler, (float2(dTid.xy) + 0.5f) / float2(width, height),
                                                    0).xyz;
+   normal = normal * 2.f - 1.f;
    float3 randomVec = normalize(ssaoNoise[(gTid.x * 4 + gTid.y * 4) % 16]);
 
    float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));

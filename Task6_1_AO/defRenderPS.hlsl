@@ -31,8 +31,6 @@ PSOutput main(PSInput input) : SV_TARGET
 
    PSOutput output;
    output.color = float4(diffuseColor.xyz, roughness);
-   float4 norm = mul(projMatrix, input.normal);
-   norm /= norm.w;
    output.normals = float4(input.normal.xyz, metalness);
    if (diffuseColor.w < 0.1f)
       discard;

@@ -53,11 +53,12 @@ class siRenderer
    std::map<std::string, siComputeShader> computeShaders;
 
    siCamera camera;
-   int targetOutput = 4;
+   int targetOutput = 5;
    int targetArray = 0;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer[4];
+   siConstBuffer<defaultSsaoConstBuff> defaultSsaoConstBuffer;
    siConstBuffer<defRenderConstBuff> defRenderConstBuffer;
 
    FfxCacaoSettings cacaoSettings;

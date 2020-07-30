@@ -5,7 +5,7 @@ class siRenderer;
 
 class siImgui
 {
-   siRenderer* renderer;
+   siRenderer* renderer = nullptr;
 public:
    siImgui();
 

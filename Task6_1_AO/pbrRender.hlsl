@@ -10,7 +10,6 @@ float4x4 projMatrixInv;
 float4 lightDirection;
 float4 lightColor;
 float4 ambientColor;
-float aoPower;
 int targetOutput;
 int targetArray;
 float width;
@@ -21,6 +20,7 @@ Texture2D diffuseRenderTarget : register(t0);
 Texture2D depthStencil : register(t1);
 Texture2D normalsRenderTarget : register(t2);
 Texture2DArray ssaoOutput : register(t3);
+Texture2D ssaoOutDef : register(t4);
 RWTexture2D<float4> deferredRenderTarget: register(u0);
 
 #define PI 3.14159265f
@@ -51,7 +51,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
    float4 diffuse = diffuseRenderTarget[dTid.xy];
    float4 position = float4(getPosFromNdc(dTid.xy), 1.f);
    float4 normal = normalsRenderTarget[dTid.xy];
-   float ao = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 1), 0);
+   float ao = ssaoOutDef.SampleLevel(gPointClampSampler, dTid / float3(width, height, 1), 0);
    float roughness = diffuse.w;
    float metalness = normal.w;
 
@@ -67,11 +67,10 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[dTid.xy] = abs(normal);
       return;
    case 4:
-      deferredRenderTarget[dTid.xy] = abs(ssaoOutput.SampleLevel(gPointClampSampler,
-                                                             int3(dTid.xy, targetArray) / float3(width, height, 1), 0)).x;
+      deferredRenderTarget[dTid.xy] = ssaoOutput[dTid].x;
       return;
    case 5:
-      deferredRenderTarget[dTid.xy] = metalness;
+      deferredRenderTarget[dTid.xy] = ssaoOutDef[dTid.xy].x;
       return;
    case 6:
       deferredRenderTarget[dTid.xy] = roughness;
@@ -109,7 +108,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
    }
    float3 kD = (1.f - F) * (1.f - normMetalness);
 
-   float3 color = pow(ao, aoPower) * ambientColor * normDiffuseColor +
+   float3 color = ao * ambientColor * normDiffuseColor +
       (normDiffuseColor * kD / PI + specular) * lightColor * dotNL;
 
    color = pow(color / (color + 1.f), 1.f / 2.2f);

@@ -62,10 +62,12 @@ void siImgui::onUpdate()
    ImGui::NewFrame();
    {
       ImGui::Begin("Imgui Debug");
-      ImGui::DragFloat3("Camera position", &renderer->camera.position.x, 0.1f);
-      ImGui::DragFloat3("Camera target", &renderer->camera.target.x, 0.1f);
+      ImGui::DragFloat3("Camera position", &renderer->camera.position.x, 0.01f);
+      ImGui::DragFloat3("Camera target", &renderer->camera.target.x, 0.01f);
       ImGui::DragFloat3("Light Color", &renderer->defRenderConstBuffer.get().lightColor.x, 0.1f);
       ImGui::DragFloat3("Ambient Color", &renderer->defRenderConstBuffer.get().ambientColor.x, 0.01f);
+      ImGui::DragFloat("Radius", &renderer->defaultSsaoConstBuffer.get().radius, 0.001f);
+      ImGui::DragFloat("Bias", &renderer->defaultSsaoConstBuffer.get().bias, 0.001f);
       ImGui::Combo("Target output", &renderer->targetOutput, targets, _countof(targets));
       ImGui::End();
    }
@@ -81,6 +83,10 @@ void siImgui::onUpdate()
       ImGui::DragFloat("shadowPower", &renderer->cacaoSettings.shadowPower, 0.01);
       ImGui::DragFloat("shadowMultiplier", &renderer->cacaoSettings.shadowMultiplier, 0.01);
       ImGui::DragFloat("sharpness", &renderer->cacaoSettings.sharpness, 0.01);
+      if (ImGui::Button("Reset"))
+      {
+         renderer->cacaoSettings = FFX_CACAO_DEFAULT_SETTINGS;
+      }
       ImGui::End();
    }
 }
