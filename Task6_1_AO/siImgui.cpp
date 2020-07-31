@@ -83,6 +83,7 @@ void siImgui::onUpdate()
       ImGui::DragFloat("shadowPower", &renderer->cacaoSettings.shadowPower, 0.01);
       ImGui::DragFloat("shadowMultiplier", &renderer->cacaoSettings.shadowMultiplier, 0.01);
       ImGui::DragFloat("sharpness", &renderer->cacaoSettings.sharpness, 0.01);
+      ImGui::DragInt("blurPassCount", reinterpret_cast<int*>(&renderer->cacaoSettings.blurPassCount), 0.1f, 0, 8);
       if (ImGui::Button("Reset"))
       {
          renderer->cacaoSettings = FFX_CACAO_DEFAULT_SETTINGS;

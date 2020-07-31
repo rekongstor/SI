@@ -4,8 +4,8 @@
 #define TILE_HEIGHT 3
 #define HALF_TILE_WIDTH (TILE_WIDTH / 2)
 #define QUARTER_TILE_WIDTH (TILE_WIDTH / 4)
-#define BLUR_WIDTH  8
-#define BLUR_HEIGHT 8
+#define BLUR_WIDTH  16
+#define BLUR_HEIGHT 16
 
 #define ARRAY_WIDTH  (HALF_TILE_WIDTH  * BLUR_WIDTH  + 2)
 #define ARRAY_HEIGHT (TILE_HEIGHT * BLUR_HEIGHT + 2)
@@ -67,6 +67,7 @@ min16float2 UnpackFloat16(uint a)
 	float2 tmp = f16tof32(uint2(a & 0xFFFF, a >> 16));
 	return min16float2(tmp);
 }
+
 
 void LDSEdgeSensitiveBlur(const uint blurPasses, const uint2 tid, const uint2 gid)
 {

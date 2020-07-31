@@ -176,6 +176,7 @@ static void updatePerPassConstants(FfxCacaoConstants* consts, FfxCacaoSettings* 
    }
 }
 
+
 void siRenderer::onInit(siImgui* imgui)
 {
    std::cout << "Initializing renderer..." << std::endl;
@@ -456,27 +457,44 @@ void siRenderer::onInit(siImgui* imgui)
                          },
                          ssaoConstBuffer[0].getGpuVirtualAddress());
 
-
-      auto& cacaoBlur = computeShaders["cacaoBlur"];
-      cacaoBlur.onInit(device.get(), &descriptorMgr, L"cacaoBlur4.hlsl",
-                       {
-                          g_FinalSSAO,
-                       },
-                       {
-                          g_FinalSSAOBlurPong
-                       },
-                       ssaoConstBuffer[0].getGpuVirtualAddress());
+      std::string name("cacaoBlur0");
+      std::wstring filename = L"cacaoBlur0.hlsl";
+      for (int i = 1; i <= 8; ++i)
+      {
+         name[9] = ('0' + i);
+         filename[9] = (L'0' + i);
+         auto& cacaoBlur = computeShaders[name];
+         cacaoBlur.onInit(device.get(), &descriptorMgr, filename.c_str(),
+                          {
+                             g_FinalSSAO,
+                          },
+                          {
+                             g_FinalSSAOBlurPong
+                          },
+                          ssaoConstBuffer[0].getGpuVirtualAddress());
+      }
 
 
       auto& cacaoApply = computeShaders["cacaoApply"];
       cacaoApply.onInit(device.get(), &descriptorMgr, L"cacaoApply.hlsl",
                         {
-                           g_FinalSSAOBlurPong,
+                           g_FinalSSAO,
                         },
                         {
                            g_SSAOOutput,
                         },
                         ssaoConstBuffer[0].getGpuVirtualAddress());
+
+
+      auto& cacaoApplyBlurred = computeShaders["cacaoApplyBlurred"];
+      cacaoApplyBlurred.onInit(device.get(), &descriptorMgr, L"cacaoApply.hlsl",
+                               {
+                                  g_FinalSSAOBlurPong,
+                               },
+                               {
+                                  g_SSAOOutput,
+                               },
+                               ssaoConstBuffer[0].getGpuVirtualAddress());
    }
 
    // SSAO
@@ -500,11 +518,11 @@ void siRenderer::onInit(siImgui* imgui)
 
       auto& ssaoBlur = computeShaders["ssaoBlur"];
       ssaoBlur.onInit(device.get(), &descriptorMgr, L"ssaoBlur.hlsl",
-                  {
-                     g_SSAOOutput
-                  },
-                  { SSAOOutputBlur },
-                  defaultSsaoConstBuffer.getGpuVirtualAddress());
+                      {
+                         g_SSAOOutput
+                      },
+                      {SSAOOutputBlur},
+                      defaultSsaoConstBuffer.getGpuVirtualAddress());
    }
 
    // creating compute shaders
@@ -617,7 +635,7 @@ void siRenderer::update()
    auto& ssaoCb = ssaoConstBuffer[0].get();
    FfxCacaoMatrix4x4 proj;
    memcpy(proj.elements, mainCb.projMatrix.m, sizeof(float) * 16);
-   updateConstants(&ssaoCb.consts, &this->cacaoSettings, &this->bsInfo, &proj, &FFX_CACAO_IDENTITY_MATRIX);
+   updateConstants(&ssaoCb.consts, &cacaoSettings, &bsInfo, &proj, &FFX_CACAO_IDENTITY_MATRIX);
    updatePerPassConstants(&ssaoCb.consts, &cacaoSettings, &bsInfo, 0);
    ssaoConstBuffer[0].gpuCopy();
    for (int i = 1; i < 4; ++i)
@@ -719,11 +737,27 @@ void siRenderer::updatePipeline()
       computeShaders["cacaoPostprocessImportanceB"].dispatch(commandList.get());
       for (int i = 0; i < 4; ++i)
          computeShaders["cacaoSSAOq3"].dispatch(commandList.get(), ssaoConstBuffer[i].getGpuVirtualAddress());
-      for (int i = 0; i < 4; ++i)
-         computeShaders["cacaoBlur"].dispatch(commandList.get(), ssaoConstBuffer[i].getGpuVirtualAddress());
-      computeShaders["cacaoApply"].dispatch(commandList.get());
-      computeShaders["ssao"].dispatch(commandList.get());
-      computeShaders["ssaoBlur"].dispatch(commandList.get());
+
+      int blurPassCount = this->cacaoSettings.blurPassCount;
+      blurPassCount = FFX_CACAO_CLAMP(blurPassCount, 0, MAX_BLUR_PASSES);
+
+      if (blurPassCount)
+      {
+         uint32_t w = 4 * BLUR_WIDTH - 2 * blurPassCount;
+         uint32_t h = 3 * BLUR_HEIGHT - 2 * blurPassCount;
+         uint32_t dispatchWidth = dispatchSize(w, bsInfo.ssaoBufferWidth);
+         uint32_t dispatchHeight = dispatchSize(h, bsInfo.ssaoBufferHeight);
+         std::string name("cacaoBlur0");
+         name[9] = ('0' + blurPassCount);
+         for (int i = 0; i < 4; ++i)
+         {
+            computeShaders[name].dispatch(commandList.get(), ssaoConstBuffer[i].getGpuVirtualAddress(),
+                                          dispatchWidth, dispatchHeight);
+         }
+         computeShaders["cacaoApplyBlurred"].dispatch(commandList.get());
+      }
+      //computeShaders["ssao"].dispatch(commandList.get());
+      //computeShaders["ssaoBlur"].dispatch(commandList.get());
       computeShaders["deferredRender"].dispatch(commandList.get());
    }
 

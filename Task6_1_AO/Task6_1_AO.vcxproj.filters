@@ -223,5 +223,26 @@
     <FxCompile Include="cacaoBlur4.hlsl">
       <Filter>Resource Files\cacao\blur</Filter>
     </FxCompile>
+    <FxCompile Include="cacaoBlur1.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur2.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur3.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur5.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur6.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur7.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
+    <FxCompile Include="cacaoBlur8.hlsl">
+      <Filter>Resource Files\cacao\blur</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

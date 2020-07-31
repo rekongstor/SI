@@ -51,7 +51,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
    float4 diffuse = diffuseRenderTarget[dTid.xy];
    float4 position = float4(getPosFromNdc(dTid.xy), 1.f);
    float4 normal = normalsRenderTarget[dTid.xy];
-   float ao = ssaoOutDef.SampleLevel(gPointClampSampler, dTid / float3(width, height, 1), 0);
+   float ao = ssaoOutput.SampleLevel(gPointClampSampler, dTid / float3(width, height, 1), 0);
    float roughness = diffuse.w;
    float metalness = normal.w;
 

@@ -107,12 +107,13 @@ void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPC
    pipelineState.createPso(device, rootSignature.get(), filename);
 }
 
-void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList)
+void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, uint32_t width, uint32_t height)
 {
    dispatch(commandList, constBufferAddress);
 }
 
-void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress)
+void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress,
+                               uint32_t width, uint32_t height)
 {
    if (outputs.empty())
       return;
@@ -130,8 +131,12 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU
    commandList->SetComputeRootDescriptorTable(slot++, inputs[0].getSrvHandle().second);
 
    commandList->SetPipelineState(pipelineState.getPipelineState().Get());
+   if (width == 0)
+      width = static_cast<UINT>(ceilf(outputs[0].getWidth() / 8.f));
+   if (height == 0)
+      height = static_cast<UINT>(ceilf(outputs[0].getHeight() / 8.f));
 
-   commandList->Dispatch(static_cast<UINT>(ceilf(outputs[0].getWidth() / 8.f)), static_cast<UINT>(ceilf(outputs[0].getHeight() / 8.f)), 1);
+   commandList->Dispatch(width, height, 1);
 
    for (auto& input : inputs)
       input.resourceBarrier(commandList, D3D12_RESOURCE_STATE_COMMON);

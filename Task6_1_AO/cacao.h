@@ -7,6 +7,9 @@ static const FfxCacaoBool FFX_CACAO_FALSE = 0;
 #define FFX_CACAO_COS(x) cosf(x)
 #define FFX_CACAO_SIN(x) sinf(x)
 
+#define BLUR_WIDTH  16
+#define BLUR_HEIGHT 16
+
 typedef enum FfxCacaoQuality {
 	FFX_CACAO_QUALITY_LOWEST = 0,
 	FFX_CACAO_QUALITY_LOW = 1,
