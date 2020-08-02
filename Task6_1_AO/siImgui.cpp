@@ -54,7 +54,8 @@ void siImgui::onUpdate()
       "Ssao",
       "Metalness",
       "Roughness",
-      "Specular"
+      "Specular",
+      "Alt"
    };
 
    ImGui_ImplDX12_NewFrame();
@@ -69,6 +70,8 @@ void siImgui::onUpdate()
       ImGui::DragFloat("Radius", &renderer->defaultSsaoConstBuffer.get().radius, 0.001f);
       ImGui::DragFloat("Bias", &renderer->defaultSsaoConstBuffer.get().bias, 0.001f);
       ImGui::Combo("Target output", &renderer->targetOutput, targets, _countof(targets));
+      ImGui::InputInt("Target array", &renderer->targetArray);
+      ImGui::InputInt("Target mip", &renderer->targetMip);
       ImGui::End();
    }
    {

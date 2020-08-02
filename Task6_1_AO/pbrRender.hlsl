@@ -12,6 +12,7 @@ float4 lightColor;
 float4 ambientColor;
 int targetOutput;
 int targetArray;
+int targetMip;
 float width;
 float height;
 }
@@ -20,7 +21,7 @@ Texture2D diffuseRenderTarget : register(t0);
 Texture2D depthStencil : register(t1);
 Texture2D normalsRenderTarget : register(t2);
 Texture2DArray ssaoOutput : register(t3);
-Texture2D ssaoOutDef : register(t4);
+Texture2DArray alt : register(t4);
 RWTexture2D<float4> deferredRenderTarget: register(u0);
 
 #define PI 3.14159265f
@@ -70,10 +71,13 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[dTid.xy] = ssaoOutput[dTid].x;
       return;
    case 5:
-      deferredRenderTarget[dTid.xy] = ssaoOutDef[dTid.xy].x;
+      deferredRenderTarget[dTid.xy] = metalness;
       return;
    case 6:
       deferredRenderTarget[dTid.xy] = roughness;
+      return;
+   case 8:
+      deferredRenderTarget[dTid.xy] = alt.SampleLevel(gPointClampSampler, float3(dTid.xy, targetArray) / float3(width, height, 1), targetMip);
       return;
    }
 

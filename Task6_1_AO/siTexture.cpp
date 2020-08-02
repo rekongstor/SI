@@ -4,16 +4,6 @@
 #include "siCommandList.h"
 #include "siDescriptorMgr.h"
 
-uint32_t siTexture::getWidth() const
-{
-   return width;
-}
-
-uint32_t siTexture::getHeight() const
-{
-   return height;
-}
-
 void siTexture::initFromTexture(const siTexture& other)
 {
    this->buffer = other.buffer;
@@ -104,7 +94,7 @@ void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t heigh
    this->state = initState;
    this->width = width;
    this->height = height;
-
+   this->mipLevels = mipLevels;
 }
 
 void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
@@ -439,8 +429,24 @@ void siTexture::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
    assert(hr == S_OK);
 }
 
-void siTexture::createUav(ID3D12Device* device, siDescriptorMgr* descMgr)
+void siTexture::createUav(ID3D12Device* device, siDescriptorMgr* descMgr, uint32_t mipLevel)
 {
+   if (mipLevel)
+   {
+      D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
+      ZeroMemory(&desc, sizeof(desc));
+      desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+      desc.Format = format;
+      desc.Texture2DArray.MipSlice = mipLevel;
+      desc.Texture2DArray.ArraySize = 4;
+      desc.Texture2DArray.FirstArraySlice = 0;
+
+      uavHandle = descMgr->getCbvSrvUavHandle();
+      device->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle.first);
+      auto hr = device->GetDeviceRemovedReason();
+      assert(hr == S_OK);
+      return;
+   }
    uavHandle = descMgr->getCbvSrvUavHandle();
    device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
    auto hr = device->GetDeviceRemovedReason();

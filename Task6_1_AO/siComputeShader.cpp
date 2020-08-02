@@ -15,15 +15,18 @@ void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPC
 
    for (auto& input : inputs)
    {
-      auto& tex = this->inputs.emplace_back(siTexture());
-      tex.initFromTexture(input);
-      tex.createSrv(device, descMgr);
+         auto& tex = this->inputs.emplace_back(siTexture());
+         tex.initFromTexture(input);
+         tex.createSrv(device, descMgr);
    }
    for (auto& output : outputs)
    {
-      auto& tex = this->outputs.emplace_back(siTexture());
-      tex.initFromTexture(output);
-      tex.createUav(device, descMgr);
+      for (int i = 0; i < output.getMipLevels(); ++i)
+      {
+         auto& tex = this->outputs.emplace_back(siTexture());
+         tex.initFromTexture(output);
+         tex.createUav(device, descMgr, i);
+      }
    }
 
    // creating root signature
@@ -101,7 +104,7 @@ void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPC
       samplers[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
       rootSignature.onInit(
-         device, siRootSignature::createCsRsBlobCb1In1Out(inputs.size(), outputs.size(), samplers, _countof(samplers)));
+         device, siRootSignature::createCsRsBlobCb1In1Out(inputs.size(), this->outputs.size(), samplers, _countof(samplers)));
    }
 
    pipelineState.createPso(device, rootSignature.get(), filename);

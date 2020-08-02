@@ -31,7 +31,7 @@ void siSceneLoader::loadScene(LPCSTR filename, std::map<int32_t, siMesh>& meshes
 
       dstMesh.diffuseMap = mesh.MeshMaterial.map_Kd;
       dstMesh.roughnessMap = mesh.MeshMaterial.map_Ka;
-      dstMesh.metalnessMap = mesh.MeshMaterial.map_Ka;
+      dstMesh.metalnessMap = mesh.MeshMaterial.map_Ks;
       {
          auto& tex = textures[dstMesh.diffuseMap];
          if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)

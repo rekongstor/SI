@@ -55,6 +55,7 @@ class siRenderer
    siCamera camera;
    int targetOutput = 4;
    int targetArray = 0;
+   int targetMip = 0;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer[4];

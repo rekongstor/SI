@@ -1,6 +1,9 @@
 #include "cacaoHLSL.hlsl"
 Texture2D g_DepthSource : register(t0);
 RWTexture2DArray<float> g_PrepareDepthsAndMips_OutMip0: register(u0);
+RWTexture2DArray<float> g_PrepareDepthsAndMips_OutMip1: register(u1);
+RWTexture2DArray<float> g_PrepareDepthsAndMips_OutMip2: register(u2);
+RWTexture2DArray<float> g_PrepareDepthsAndMips_OutMip3: register(u3);
 
 groupshared float s_PrepareDepthsAndMipsBuffer[4][8][8];
 
@@ -45,6 +48,52 @@ void PrepareDepthsAndMips(float4 samples, int2 outputCoord, uint2 gtid)
 	int2 depthArrayOffset = int2(gtid.x % 2, gtid.y % 2);
 	int2 bufferCoord = gtid - depthArrayOffset;
 
+	outputCoord /= 2;
+
+	// if (stillAlive) <-- all threads alive here
+	{
+		float sample_00 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 0][bufferCoord.y + 0];
+		float sample_01 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 0][bufferCoord.y + 1];
+		float sample_10 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 1][bufferCoord.y + 0];
+		float sample_11 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 1][bufferCoord.y + 1];
+
+		float avg = MipSmartAverage(float4(sample_00, sample_01, sample_10, sample_11));
+		g_PrepareDepthsAndMips_OutMip1[int3(outputCoord.x, outputCoord.y, depthArrayIndex)] = avg;
+		s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x][bufferCoord.y] = avg;
+	}
+
+	bool stillAlive = gtid.x % 4 == depthArrayOffset.x && gtid.y % 4 == depthArrayOffset.y;
+
+	outputCoord /= 2;
+	GroupMemoryBarrierWithGroupSync();
+
+	if (stillAlive)
+	{
+		float sample_00 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 0][bufferCoord.y + 0];
+		float sample_01 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 0][bufferCoord.y + 2];
+		float sample_10 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 2][bufferCoord.y + 0];
+		float sample_11 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 2][bufferCoord.y + 2];
+
+		float avg = MipSmartAverage(float4(sample_00, sample_01, sample_10, sample_11));
+		g_PrepareDepthsAndMips_OutMip2[int3(outputCoord.x, outputCoord.y, depthArrayIndex)] = avg;
+		s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x][bufferCoord.y] = avg;
+	}
+
+	stillAlive = gtid.x % 8 == depthArrayOffset.x && depthArrayOffset.y % 8 == depthArrayOffset.y;
+
+	outputCoord /= 2;
+	GroupMemoryBarrierWithGroupSync();
+
+	if (stillAlive)
+	{
+		float sample_00 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 0][bufferCoord.y + 0];
+		float sample_01 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 0][bufferCoord.y + 4];
+		float sample_10 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 4][bufferCoord.y + 0];
+		float sample_11 = s_PrepareDepthsAndMipsBuffer[depthArrayIndex][bufferCoord.x + 4][bufferCoord.y + 4];
+
+		float avg = MipSmartAverage(float4(sample_00, sample_01, sample_10, sample_11));
+		g_PrepareDepthsAndMips_OutMip3[int3(outputCoord.x, outputCoord.y, depthArrayIndex)] = avg;
+	}
 }
 
 [numthreads(8, 8, 1)]

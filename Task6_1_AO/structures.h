@@ -39,6 +39,7 @@ struct defRenderConstBuff
    float4 ambientColor;
    int targetOutput;
    int targetArray;
+   int targetMip;
    float width;
    float height;
 };

@@ -119,7 +119,7 @@ void SSAOTapInner(const int qualityLevel, inout float obscuranceSum, inout float
                   const float falloffCalcMulSq, const float weightMod, const int dbgTapIndex)
 {
    // get depth at sample
-   float viewspaceSampleZ = g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, samplingUV.xy, 0).x;
+   float viewspaceSampleZ = g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, samplingUV.xy, mipLevel).x;
    // * g_CACAOConsts.MaxViewspaceDepth;
 
    // convert to viewspace
@@ -220,11 +220,11 @@ SSAOHits SSAOGetHits(const int qualityLevel, const float2 depthBufferUV, const i
 
    float2 sampleUV = depthBufferUV + sampleOffset;
    result.hits[0] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, mipLevel).x);
 
    sampleUV = depthBufferUV - sampleOffset;
    result.hits[1] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, mipLevel).x);
 
    return result;
 }
