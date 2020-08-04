@@ -55,7 +55,7 @@ static const FfxCacaoSettings FFX_CACAO_DEFAULT_SETTINGS = {
 	/* fadeOutTo                         */ 300.0f,
 	/* qualityLevel                      */ FFX_CACAO_QUALITY_HIGHEST,
 	/* adaptiveQualityLimit              */ 0.45f,
-	/* blurPassCount                     */ 2,
+	/* blurPassCount                     */ 1,
 	/* sharpness                         */ 0.98f,
 	/* temporalSupersamplingAngleOffset  */ 0.0f,
 	/* temporalSupersamplingRadiusOffset */ 0.0f,

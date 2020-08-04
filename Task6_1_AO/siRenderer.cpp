@@ -13,7 +13,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    commandAllocator(bufferCount),
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
-   camera({6.7, 2.59, 0.81f, 1.f}, {-5.87f, -0.08f, -2.82f, 1.f}, 45.f,
+   camera({5.07, 2.05, -1.27f, 1.f}, {-8.26f, -1.38f, 2.44f, 1.f}, 51.f,
           static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
 }
@@ -478,7 +478,7 @@ void siRenderer::onInit(siImgui* imgui)
          L"cacaoBlur7.hlsl",
          L"cacaoBlur8.hlsl",
       };
-      for (int i = 1; i < 2; ++i)
+      for (auto i = 0; i < _countof(filename); ++i)
       {
          auto& cacaoBlur = computeShaders[name[i]];
          cacaoBlur.onInit(device.get(), &descriptorMgr, filename[i],
@@ -563,7 +563,7 @@ void siRenderer::onInit(siImgui* imgui)
       auto& inst = instances[i];
       const uint32_t x = 1;
       const uint32_t y = 1;
-      float scale = 0.1f;
+      float scale = 1.0f;
       XMFLOAT4 position = XMFLOAT4();
       XMFLOAT4 rotation = XMFLOAT4();
       for (uint32_t i = 0; i < x; ++i)

@@ -9,8 +9,8 @@ class siMesh
    std::vector<DWORD> indices;
    std::vector<siVertex> vertices;
    std::string diffuseMap;
-   std::string metalnessMap;
-   std::string roughnessMap;
+   std::string normalMap;
+   std::string materialMap;
    ComPtr<ID3D12Resource> vertexBuffer;
    ComPtr<ID3D12Resource> indexBuffer;
    ComPtr<ID3D12Resource> vBufferUploadHeap;

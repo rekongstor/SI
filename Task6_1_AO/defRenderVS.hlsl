@@ -33,6 +33,6 @@ PSInput main(VSInput input, uint instanceID : SV_InstanceID)
 
    output.position = mul(projMatrix, mul(viewMatrix, mul(inst.world, input.position)));
    output.normal = normalize(mul(viewMatrix, mul(inst.worldIt, input.normal)));
-   output.uv = input.uv;
+   output.uv = float2(input.uv.x, 1.f - input.uv.y);
    return output;
 }

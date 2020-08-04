@@ -1,310 +1,327 @@
 # Blender MTL File: 'None'
 # Material Count: 25
 
-newmtl Material__25
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/lion.tga.png
-map_Ks textures/lion_ddn.tga.png
-map_Ka textures/lion.tga.png
-
-newmtl Material__298
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/background.tga.png
-map_Ks textures/background_ddn.tga.png
-map_Ka textures/background.tga.png
-
-newmtl Material__47
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/lion.tga.png
-map_Ks textures/lion_ddn.tga.png
-map_Ka textures/lion.tga.png
-
-
-
-newmtl Material__57
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
+newmtl Material_0
+Ns 323.999994
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd textures/vase_plant.tga.png
-map_Ks textures/vase_plant.tga.png
-map_Ka textures/vase_plant.tga.png
+map_Kd sponza/5061699253647017043.png
+map_Bump sponza/8773302468495022225.jpg
+map_Ka sponza/11872827283454512094.jpg
 
-newmtl arch
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_1
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/sponza_arch_diff.tga.png
-map_Ka textures/sponza_arch_diff.tga.png
-map_Ks textures/sponza_arch_ddn.tga.png
+map_Kd sponza/7268504077753552595.jpg
+map_Bump sponza/4477655471536070370.jpg
+map_Ka sponza/8503262930880235456.jpg
 
-newmtl bricks
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_10
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/spnza_bricks_a_diff.tga.png
-map_Ks textures/spnza_bricks_a_ddn.tga.png
-map_Ka textures/spnza_bricks_a_diff.tga.png
+map_Kd sponza/7441062115984513793.jpg
+map_Bump sponza/6667038893015345571.jpg
+map_Ka sponza/8114461559286000061.jpg
 
-newmtl ceiling
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_11
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/sponza_ceiling_a_diff.tga.png
-map_Ka textures/sponza_ceiling_a_diff.tga.png
-map_Ks textures/sponza_ceiling_a_ddn.tga.png
+map_Kd sponza/11490520546946913238.jpg
+map_Bump sponza/3628158980083700836.jpg
+map_Ka sponza/3455394979645218238.jpg
 
-newmtl chain
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
+newmtl Material_12
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/6151467286084645207.jpg
+map_Bump sponza/7645212358685992005.jpg
+map_Ka sponza/8783994986360286082.jpg
+
+newmtl Material_13
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/4975155472559461469.jpg
+map_Bump sponza/2299742237651021498.jpg
+map_Ka sponza/3371964815757888145.jpg
+
+newmtl Material_14
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/4675343432951571524.jpg
+map_Bump sponza/7056944414013900257.jpg
+map_Ka sponza/7815564343179553343.jpg
+
+newmtl Material_15
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/2775690330959970771.jpg
+map_Bump sponza/2374361008830720677.jpg
+map_Ka sponza/7815564343179553343.jpg
+
+newmtl Material_16
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/2185409758123873465.jpg
+map_Bump sponza/332936164838540657.jpg
+map_Ka sponza/7815564343179553343.jpg
+
+newmtl Material_17
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/17876391417123941155.jpg
+map_Bump sponza/6593109234861095314.jpg
+map_Ka sponza/466164707995436622.jpg
+
+newmtl Material_18
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/11474523244911310074.jpg
+map_Bump sponza/4601176305987539675.jpg
+map_Ka sponza/466164707995436622.jpg
+
+newmtl Material_19
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/9288698199695299068.jpg
+map_Bump sponza/4910669866631290573.jpg
+map_Ka sponza/466164707995436622.jpg
+
+newmtl Material_2
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/15295713303328085182.jpg
+map_Bump sponza/10388182081421875623.jpg
+map_Ka sponza/9916269861720640319.jpg
+
+newmtl Material_20
+Ns 323.999994
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd textures/chain_texture.tga.png
-map_d textures/chain_texture_mask.tga.png
-map_Ks textures/chain_texture_ddn.tga.png
-map_Ka textures/chain_texture.tga.png
+map_Kd sponza/16275776544635328252.png
+map_Bump sponza/14170708867020035030.jpg
+map_Ka sponza/1219024358953944284.jpg
 
-newmtl column_a
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_21
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/sponza_column_a_diff.tga.png
-map_Ks textures/sponza_column_a_ddn.tga.png
-map_Ka textures/sponza_column_a_diff.tga.png
+map_Kd sponza/755318871556304029.jpg
+map_Bump sponza/3827035219084910048.jpg
+map_Ka sponza/2411100444841994089.jpg
 
-newmtl column_b
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_22
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/sponza_column_b_diff.tga.png
-map_Ks textures/sponza_column_b_ddn.tga.png
-map_Ka textures/sponza_column_b_diff.tga.png
+map_Kd sponza/8481240838833932244.jpg
+map_Bump sponza/10381718147657362067.jpg
+map_Ka sponza/17556969131407844942.jpg
 
-newmtl column_c
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_23
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/sponza_column_c_diff.tga.png
-map_Ks textures/sponza_column_c_ddn.tga.png
-map_Ka textures/sponza_column_c_diff.tga.png
+map_Kd sponza/6772804448157695701.jpg
+map_Bump sponza/759203620573749278.jpg
+map_Ka sponza/13196865903111448057.jpg
 
-newmtl details
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_24
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/sponza_details_diff.tga.png
-map_Ka textures/sponza_details_diff.tga.png
-map_Ks textures/sponza_details_ddn.tga.png
+map_Kd sponza/2969916736137545357.jpg
+map_Bump sponza/14118779221266351425.jpg
+map_Ka sponza/8747919177698443163.jpg
 
-newmtl fabric_a
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_fabric_diff.tga.png
-map_Ka textures/sponza_fabric_diff.tga.png
-map_Ks textures/sponza_fabric_ddn.tga.png
-
-newmtl fabric_c
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_curtain_diff.tga.png
-map_Ka textures/sponza_curtain_diff.tga.png
-map_Ks textures/sponza_curtain_ddn.tga.png
-
-
-newmtl fabric_d
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_fabric_blue_diff.tga.png
-map_Ka textures/sponza_fabric_blue_diff.tga.png
-map_Ks textures/sponza_fabric_ddn.tga.png
-
-
-newmtl fabric_e
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_fabric_green_diff.tga.png
-map_Ka textures/sponza_fabric_green_diff.tga.png
-map_Ks textures/sponza_fabric_ddn.tga.png
-
-
-newmtl fabric_f
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_curtain_green_diff.tga.png
-map_Ka textures/sponza_curtain_green_diff.tga.png
-map_Ks textures/sponza_curtain_ddn.tga.png
-
-newmtl fabric_g
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_curtain_blue_diff.tga.png
-map_Ka textures/sponza_curtain_blue_diff.tga.png
-map_Ks textures/sponza_curtain_ddn.tga.png
-
-
-newmtl flagpole
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_flagpole_diff.tga.png
-map_Ka textures/sponza_flagpole_diff.tga.png
-map_Ks textures/sponza_flagpole_ddn.tga.png
-
-newmtl floor
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
-illum 2
-map_Kd textures/sponza_floor_a_diff.tga.png
-map_Ka textures/sponza_floor_a_diff.tga.png
-map_Ks textures/sponza_floor_a_ddn.tga.png
-
-newmtl leaf
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
+newmtl Material_3
+Ns 323.999994
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd textures/sponza_thorn_diff.tga.png
-map_d textures/sponza_thorn_mask.tga.png
-map_Ks textures/sponza_thorn_ddn.tga.png
-map_Ka textures/sponza_thorn_diff.tga.png
+map_Kd sponza/8006627369776289000.png
+map_Bump sponza/12501374198249454378.jpg
+map_Ka sponza/715093869573992647.jpg
 
-newmtl roof
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_4
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/sponza_roof_diff.tga.png
-map_Ks textures/sponza_roof_ddn.tga.png
-map_Ka textures/sponza_roof_ddn.tga.png
+map_Kd sponza/8750083169368950601.jpg
+map_Bump sponza/13982482287905699490.jpg
+map_Ka sponza/16885566240357350108.jpg
 
-newmtl vase
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_5
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/vase_dif.tga.png
-map_Ka textures/vase_dif.tga.png
-map_Ks textures/vase_ddn.tga.png
+map_Kd sponza/5792855332885324923.jpg
+map_Bump sponza/16299174074766089871.jpg
+map_Ka sponza/11968150294050148237.jpg
 
-newmtl vase_hanging
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_6
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/vase_hanging.tga.png
-map_Ka textures/vase_hanging.tga.png
-map_Ks textures/vase_hanging_ddn.tga.png
+map_Kd sponza/14650633544276105767.jpg
+map_Bump sponza/2051777328469649772.jpg
+map_Ka sponza/4871783166746854860.jpg
 
-newmtl vase_round
-Ns 7.843137
-Ka 0.000000 0.000000 0.000000
-Kd 0.470400 0.470400 0.470400
-Ks 0.000000 0.000000 0.000000
-Ni 1.000000
-d 0.000000
+newmtl Material_7
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
 illum 2
-map_Kd textures/vase_round.tga.png
-map_Ks textures/vase_round_ddn.tga.png
-map_Ka textures/vase_round.tga.png
+map_Kd sponza/15295713303328085182.jpg
+map_Bump sponza/10388182081421875623.jpg
+map_Ka sponza/9916269861720640319.jpg
+
+newmtl Material_8
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/6047387724914829168.jpg
+map_Bump sponza/15722799267630235092.jpg
+map_Ka sponza/8051790464816141987.jpg
+
+newmtl Material_9
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd sponza/5823059166183034438.jpg
+map_Bump sponza/14267839433702832875.jpg
+map_Ka sponza/13824894030729245199.jpg
