@@ -13,7 +13,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    commandAllocator(bufferCount),
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
-   camera({5.07, 2.05, -1.27f, 1.f}, {-8.26f, -1.38f, 2.44f, 1.f}, 51.f,
+   camera({5.16772985, 1.89779234, -1.41415465f, 1.f}, {0.703276634f, 1.02280307f, 0.218072295f, 1.f}, 45.f,
           static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
 {
 }
@@ -219,7 +219,7 @@ void siRenderer::onInit(siImgui* imgui)
    // depth/stencil buffers
    {
       auto& depthStencilTarget = textures["#depthStencil"];
-      depthStencilTarget.initDepthStencil(device.get(), window->getWidth(), window->getHeight());
+      depthStencilTarget.initDepthStencil(device.get(), window->getWidth(), window->getHeight(), sampleDesc);
       depthStencilTarget.createDsv(device.get(), &descriptorMgr);
    }
 

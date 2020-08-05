@@ -21,7 +21,7 @@ void siTexture::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORM
    this->height = height;
 }
 
-void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height)
+void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height, DXGI_SAMPLE_DESC sampleDesc)
 {
    HRESULT hr = S_OK;
 
@@ -37,7 +37,7 @@ void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t 
          DXGI_FORMAT_D32_FLOAT,
          width,
          height,
-         1, 1, 1, 0,
+         1, 1, sampleDesc.Count, sampleDesc.Quality,
          D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
       D3D12_RESOURCE_STATE_DEPTH_WRITE,
       &optClearValue,

@@ -43,7 +43,7 @@ PSOutput main(PSInput input) : SV_TARGET
    b = normalize(cross(n, t));
    float3x3 tbn = float3x3(t, b, n);
    tbn = 1.f / determinant(tbn) * transpose(tbn);
-   normalTex.x *= -1;
+   normalTex.y *= -1;
    float3 normal = mul(tbn, normalize(normalTex));
    PSOutput output;
    output.color = float4(diffuseColor.xyz, roughness);

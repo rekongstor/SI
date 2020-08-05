@@ -22,7 +22,7 @@ class siTexture
 public:
    void initFromTexture(const siTexture& other);
    void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height);
-   void initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height);
+   void initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height, DXGI_SAMPLE_DESC sampleDesc);
    void initTexture(ID3D12Device* device, uint32_t width, uint32_t height, uint32_t arraySize,
                     uint32_t mipLevels,
                     DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState,
