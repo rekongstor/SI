@@ -27,7 +27,8 @@ PSOutput main(PSInput input) : SV_TARGET
 {
    float4 diffuseColor = diffuseMap.Sample(s1, input.uv);
    float2 material = materialMap.Sample(s1, input.uv).zy;
-   float3 normalTex = normalMap.Sample(s1, input.uv).xyz * 2.f - 1.f;
+   float3 normalTex = normalMap.Sample(s1, input.uv).xyz;
+   normalTex.xy = normalTex.xy * 2.f - 1.f;
    float metalness = material.x;
    float roughness = material.y;
 
