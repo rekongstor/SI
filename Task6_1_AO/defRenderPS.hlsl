@@ -33,7 +33,7 @@ PSOutput main(PSInput input) : SV_TARGET
 
    float3 n = input.normal.xyz;
    float3 t, b;
-   float3 c1 = cross(n, float3(0, 0, 1));
+   float3 c1 = cross(n, float3(1, 0.5, 1));
    float3 c2 = cross(n, float3(0, 1, 0));
    if (length(c1) > length(c2))
       t = c1;

@@ -343,6 +343,6 @@ ASALocalRun/
 healthchecksdb
 *.gif
 
-Task5_1_DirectX12/imgui.ini
+!Task6_1_AO/sponza.obj
 
 *.ini

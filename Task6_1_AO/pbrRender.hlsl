@@ -66,7 +66,7 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[pos] = position;
       return;
    case 3:
-      deferredRenderTarget[pos] = normal;
+      deferredRenderTarget[pos] = abs(float4(1, 0, 0, 0) - normal);
       return;
    case 4:
       deferredRenderTarget[pos] = ssaoOutput[dTid].x;
@@ -78,7 +78,8 @@ void main(uint3 dTid : SV_DispatchThreadID)
       deferredRenderTarget[pos] = roughness;
       return;
    case 8:
-      deferredRenderTarget[pos] = alt.SampleLevel(gPointClampSampler, float3(dTid.xy, targetArray) / float3(width, height, 1), targetMip);
+      deferredRenderTarget[pos] = alt.SampleLevel(gPointClampSampler,
+                                                  float3(dTid.xy, targetArray) / float3(width, height, 1), targetMip);
       return;
    }
 
