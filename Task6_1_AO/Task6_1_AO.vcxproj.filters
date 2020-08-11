@@ -31,6 +31,9 @@
     <Filter Include="Resource Files\cacao\blur">
       <UniqueIdentifier>{f9cc408d-c168-45ac-859b-e65bbba8f97c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\si">
+      <UniqueIdentifier>{3e91069d-5d38-457c-be5a-8561b0c1e598}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -249,6 +252,27 @@
     </FxCompile>
     <FxCompile Include="ssaoSiApply.hlsl">
       <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="si\common.hlsl">
+      <Filter>Resource Files\si</Filter>
+    </FxCompile>
+    <FxCompile Include="si\ssao_apply.hlsl">
+      <Filter>Resource Files\si</Filter>
+    </FxCompile>
+    <FxCompile Include="si\ssao_normals.hlsl">
+      <Filter>Resource Files\si</Filter>
+    </FxCompile>
+    <FxCompile Include="si\system.hlsl">
+      <Filter>Resource Files\si</Filter>
+    </FxCompile>
+    <FxCompile Include="si\registers_common.hlsl">
+      <Filter>Resource Files\si</Filter>
+    </FxCompile>
+    <FxCompile Include="si\common_funcs.hlsl">
+      <Filter>Resource Files\si</Filter>
+    </FxCompile>
+    <FxCompile Include="si\common_math.hlsl">
+      <Filter>Resource Files\si</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

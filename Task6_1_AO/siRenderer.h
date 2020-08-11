@@ -53,10 +53,10 @@ class siRenderer
    std::map<std::string, siComputeShader> computeShaders;
 
    siCamera camera;
-   int targetOutput = 4;
-   int targetArray = 0;
-   int targetMip = 0;
-   int cacaoSsao = 1;
+   int targetOutput;
+   int targetArray;
+   int targetMip;
+   int cacaoSsao;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer[4];

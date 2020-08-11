@@ -73,6 +73,7 @@ void siPipelineState::createPso(
    HRESULT hr;
 
    ID3DBlob* computeShader;
+   ID3DBlob* errorBlob;
    hr = D3DCompileFromFile(csFileName,
                            nullptr,
                            D3D_COMPILE_STANDARD_FILE_INCLUDE,
@@ -81,7 +82,7 @@ void siPipelineState::createPso(
                            D3DCOMPILE_OPTIMIZATION_LEVEL3,
                            NULL,
                            &computeShader,
-                           nullptr);
+                           &errorBlob);
    assert(hr == S_OK);
 
    D3D12_SHADER_BYTECODE CSShaderByteCode = {computeShader->GetBufferPointer(), computeShader->GetBufferSize()};

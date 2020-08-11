@@ -55,4 +55,5 @@ struct siSsaoBuff
    float4 SSAO_FRUSTUM_SCALE;
    float4 SSAO_FRUSTUM_SCALE_FPMODEL;
    float4 PS_REG_SSAO_COMMON_PARAMS;
+   int blur;
 };

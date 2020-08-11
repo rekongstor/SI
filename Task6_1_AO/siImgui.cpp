@@ -81,6 +81,7 @@ void siImgui::onUpdate()
       ImGui::DragFloat4("SSAO_FRUSTUM_SCALE", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE.x, 0.001f);
       ImGui::DragFloat4("SSAO_FRUSTUM_SCALE_FPMODEL", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE_FPMODEL.x, 0.001f);
       ImGui::DragFloat4("PS_REG_SSAO_COMMON_PARAMS", &renderer->siSsaoBuffer.get().PS_REG_SSAO_COMMON_PARAMS.x, 0.001f);
+      ImGui::InputInt("Blur", &renderer->siSsaoBuffer.get().blur);
       ImGui::End();
    }
    {

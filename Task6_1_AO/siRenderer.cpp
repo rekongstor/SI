@@ -14,8 +14,12 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
    camera({5.16772985, 1.89779234, -1.41415465f, 1.f}, {0.703276634f, 1.02280307f, 0.218072295f, 1.f}, 45.f,
-          static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()))
+          static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()), 0.1f, 250000.0f)
 {
+   targetOutput = 4;
+   targetArray = 0;
+   targetMip = 0;
+   cacaoSsao = 0;
 }
 
 static void updateConstants(FfxCacaoConstants* consts, FfxCacaoSettings* settings, BufferSizeInfo* bufferSizeInfo,
@@ -257,14 +261,15 @@ void siRenderer::onInit(siImgui* imgui)
       sas.w = sas.z * 1.f;
       siSsaoBuffer.initBuffer({
                                  {}, {
-                                    120.f,
-                                    FFX_CACAO_DEFAULT_SETTINGS.horizonAngleThreshold,
-                                    1.f / FFX_CACAO_DEFAULT_SETTINGS.horizonAngleThreshold,
+                                    1.f,
+                                    16.f,
+                                    1.f / 16.f,
                                     1.f
                                  },
                                  {}, {}, {},
                                  {sas.x * 2.f, sas.y * 2.f, 0.5f / sas.x, 0.5f / sas.y},
-                                 {sas.z * 2.f, sas.w * 2.f, 0.5f / sas.z, 0.5f / sas.w}
+                                 {sas.z * 2.f, sas.w * 2.f, 0.5f / sas.z, 0.5f / sas.w},
+                                 {2, 0, 0, 0}
                               }, device.get());
    }
 
@@ -556,13 +561,13 @@ void siRenderer::onInit(siImgui* imgui)
                     siSsaoBuffer.getGpuVirtualAddress());
       auto& ssaoSiApply = computeShaders["ssaoSiApply"];
       ssaoSiApply.onInit(device.get(), &descriptorMgr, L"ssaoSiApply.hlsl",
-         {
-            textures["#depthStencil"], ssaoSiOutput
-         },
-                    {
-                       g_SSAOOutput
-                    },
-         siSsaoBuffer.getGpuVirtualAddress());
+                         {
+                            textures["#depthStencil"], ssaoSiOutput
+                         },
+                         {
+                            g_SSAOOutput
+                         },
+                         siSsaoBuffer.getGpuVirtualAddress());
 
       auto& texture = textures["#deferredRenderTarget"];
       texture.initTexture(
