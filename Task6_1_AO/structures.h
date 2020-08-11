@@ -12,6 +12,7 @@ struct mainConstBuff
 {
    float4x4 viewMatrix;
    float4x4 projMatrix;
+   int cacaoSsao;
 };
 
 struct ssaoConstBuff
@@ -42,4 +43,16 @@ struct defRenderConstBuff
    int targetMip;
    float width;
    float height;
+};
+
+struct siSsaoBuff
+{
+   float4 PS_REG_SSAO_SCREEN;
+   float4 PS_REG_SSAO_PARAMS;
+   float4 PS_REG_SSAO_MV_1;
+   float4 PS_REG_SSAO_MV_2;
+   float4 PS_REG_SSAO_MV_3;
+   float4 SSAO_FRUSTUM_SCALE;
+   float4 SSAO_FRUSTUM_SCALE_FPMODEL;
+   float4 PS_REG_SSAO_COMMON_PARAMS;
 };

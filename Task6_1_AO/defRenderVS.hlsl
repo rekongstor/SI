@@ -22,6 +22,7 @@ cbuffer cbPass : register(b0)
 {
 float4x4 viewMatrix;
 float4x4 projMatrix;
+int cacaoSsao;
 }
 
 StructuredBuffer<InstanceData> gInstanceData : register(t0, space0);
@@ -32,7 +33,10 @@ PSInput main(VSInput input, uint instanceID : SV_InstanceID)
    InstanceData inst = gInstanceData[instanceID];
 
    output.position = mul(projMatrix, mul(viewMatrix, mul(inst.world, input.position)));
-   output.normal = normalize(mul(viewMatrix, mul(inst.worldIt, input.normal)));
+   if (cacaoSsao)
+      output.normal = normalize(mul(viewMatrix, mul(inst.worldIt, input.normal)));
+   else
+      output.normal = normalize(mul(inst.worldIt, input.normal));
    output.uv = float2(input.uv.x, 1.f - input.uv.y);
    return output;
 }

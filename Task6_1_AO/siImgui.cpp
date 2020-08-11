@@ -72,6 +72,29 @@ void siImgui::onUpdate()
       ImGui::Combo("Target output", &renderer->targetOutput, targets, _countof(targets));
       ImGui::InputInt("Target array", &renderer->targetArray);
       ImGui::InputInt("Target mip", &renderer->targetMip);
+      ImGui::InputInt("Target ssao", &renderer->cacaoSsao);
+      ImGui::End();
+   }
+   {
+      ImGui::Begin("SI Ssao");
+      ImGui::DragFloat4("PS_REG_SSAO_PARAMS", &renderer->siSsaoBuffer.get().PS_REG_SSAO_PARAMS.x, 0.001f);
+      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE.x, 0.001f);
+      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE_FPMODEL", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE_FPMODEL.x, 0.001f);
+      ImGui::DragFloat4("PS_REG_SSAO_COMMON_PARAMS", &renderer->siSsaoBuffer.get().PS_REG_SSAO_COMMON_PARAMS.x, 0.001f);
+      ImGui::End();
+   }
+   {
+      ImGui::Begin("Timings");
+
+      FfxCacaoDetailedTiming timings;
+      uint64_t gpuTicksPerMicrosecond;
+      renderer->getTimings(&timings, &gpuTicksPerMicrosecond);
+      gpuTicksPerMicrosecond /= 1000000;
+      for (uint32_t i = 0; i < timings.numTimestamps; ++i)
+      {
+         FfxCacaoTimestamp* t = &timings.timestamps[i];
+         ImGui::Text("%-50s: %7.1f us", t->label, ((double)t->ticks) / ((double)gpuTicksPerMicrosecond));
+      }
       ImGui::End();
    }
    {

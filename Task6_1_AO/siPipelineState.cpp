@@ -6,7 +6,7 @@ void siPipelineState::createPso(
    const ComPtr<ID3D12RootSignature>& rootSignature,
    LPCWSTR vsFileName,
    LPCWSTR psFileName,
-   const DXGI_FORMAT *rtvFormats,
+   const DXGI_FORMAT* rtvFormats,
    uint32_t renderTargetsCount,
    DXGI_SAMPLE_DESC sampleDesc,
    const std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDesc)
@@ -20,7 +20,7 @@ void siPipelineState::createPso(
                            nullptr,
                            "main",
                            "vs_5_1",
-                           D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+                           D3DCOMPILE_OPTIMIZATION_LEVEL3,
                            NULL,
                            &vertexShader,
                            nullptr);
@@ -32,7 +32,7 @@ void siPipelineState::createPso(
                            nullptr,
                            "main",
                            "ps_5_1",
-                           D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+                           D3DCOMPILE_OPTIMIZATION_LEVEL3,
                            NULL,
                            &pixelShader,
                            nullptr);
@@ -74,17 +74,17 @@ void siPipelineState::createPso(
 
    ID3DBlob* computeShader;
    hr = D3DCompileFromFile(csFileName,
-      nullptr,
-      D3D_COMPILE_STANDARD_FILE_INCLUDE,
-      "main",
-      "cs_5_1",
-      D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-      NULL,
-      &computeShader,
-      nullptr);
+                           nullptr,
+                           D3D_COMPILE_STANDARD_FILE_INCLUDE,
+                           "main",
+                           "cs_5_1",
+                           D3DCOMPILE_OPTIMIZATION_LEVEL3,
+                           NULL,
+                           &computeShader,
+                           nullptr);
    assert(hr == S_OK);
 
-   D3D12_SHADER_BYTECODE CSShaderByteCode = { computeShader->GetBufferPointer(), computeShader->GetBufferSize() };
+   D3D12_SHADER_BYTECODE CSShaderByteCode = {computeShader->GetBufferPointer(), computeShader->GetBufferSize()};
 
 
    D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc;

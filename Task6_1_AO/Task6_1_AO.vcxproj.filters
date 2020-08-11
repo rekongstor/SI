@@ -244,5 +244,11 @@
     <FxCompile Include="cacaoBlur8.hlsl">
       <Filter>Resource Files\cacao\blur</Filter>
     </FxCompile>
+    <FxCompile Include="ssaoSi.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="ssaoSiApply.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

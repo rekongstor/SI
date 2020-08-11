@@ -56,14 +56,19 @@ class siRenderer
    int targetOutput = 4;
    int targetArray = 0;
    int targetMip = 0;
+   int cacaoSsao = 1;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer[4];
    siConstBuffer<defaultSsaoConstBuff> defaultSsaoConstBuffer;
    siConstBuffer<defRenderConstBuff> defRenderConstBuffer;
+   siConstBuffer<siSsaoBuff> siSsaoBuffer;
 
    FfxCacaoSettings cacaoSettings;
    BufferSizeInfo bsInfo;
+
+   GpuTimer timer;
+   void getTimings(FfxCacaoDetailedTiming* timings, uint64_t* gpuTicksPerSecond);
 
    void update();
    void updatePipeline();
