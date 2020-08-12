@@ -10,6 +10,7 @@ class siTexture
 
    DXGI_FORMAT format;
    D3D12_RESOURCE_STATES state;
+   D3D12_RESOURCE_STATES* pState;
    uint32_t width;
    uint32_t height;
    uint32_t mipLevels;
@@ -20,15 +21,15 @@ class siTexture
    std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> uavHandle;
 
 public:
-   void initFromTexture(const siTexture& other);
+   void initFromTexture(siTexture& other);
    void initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height);
    void initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height, DXGI_SAMPLE_DESC sampleDesc);
    void initTexture(ID3D12Device* device, uint32_t width, uint32_t height, uint32_t arraySize,
                     uint32_t mipLevels,
                     DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState,
-                    DXGI_SAMPLE_DESC sampleDesc);
+                    DXGI_SAMPLE_DESC sampleDesc, LPCWSTR name);
    void initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList);
-   void releaseUploadBuffer();
+   void releaseBuffer();
 
    void resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES targetState);
 

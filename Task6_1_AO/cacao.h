@@ -369,5 +369,6 @@ static void gpuTimerCollectTimings(GpuTimer* gpuTimer, FfxCacaoDetailedTiming* t
 
    timings->timestamps[0].label = "total";
    timings->timestamps[0].ticks = prevTimeTicks - timingsInTicks[start];
+   gpuTimer->buffer->Unmap(0, nullptr);
 }
 #endif

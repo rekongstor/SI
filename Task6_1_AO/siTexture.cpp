@@ -4,16 +4,18 @@
 #include "siCommandList.h"
 #include "siDescriptorMgr.h"
 
-void siTexture::initFromTexture(const siTexture& other)
+void siTexture::initFromTexture(siTexture& other)
 {
    this->buffer = other.buffer;
    this->format = other.format;
-   this->state = other.state;
+   this->pState = &other.state;
+   this->state = *pState;
    this->width = other.width;
    this->height = other.height;
 }
 
-void siTexture::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width, uint32_t height)
+void siTexture::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width,
+                               uint32_t height)
 {
    buffer = existingBuffer;
    this->format = format;
@@ -53,10 +55,18 @@ void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t 
 }
 
 void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
-                              uint32_t arraySize, uint32_t mipLevels, DXGI_FORMAT format,
-                              D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState, DXGI_SAMPLE_DESC sampleDesc)
+                            uint32_t arraySize, uint32_t mipLevels, DXGI_FORMAT format,
+                            D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initState, DXGI_SAMPLE_DESC sampleDesc,
+                            LPCWSTR name)
 {
    HRESULT hr = S_OK;
+   D3D12_CLEAR_VALUE optClearValue;
+   ZeroMemory(&optClearValue, sizeof(D3D12_CLEAR_VALUE));
+   optClearValue.Format = format;
+   optClearValue.Color[0] = 0.f;
+   optClearValue.Color[1] = 0.f;
+   optClearValue.Color[2] = 0.f;
+   optClearValue.Color[3] = 0.f;
 
    if (height)
    {
@@ -70,7 +80,7 @@ void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t heigh
             arraySize, mipLevels, sampleDesc.Count, sampleDesc.Quality,
             flags),
          initState,
-         nullptr,
+         flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET ? &optClearValue : nullptr,
          IID_PPV_ARGS(&buffer)
       );
       assert(hr == S_OK);
@@ -86,7 +96,7 @@ void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t heigh
             arraySize, mipLevels,
             flags),
          initState,
-         nullptr,
+         flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET ? &optClearValue : nullptr,
          IID_PPV_ARGS(&buffer)
       );
       assert(hr == S_OK);
@@ -96,7 +106,8 @@ void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t heigh
    this->width = width;
    this->height = height;
    this->mipLevels = mipLevels;
-   buffer.Get()->SetName(L"Texture buffer");
+   if (name)
+      buffer.Get()->SetName(name);
 }
 
 void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
@@ -364,18 +375,26 @@ void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, co
    this->height = height;
 }
 
-void siTexture::releaseUploadBuffer()
+void siTexture::releaseBuffer()
 {
    data.clear();
 }
 
 void siTexture::resourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES targetState)
 {
+   if (pState)
+      state = *pState;
+
+   if (state == targetState)
+      return;
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
                                    buffer.Get(),
                                    state,
                                    targetState));
    setState(targetState);
+
+   if (pState)
+      *pState = state;
 }
 
 

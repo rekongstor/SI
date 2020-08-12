@@ -60,6 +60,7 @@ void siPipelineState::createPso(
    psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
    psoDesc.NumRenderTargets = renderTargetsCount;
    psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+   psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
    hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
    assert(hr == S_OK);

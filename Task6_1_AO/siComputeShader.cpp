@@ -7,8 +7,8 @@
 
 
 void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPCWSTR filename,
-                             const std::vector<siTexture>& inputs,
-                             const std::vector<siTexture>& outputs,
+                             std::vector<siTexture*> inputs,
+                             std::vector<siTexture*> outputs,
                              D3D12_GPU_VIRTUAL_ADDRESS constBufferAddress)
 {
    this->constBufferAddress = constBufferAddress;
@@ -16,15 +16,15 @@ void siComputeShader::onInit(ID3D12Device* device, siDescriptorMgr* descMgr, LPC
    for (auto& input : inputs)
    {
          auto& tex = this->inputs.emplace_back(siTexture());
-         tex.initFromTexture(input);
+         tex.initFromTexture(*input);
          tex.createSrv(device, descMgr);
    }
    for (auto& output : outputs)
    {
-      for (int i = 0; i < output.getMipLevels(); ++i)
+      for (int i = 0; i < (*output).getMipLevels(); ++i)
       {
          auto& tex = this->outputs.emplace_back(siTexture());
-         tex.initFromTexture(output);
+         tex.initFromTexture(*output);
          tex.createUav(device, descMgr, i);
       }
    }
@@ -145,5 +145,5 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU
       input.resourceBarrier(commandList, D3D12_RESOURCE_STATE_COMMON);
 
    for (auto& output : outputs)
-      output.resourceBarrier(commandList, D3D12_RESOURCE_STATE_COMMON);
+      output.resourceBarrier(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
 }
