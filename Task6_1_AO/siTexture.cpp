@@ -49,6 +49,7 @@ void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t 
    this->state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
    this->width = width;
    this->height = height;
+   buffer.Get()->SetName(L"Depth texture buffer");
 }
 
 void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t height,
@@ -95,6 +96,7 @@ void siTexture::initTexture(ID3D12Device* device, uint32_t width, uint32_t heigh
    this->width = width;
    this->height = height;
    this->mipLevels = mipLevels;
+   buffer.Get()->SetName(L"Texture buffer");
 }
 
 void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, const siCommandList& commandList)
@@ -338,6 +340,7 @@ void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, co
       nullptr,
       IID_PPV_ARGS(&buffer));
    assert(hr == S_OK);
+   buffer.Get()->SetName(L"Mesh texture buffer");
 
 
    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(buffer.Get(), 0, 1);
@@ -350,6 +353,7 @@ void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, co
       nullptr,
       IID_PPV_ARGS(&textureUploadHeap));
    assert(hr == S_OK);
+   textureUploadHeap.Get()->SetName(L"Mesh texture upload");
 
    commandList.updateSubresource(buffer.Get(), textureUploadHeap.Get(),
                                  {data.data(), bytesPerRow, bytesPerRow * desc.Height});
@@ -362,7 +366,6 @@ void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, co
 
 void siTexture::releaseUploadBuffer()
 {
-   textureUploadHeap.Reset();
    data.clear();
 }
 

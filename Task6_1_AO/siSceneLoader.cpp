@@ -28,32 +28,32 @@ void siSceneLoader::loadScene(LPCSTR filename, std::map<int32_t, siMesh>& meshes
       }
       dstMesh.initBuffer(device, commandList);
 
-      dstMesh.diffuseMap = mesh.MeshMaterial.map_Kd;
-      dstMesh.materialMap = mesh.MeshMaterial.map_Ka;
-      dstMesh.normalMap = mesh.MeshMaterial.map_bump;
       {
-         auto& tex = textures[dstMesh.diffuseMap];
-         //if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+         auto& tex = textures[mesh.MeshMaterial.map_Kd];
+         if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
          {
-            tex.initFromFile(device, dstMesh.diffuseMap, commandList);
-            tex.createSrv(device, descriptorMgr);
+            tex.initFromFile(device, mesh.MeshMaterial.map_Kd, commandList);
          }
+         dstMesh.diffuseMapTexture.initFromTexture(tex);
+         dstMesh.diffuseMapTexture.createSrv(device, descriptorMgr);
       }
       {
-         auto& tex = textures[dstMesh.materialMap];
-         //if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+         auto& tex = textures[mesh.MeshMaterial.map_Ka];
+         if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
          {
-            tex.initFromFile(device, dstMesh.materialMap, commandList);
-            tex.createSrv(device, descriptorMgr);
+            tex.initFromFile(device, mesh.MeshMaterial.map_Ka, commandList);
          }
+         dstMesh.materialMapTexture.initFromTexture(tex);
+         dstMesh.materialMapTexture.createSrv(device, descriptorMgr);
       }
       {
-         auto& tex = textures[dstMesh.normalMap];
-         //if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+         auto& tex = textures[mesh.MeshMaterial.map_bump];
+         if (tex.getState() != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
          {
-            tex.initFromFile(device, dstMesh.normalMap, commandList);
-            tex.createSrv(device, descriptorMgr);
+            tex.initFromFile(device, mesh.MeshMaterial.map_bump, commandList);
          }
+         dstMesh.normalMapTexture.initFromTexture(tex);
+         dstMesh.normalMapTexture.createSrv(device, descriptorMgr);
       }
    }
 }

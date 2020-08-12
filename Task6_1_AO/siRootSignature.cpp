@@ -12,6 +12,7 @@ void siRootSignature::onInit(ID3D12Device* device, const ComPtr<ID3DBlob>& signa
    assert(hr == S_OK);
    hr = device->GetDeviceRemovedReason();
    assert(hr == S_OK);
+   rootSignature.Get()->SetName(L"Root signature");
 }
 
 ComPtr<ID3DBlob> siRootSignature::createCsRsBlobCb1In1Out(uint32_t inputCount, uint32_t outputCount, D3D12_STATIC_SAMPLER_DESC* samplers, uint32_t samplersCount)

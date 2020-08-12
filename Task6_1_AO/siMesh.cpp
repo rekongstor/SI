@@ -14,6 +14,7 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       nullptr,
       IID_PPV_ARGS(&vertexBuffer));
    assert(hr == S_OK);
+   vertexBuffer.Get()->SetName(L"Vertex buffer default");
 
    hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -23,6 +24,7 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       nullptr,
       IID_PPV_ARGS(&vBufferUploadHeap));
    assert(hr == S_OK);
+   vertexBuffer.Get()->SetName(L"Vertex buffer upload");
 
    commandList.updateSubresource(
       vertexBuffer.Get(),
@@ -48,6 +50,7 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       nullptr,
       IID_PPV_ARGS(&indexBuffer));
    assert(hr == S_OK);
+   vertexBuffer.Get()->SetName(L"Index buffer default");
 
    hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -57,6 +60,7 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       nullptr,
       IID_PPV_ARGS(&iBufferUploadHeap));
    assert(hr == S_OK);
+   vertexBuffer.Get()->SetName(L"Index buffer upload");
 
    commandList.updateSubresource(
       indexBuffer.Get(),

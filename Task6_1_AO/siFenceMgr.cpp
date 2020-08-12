@@ -14,6 +14,10 @@ void siFenceMgr::onInit(ID3D12Device* device, uint32_t bufferCount, const ComPtr
       );
       assert(hr == S_OK);
       fenceValues[i] = 0;
+      wchar_t name[] = L"Fence  ";
+      wchar_t id = L'0' + i;
+      name[_countof(name) - 1] = id;
+      fences[i]->SetName(name);
    }
 
    fenceEvent = CreateEvent(

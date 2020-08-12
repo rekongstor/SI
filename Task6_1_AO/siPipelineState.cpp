@@ -63,6 +63,7 @@ void siPipelineState::createPso(
 
    hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
    assert(hr == S_OK);
+   pipelineStateObject.Get()->SetName(L"Drawing PSO");
 }
 
 void siPipelineState::createPso(
@@ -97,6 +98,7 @@ void siPipelineState::createPso(
 
    hr = device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
    assert(hr == S_OK);
+   pipelineStateObject.Get()->SetName(csFileName);
 }
 
 const ComPtr<ID3D12PipelineState>& siPipelineState::getPipelineState() const

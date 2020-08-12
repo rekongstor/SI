@@ -18,4 +18,5 @@ void siDevice::onInit(IDXGIFactory4* factory, D3D_FEATURE_LEVEL featureLevel, bo
 
    hr = D3D12CreateDevice(adapter.Get(), featureLevel, IID_PPV_ARGS(&device));
    assert(hr == S_OK);
+   device.Get()->SetName(L"Device");
 }

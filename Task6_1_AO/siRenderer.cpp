@@ -20,7 +20,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    targetOutput = 4;
    targetArray = 0;
    targetMip = 0;
-   cacaoSsao = 0;
+   cacaoSsao = 1;
 }
 
 static void updateConstants(FfxCacaoConstants* consts, FfxCacaoSettings* settings, BufferSizeInfo* bufferSizeInfo,
@@ -190,6 +190,7 @@ void siRenderer::onInit(siImgui* imgui)
    // Debug
    {
       hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController0));
+      debugController0->EnableDebugLayer();
       assert(hr == S_OK);
       debugController0->QueryInterface(IID_PPV_ARGS(&debugController1));
       debugController1->SetEnableGPUBasedValidation(true);
@@ -292,7 +293,7 @@ void siRenderer::onInit(siImgui* imgui)
    {
       auto& pso = pipelineStates["default"];
       DXGI_FORMAT rtvFormats[] = {
-         DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT
+         DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM
       };
       pso.createPso(device.get(), rootSignatures["default"].get(), L"defRenderVS.hlsl", L"defRenderPS.hlsl",
                     rtvFormats, _countof(rtvFormats),
@@ -382,6 +383,7 @@ void siRenderer::onInit(siImgui* imgui)
       auto& deinterlacedNormals = textures["#deinterlacedNormals"];
       deinterlacedNormals.initTexture(
          device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8B8A8_SNORM,
+         //D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
       auto& cacaoPrepareNormals = computeShaders["cacaoPrepareNormals"];
       cacaoPrepareNormals.onInit(device.get(), &descriptorMgr, L"cacaoPrepareNormals.hlsl",
@@ -510,7 +512,8 @@ void siRenderer::onInit(siImgui* imgui)
          L"cacaoBlur7.hlsl",
          L"cacaoBlur8.hlsl",
       };
-      for (auto i = 0; i < _countof(filename); ++i)
+      //for (auto i = 0; i < _countof(filename); ++i)
+      for (auto i = 0; i < 1; ++i)
       {
          auto& cacaoBlur = computeShaders[name[i]];
          cacaoBlur.onInit(device.get(), &descriptorMgr, filename[i],
@@ -785,7 +788,7 @@ void siRenderer::updatePipeline()
          commandList->IASetVertexBuffers(0, 1, &mesh.getVertexBufferView());
          commandList->IASetIndexBuffer(&mesh.getIndexBufferView());
          commandList->SetGraphicsRootShaderResourceView(1, instance.second.getGpuVirtualAddress(currentFrame));
-         commandList->SetGraphicsRootDescriptorTable(2, textures[mesh.getDiffuseMap()].getSrvHandle().second);
+         commandList->SetGraphicsRootDescriptorTable(2, mesh.getDiffuseMap().getSrvHandle().second);
          commandList->DrawIndexedInstanced(mesh.getIndexCount(), static_cast<UINT>(instance.second.get().size()), 0, 0,
                                            0);
       }

@@ -35,15 +35,19 @@ void siDescriptorMgr::onInit(ID3D12Device* device)
 
    heapInit(dsvHeap, dsvHandle.first, dsvHandle.second,
             D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, dsvHeapSize);
+   dsvHeap.Get()->SetName(L"Descriptor heap DSV");
 
    heapInit(rtvHeap, rtvHandle.first, rtvHandle.second,
             D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, rtvHeapSize);
+   dsvHeap.Get()->SetName(L"Descriptor heap RTV");
 
    heapInit(cbvSrvUavHeap, cbvSrvUavHandle.first, cbvSrvUavHandle.second,
             D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, cbvSrvUavHeapSize);
+   dsvHeap.Get()->SetName(L"Descriptor heap SrvUav");
 
    heapInit(samplerHeap, samplerHandle.first, samplerHandle.second,
             D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, samplerHeapSize);
+   dsvHeap.Get()->SetName(L"Descriptor heap Sampler");
 
    dsvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
    rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
