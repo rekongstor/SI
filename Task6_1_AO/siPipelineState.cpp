@@ -1,5 +1,35 @@
 #include "siPipelineState.h"
 #include <d3dcompiler.h>
+#include <fstream>
+
+std::vector<byte> LoadShaderFile(LPCWSTR filename)
+{
+   std::vector<byte> filedata;
+
+   // open the file
+   std::ifstream VertexFile(filename, std::ios::in | std::ios::binary | std::ios::ate);
+
+   // if open was successful
+   if (VertexFile.is_open())
+   {
+      // find the length of the file
+      int Length = (int)VertexFile.tellg();
+
+      // collect the file data
+      filedata.resize(Length);
+      VertexFile.seekg(0, std::ios::beg);
+      VertexFile.read(reinterpret_cast<char*>(filedata.data()), Length);
+      VertexFile.close();
+   }
+
+   return filedata;
+}
+
+bool fileExists(LPCWSTR filename)
+{
+   std::ifstream file(filename);
+   return file.good();
+}
 
 void siPipelineState::createPso(
    ID3D12Device* device,
@@ -73,21 +103,38 @@ void siPipelineState::createPso(
    LPCWSTR csFileName)
 {
    HRESULT hr;
+   std::vector<byte> byteCode;
+   D3D12_SHADER_BYTECODE CSShaderByteCode;
+   wchar_t csoFilename[256];
+   wcscpy_s(csoFilename, csFileName);
+   size_t length = wcslen(csoFilename);
+   csoFilename[length - 4] = L'c';
+   csoFilename[length - 3] = L's';
+   csoFilename[length - 2] = L'o';
+   csoFilename[length - 1] = 0;
 
    ID3DBlob* computeShader;
-   ID3DBlob* errorBlob;
-   hr = D3DCompileFromFile(csFileName,
-                           nullptr,
-                           D3D_COMPILE_STANDARD_FILE_INCLUDE,
-                           "main",
-                           "cs_5_1",
-                           D3DCOMPILE_OPTIMIZATION_LEVEL3,
-                           NULL,
-                           &computeShader,
-                           &errorBlob);
-   assert(hr == S_OK);
+   if (csoFilename && fileExists(csoFilename))
+   {
+      std::cout << "Loading cso shader " << csoFilename << std::endl;
+      byteCode = LoadShaderFile(csoFilename);
+      CSShaderByteCode = { byteCode.data(), byteCode.size() };
+   }
+   else
+   {
+      hr = D3DCompileFromFile(csFileName,
+         nullptr,
+         D3D_COMPILE_STANDARD_FILE_INCLUDE,
+         "main",
+         "cs_5_1",
+         D3DCOMPILE_OPTIMIZATION_LEVEL3,
+         NULL,
+         &computeShader,
+         nullptr);
+      assert(hr == S_OK);
+      CSShaderByteCode = { computeShader->GetBufferPointer(), computeShader->GetBufferSize() };
+   }
 
-   D3D12_SHADER_BYTECODE CSShaderByteCode = {computeShader->GetBufferPointer(), computeShader->GetBufferSize()};
 
 
    D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc;
