@@ -70,6 +70,9 @@ class siRenderer
    GpuTimer timer;
    void getTimings(FfxCacaoDetailedTiming* timings, uint64_t* gpuTicksPerSecond);
 
+   ComPtr<ID3D12Debug> debugController0;
+   ComPtr<ID3D12Debug1> debugController1;
+
    void update();
    void updatePipeline();
    void executePipeline();

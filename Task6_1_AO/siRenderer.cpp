@@ -7,6 +7,7 @@
 
 #include "cacao.h"
 
+
 siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    window(window),
    bufferCount(bufferCount),
@@ -185,6 +186,14 @@ void siRenderer::onInit(siImgui* imgui)
 {
    std::cout << "Initializing renderer..." << std::endl;
    HRESULT hr = S_OK;
+
+   // Debug
+   {
+      hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController0));
+      assert(hr == S_OK);
+      debugController0->QueryInterface(IID_PPV_ARGS(&debugController1));
+      debugController1->SetEnableGPUBasedValidation(true);
+   }
 
    ComPtr<IDXGIFactory4> factory;
    // initializing main objects
