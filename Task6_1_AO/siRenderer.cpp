@@ -531,8 +531,8 @@ void siRenderer::onInit(siImgui* imgui)
          L"cacaoBlur7.hlsl",
          L"cacaoBlur8.hlsl",
       };
-      //for (auto i = 0; i < _countof(filename); ++i)
-      for (auto i = 0; i < 1; ++i)
+      for (auto i = 0; i < _countof(filename); ++i)
+      //for (auto i = 0; i < 1; ++i)
       {
          auto& cacaoBlur = computeShaders[name[i]];
          cacaoBlur.onInit(device.get(), &descriptorMgr, filename[i],
