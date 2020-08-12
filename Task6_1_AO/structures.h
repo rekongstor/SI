@@ -20,18 +20,6 @@ struct ssaoConstBuff
    FfxCacaoConstants consts;
 };
 
-struct defaultSsaoConstBuff
-{
-   float4x4 projMatrix;
-   float4x4 projMatrixInv;
-   float width;
-   float height;
-   float radius;
-   float bias;
-   float widthInv;
-   float heightInv;
-};
-
 struct defRenderConstBuff
 {
    float4x4 projMatrixInv;

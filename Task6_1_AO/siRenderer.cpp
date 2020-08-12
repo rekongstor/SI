@@ -261,7 +261,6 @@ void siRenderer::onInit(siImgui* imgui)
       ssaoConstBuffer[1].initBuffer({}, device.get());
       ssaoConstBuffer[2].initBuffer({}, device.get());
       ssaoConstBuffer[3].initBuffer({}, device.get());
-      //defaultSsaoConstBuffer.initBuffer({{}, {}, {}, {}, 0.5, 0.025}, device.get());
       defRenderConstBuffer.initBuffer(
          {{}, {}, {0, 0, 0, 1}, {1, 1, 1, 1}}, device.get());
 
@@ -376,7 +375,6 @@ void siRenderer::onInit(siImgui* imgui)
       auto& deinterlacedNormals = textures["#deinterlacedNormals"];
       deinterlacedNormals.initTexture(
          device.get(), bsInfo.ssaoBufferWidth, bsInfo.ssaoBufferHeight, 4, 1, DXGI_FORMAT_R8G8B8A8_SNORM,
-         //D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COMMON, sampleDesc);
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc, L"normals cacao");
 
 
@@ -682,15 +680,6 @@ void siRenderer::update()
    DirectX::XMStoreFloat4x4(&defRenCb.projMatrixInv, projInv);
    defRenderConstBuffer.gpuCopy();
 
-   //auto& dSsao = defaultSsaoConstBuffer.get();
-   //dSsao.width = window->getWidth();
-   //dSsao.height = window->getHeight();
-   //dSsao.widthInv = 1.f / window->getWidth();
-   //dSsao.heightInv = 1.f / window->getHeight();
-   //dSsao.projMatrixInv = defRenCb.projMatrixInv;
-   //dSsao.projMatrix = mainCb.projMatrix;
-   //defaultSsaoConstBuffer.gpuCopy();
-
 
    auto& ssaoCb = ssaoConstBuffer[0].get();
    FfxCacaoMatrix4x4 proj;
@@ -716,9 +705,7 @@ void siRenderer::update()
       {-mainCb.viewMatrix.m[0][1], -mainCb.viewMatrix.m[1][1], -mainCb.viewMatrix.m[2][1], 1.f};
    siSsaoCb.PS_REG_SSAO_MV_3 =
       {mainCb.viewMatrix.m[0][2], mainCb.viewMatrix.m[1][2], mainCb.viewMatrix.m[2][2], 1.f};
-   //siSsaoCb.PS_REG_SSAO_MV_1 = {1, 0, 0, 1};
-   //siSsaoCb.PS_REG_SSAO_MV_2 = {0, 1, 0, 1};
-   //siSsaoCb.PS_REG_SSAO_MV_3 = {0, 0, 1, 1};
+
    siSsaoBuffer.gpuCopy();
 
    for (auto& inst : instances)
@@ -807,8 +794,6 @@ void siRenderer::updatePipeline()
       {
          auto& loadCounter = textures["#g_LoadCounter"];
          loadCounter.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-         //commandList->ClearUnorderedAccessViewUint(loadCounter.getUavHandle().second, loadCounter.getUavHandle().first,
-         //                                          loadCounter.getBuffer().Get(), clearValue, 0, NULL);
          commandList->ClearRenderTargetView(loadCounter.getRtvHandle().first, clearColor, 0, nullptr);
          loadCounter.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 

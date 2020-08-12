@@ -142,7 +142,7 @@ void siComputeShader::dispatch(ID3D12GraphicsCommandList* commandList, D3D12_GPU
    commandList->Dispatch(width, height, 1);
 
    for (auto& input : inputs)
-      input.resourceBarrier(commandList, D3D12_RESOURCE_STATE_COMMON);
+      input.resourceBarrier(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
 
    for (auto& output : outputs)
       output.resourceBarrier(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);

@@ -67,12 +67,10 @@ void siImgui::onUpdate()
       ImGui::DragFloat3("Camera target", &renderer->camera.target.x, 0.01f);
       ImGui::DragFloat3("Light Color", &renderer->defRenderConstBuffer.get().lightColor.x, 0.1f);
       ImGui::DragFloat3("Ambient Color", &renderer->defRenderConstBuffer.get().ambientColor.x, 0.01f);
-      ImGui::DragFloat("Radius", &renderer->defaultSsaoConstBuffer.get().radius, 0.001f);
-      ImGui::DragFloat("Bias", &renderer->defaultSsaoConstBuffer.get().bias, 0.001f);
       ImGui::Combo("Target output", &renderer->targetOutput, targets, _countof(targets));
       ImGui::InputInt("Target array", &renderer->targetArray);
       ImGui::InputInt("Target mip", &renderer->targetMip);
-      ImGui::InputInt("Target ssao", &renderer->cacaoSsao);
+      ImGui::Checkbox("Cacao/Saber ssao", &renderer->cacaoSsao);
       ImGui::End();
    }
    {

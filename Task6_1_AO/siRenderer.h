@@ -56,11 +56,10 @@ class siRenderer
    int targetOutput;
    int targetArray;
    int targetMip;
-   int cacaoSsao;
+   bool cacaoSsao;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer[4];
-   siConstBuffer<defaultSsaoConstBuff> defaultSsaoConstBuffer;
    siConstBuffer<defRenderConstBuff> defRenderConstBuffer;
    siConstBuffer<siSsaoBuff> siSsaoBuffer;
 
