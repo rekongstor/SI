@@ -20,6 +20,11 @@ void siImgui::onInit()
    ImGui::CreateContext();
    ImGuiIO& io = ImGui::GetIO();
    (void)io;
+   io.AddInputCharacter('w');
+   io.AddInputCharacter('a');
+   io.AddInputCharacter('s');
+   io.AddInputCharacter('d');
+   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
    ImGui::StyleColorsDark();
 }
@@ -58,6 +63,7 @@ void siImgui::onUpdate()
       "Alt"
    };
 
+
    ImGui_ImplDX12_NewFrame();
    ImGui_ImplWin32_NewFrame();
    ImGui::NewFrame();
@@ -71,13 +77,15 @@ void siImgui::onUpdate()
       ImGui::InputInt("Target array", &renderer->targetArray);
       ImGui::InputInt("Target mip", &renderer->targetMip);
       ImGui::Checkbox("Cacao/Saber ssao", &renderer->cacaoSsao);
+      ImGui::Checkbox("WASD movement", &renderer->wasdMovement);
       ImGui::End();
    }
    {
       ImGui::Begin("SI Ssao");
       ImGui::DragFloat4("PS_REG_SSAO_PARAMS", &renderer->siSsaoBuffer.get().PS_REG_SSAO_PARAMS.x, 0.001f);
       ImGui::DragFloat4("SSAO_FRUSTUM_SCALE", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE.x, 0.001f);
-      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE_FPMODEL", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE_FPMODEL.x, 0.001f);
+      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE_FPMODEL", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE_FPMODEL.x,
+                        0.001f);
       ImGui::DragFloat4("PS_REG_SSAO_COMMON_PARAMS", &renderer->siSsaoBuffer.get().PS_REG_SSAO_COMMON_PARAMS.x, 0.001f);
       ImGui::Checkbox("Blur", reinterpret_cast<bool*>(&renderer->siSsaoBuffer.get().blur));
       ImGui::End();
@@ -114,6 +122,26 @@ void siImgui::onUpdate()
          renderer->cacaoSettings = FFX_CACAO_DEFAULT_SETTINGS;
       }
       ImGui::End();
+   }
+
+   if (renderer->wasdMovement)
+   {
+      ImGuiIO& io = ImGui::GetIO();
+      renderer->camera.lookAt(-ImGui::GetMouseDragDelta().x * io.DeltaTime * 0.01f,
+                              ImGui::GetMouseDragDelta().y * io.DeltaTime * 0.01f);
+
+      if (ImGui::IsKeyPressed('w') || ImGui::IsKeyPressed('W'))
+         renderer->camera.move('w', io.DeltaTime * (io.KeyCtrl ? 10.f : 1.f));
+
+      if (ImGui::IsKeyPressed('s') || ImGui::IsKeyPressed('S'))
+         renderer->camera.move('s', io.DeltaTime * (io.KeyCtrl ? 10.f : 1.f));
+
+      if (ImGui::IsKeyPressed('a') || ImGui::IsKeyPressed('A'))
+         renderer->camera.move('a', io.DeltaTime * (io.KeyCtrl ? 10.f : 1.f));
+
+      if (ImGui::IsKeyPressed('d') || ImGui::IsKeyPressed('D'))
+         renderer->camera.move('d', io.DeltaTime * (io.KeyCtrl ? 10.f : 1.f));
+      renderer->camera.lookAt(0, 0);
    }
 }
 

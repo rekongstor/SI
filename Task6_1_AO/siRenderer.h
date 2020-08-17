@@ -57,6 +57,7 @@ class siRenderer
    int targetArray;
    int targetMip;
    bool cacaoSsao;
+   bool wasdMovement;
 
    siConstBuffer<mainConstBuff> mainConstBuffer;
    siConstBuffer<ssaoConstBuff> ssaoConstBuffer[4];
