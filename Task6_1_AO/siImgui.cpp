@@ -24,6 +24,8 @@ void siImgui::onInit()
    io.AddInputCharacter('a');
    io.AddInputCharacter('s');
    io.AddInputCharacter('d');
+   io.KeyRepeatDelay = 0.001f;
+   io.KeyRepeatRate = 0.001f;
    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
    ImGui::StyleColorsDark();
