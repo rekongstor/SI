@@ -36,7 +36,7 @@ public:
    void createDsv(ID3D12Device* device, siDescriptorMgr* descMgr);
    void createRtv(ID3D12Device* device, siDescriptorMgr* descMgr);
    void createSrv(ID3D12Device* device, siDescriptorMgr* descMgr);
-   void createUav(ID3D12Device* device, siDescriptorMgr* descMgr, uint32_t mipLevel = 0);
+   void createUav(ID3D12Device* device, siDescriptorMgr* descMgr, int32_t mipLevel = -1);
 
    [[nodiscard]] const ComPtr<ID3D12Resource>& getBuffer() const;
    [[nodiscard]] const std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>& getDsvHandle() const;

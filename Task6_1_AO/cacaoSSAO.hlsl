@@ -2,7 +2,7 @@
 #include "cacaoHLSL.hlsl"
 
 
-Texture2D<float> g_ViewspaceDepthSource : register(t0);
+Texture2DArray<float> g_ViewspaceDepthSource : register(t0);
 Texture2D g_NormalmapSource : register(t1);
 Texture1D<uint> g_LoadCounter : register(t2);
 Texture2D<float> g_ImportanceMap : register(t3);
@@ -119,7 +119,7 @@ void SSAOTapInner(const int qualityLevel, inout float obscuranceSum, inout float
                   const float falloffCalcMulSq, const float weightMod, const int dbgTapIndex)
 {
    // get depth at sample
-   float viewspaceSampleZ = g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, samplingUV.xy, mipLevel).x;
+   float viewspaceSampleZ = g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, float3(samplingUV.xy, g_CACAOConsts.PassIndex), mipLevel).x;
    // * g_CACAOConsts.MaxViewspaceDepth;
 
    // convert to viewspace
@@ -220,11 +220,11 @@ SSAOHits SSAOGetHits(const int qualityLevel, const float2 depthBufferUV, const i
 
    float2 sampleUV = depthBufferUV + sampleOffset;
    result.hits[0] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, mipLevel).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, float3(sampleUV, g_CACAOConsts.PassIndex), mipLevel).x);
 
    sampleUV = depthBufferUV - sampleOffset;
    result.hits[1] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, mipLevel).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, float3(sampleUV, g_CACAOConsts.PassIndex), mipLevel).x);
 
    return result;
 }
@@ -260,10 +260,10 @@ SSAOHits SSAOGetHits2(SSAOSampleData data, const float2 depthBufferUV)
    result.weightMod = data.weightMod;
    float2 sampleUV = depthBufferUV + data.uvOffset;
    result.hits[0] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, float3(sampleUV, g_CACAOConsts.PassIndex), 0).x);
    sampleUV = depthBufferUV - data.uvOffset;
    result.hits[1] = float3(
-      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, sampleUV, 0).x);
+      sampleUV, g_ViewspaceDepthSource.SampleLevel(g_ViewspaceDepthTapSampler, float3(sampleUV, g_CACAOConsts.PassIndex), 0).x);
    return result;
 }
 
@@ -317,8 +317,8 @@ void GenerateSSAOShadowsInternal(out float outShadowTerm, out float4 outEdges, o
 
    float2 depthBufferUV = (SVPos + 0.5f) * g_CACAOConsts.DeinterleavedDepthBufferInverseDimensions + g_CACAOConsts.
       DeinterleavedDepthBufferNormalisedOffset;
-   float4 valuesUL = g_ViewspaceDepthSource.GatherRed(g_PointMirrorSampler, depthBufferUV, int2(-1, -1));
-   float4 valuesBR = g_ViewspaceDepthSource.GatherRed(g_PointMirrorSampler, depthBufferUV);
+   float4 valuesUL = g_ViewspaceDepthSource.GatherRed(g_PointMirrorSampler, float3(depthBufferUV, g_CACAOConsts.PassIndex), int2(-1, -1));
+   float4 valuesBR = g_ViewspaceDepthSource.GatherRed(g_PointMirrorSampler, float3(depthBufferUV, g_CACAOConsts.PassIndex));
 
    // get this pixel's viewspace depth
    pixZ = valuesUL.y;

@@ -12,6 +12,7 @@ void siTexture::initFromTexture(siTexture& other)
    this->state = *pState;
    this->width = other.width;
    this->height = other.height;
+   this->mipLevels = other.mipLevels;
 }
 
 void siTexture::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORMAT format, uint32_t width,
@@ -21,6 +22,7 @@ void siTexture::initFromBuffer(ComPtr<ID3D12Resource>& existingBuffer, DXGI_FORM
    this->format = format;
    this->width = width;
    this->height = height;
+   this->mipLevels = 1;
 }
 
 void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t height, DXGI_SAMPLE_DESC sampleDesc)
@@ -51,6 +53,7 @@ void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t 
    this->state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
    this->width = width;
    this->height = height;
+   this->mipLevels = 1;
    buffer.Get()->SetName(L"Depth texture buffer");
 }
 
@@ -373,6 +376,7 @@ void siTexture::initFromFile(ID3D12Device* device, std::string_view filename, co
    this->state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
    this->width = width;
    this->height = height;
+   this->mipLevels = 1;
 }
 
 void siTexture::releaseBuffer()
@@ -451,9 +455,9 @@ void siTexture::createSrv(ID3D12Device* device, siDescriptorMgr* descMgr)
    assert(hr == S_OK);
 }
 
-void siTexture::createUav(ID3D12Device* device, siDescriptorMgr* descMgr, uint32_t mipLevel)
+void siTexture::createUav(ID3D12Device* device, siDescriptorMgr* descMgr, int32_t mipLevel)
 {
-   if (mipLevel)
+   if (mipLevel >= 0)
    {
       D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
       ZeroMemory(&desc, sizeof(desc));
