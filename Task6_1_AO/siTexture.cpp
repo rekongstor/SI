@@ -32,7 +32,7 @@ void siTexture::initDepthStencil(ID3D12Device* device, uint32_t width, uint32_t 
    D3D12_CLEAR_VALUE optClearValue;
    ZeroMemory(&optClearValue, sizeof(D3D12_CLEAR_VALUE));
    optClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-   optClearValue.DepthStencil = {1.f, 0};
+   optClearValue.DepthStencil = {0.f, 0};
 
    hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),

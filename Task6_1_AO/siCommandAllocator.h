@@ -5,7 +5,7 @@ class siCommandAllocator
    ComPtr<ID3D12CommandAllocator> commandAllocator[maxFrameBufferCount];
 public:
    explicit siCommandAllocator(uint32_t frameBufferCount);
-   ID3D12CommandAllocator* getAllocator(uint32_t frame) const { return commandAllocator[frame].Get(); }
+   ID3D12CommandAllocator* GetAllocator(uint32_t frame) const { return commandAllocator[frame].Get(); }
 
-   void onInit(ID3D12Device* device);
+   void OnInit(ID3D12Device* device);
 };

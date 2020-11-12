@@ -15,7 +15,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
    camera({5.16772985, 1.89779234, -1.41415465f, 1.f}, {0.703276634f, 1.02280307f, 0.218072295f, 1.f}, 45.f,
-          static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()), 0.1f, 250000.0f)
+          static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()), 40.f, 0.1f)
 {
    targetOutput = 4;
    targetArray = 0;
@@ -206,8 +206,8 @@ void siRenderer::onInit(siImgui* imgui)
 
       device.onInit(factory.Get(), featureLevel, softwareAdapter);
       commandQueue.onInit(device.get());
-      commandAllocator.onInit(device.get());
-      commandList.onInit(device.get(), commandAllocator.getAllocator(0));
+      commandAllocator.OnInit(device.get());
+      commandList.onInit(device.get(), commandAllocator.GetAllocator(0));
 
       swapChain.onInit(window, sampleDesc, bufferCount, factory.Get(), commandQueue.get().Get());
       fenceMgr.onInit(device.get(), bufferCount, swapChain.get(), commandQueue.get());
@@ -428,6 +428,11 @@ void siRenderer::onInit(siImgui* imgui)
          device.get(), window->getWidth(), window->getHeight(), 1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
          D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc, L"pbr output");
 
+      auto& depthRev = textures["#depthRev"];
+      depthRev.initTexture(
+         device.get(), window->getWidth(), window->getHeight(), 1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc, L"depth_rev output");
+
 
       auto& cacaoDownscaleDepth = computeShaders["cacaoPrepareDepths"];
       cacaoDownscaleDepth.onInit(device.get(), &descriptorMgr, L"cacaoPrepareDepths.hlsl",
@@ -586,12 +591,22 @@ void siRenderer::onInit(siImgui* imgui)
                          },
                          siSsaoBuffer.getGpuVirtualAddress());
 
+      auto& depthRevert = computeShaders["depthRevert"];
+      depthRevert.onInit(device.get(), &descriptorMgr, L"depthRevert.hlsl",
+         {
+            &textures["#depthStencil"]
+         },
+         {
+            &depthRev
+         },
+         defRenderConstBuffer.getGpuVirtualAddress());
+
       auto& deferredRender = computeShaders["deferredRender"];
       deferredRender.onInit(device.get(), &descriptorMgr, L"pbrRender.hlsl",
                             {
                                &textures["#diffuseRenderTarget"], &textures["#depthStencil"],
                                &textures["#normalsRenderTarget"], &g_SSAOOutput,
-                               &ssaoSiOutput
+                               &depthRev
                             },
                             {&texture},
                             defRenderConstBuffer.getGpuVirtualAddress());
@@ -643,6 +658,15 @@ void siRenderer::onInit(siImgui* imgui)
          }
       }
       inst.initBuffer(device.get());
+   }
+
+   // preparing DXR
+   {
+      for (auto& mesh : meshes)
+      {
+         blas.AddMeshToGeometryDesc(&mesh.second);
+      }
+      blas.OnInit(device.get(), commandList.get());
    }
 
    gpuTimerInit(&timer, device.get(), bufferCount);
@@ -718,11 +742,11 @@ void siRenderer::updatePipeline()
 {
    HRESULT hr = S_OK;
 
-   hr = commandAllocator.getAllocator(currentFrame)->Reset();
+   hr = commandAllocator.GetAllocator(currentFrame)->Reset();
    assert(hr == S_OK);
 
 
-   hr = commandList->Reset(commandAllocator.getAllocator(currentFrame),
+   hr = commandList->Reset(commandAllocator.GetAllocator(currentFrame),
                            pipelineStates["default"].getPipelineState().Get());
    assert(hr == S_OK);
 
@@ -755,7 +779,7 @@ void siRenderer::updatePipeline()
 
       commandList->ClearRenderTargetView(diffuseRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
       commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
-      commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+      commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 0.f, 0, 0, nullptr);
 
       commandList->RSSetViewports(1, &viewportScissor.getViewport());
       commandList->RSSetScissorRects(1, &viewportScissor.getScissorRect());
@@ -839,6 +863,7 @@ void siRenderer::updatePipeline()
          computeShaders["ssaoSiApply"].dispatch(commandList.get());
       }
       GET_TIMESTAMP(&timer, commandList.get(), "SSAO");
+      computeShaders["depthRevert"].dispatch(commandList.get());
       computeShaders["deferredRender"].dispatch(commandList.get());
       GET_TIMESTAMP(&timer, commandList.get(), "Rendering");
    }

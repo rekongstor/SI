@@ -33,6 +33,9 @@ PSInput main(VSInput input, uint instanceID : SV_InstanceID)
    InstanceData inst = gInstanceData[instanceID];
 
    output.position = mul(projMatrix, mul(viewMatrix, mul(inst.world, input.position)));
+
+   //output.position.z = 0.1f / output.position.z + 20.f;
+
    if (cacaoSsao)
       output.normal = normalize(mul(viewMatrix, mul(inst.worldIt, input.normal)));
    else

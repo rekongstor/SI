@@ -4,7 +4,7 @@ siCommandAllocator::siCommandAllocator(uint32_t frameBufferCount): frameBufferCo
 {
 }
 
-void siCommandAllocator::onInit(ID3D12Device* device)
+void siCommandAllocator::OnInit(ID3D12Device* device)
 {
    std::cout << "Initializing command allocators..." << std::endl;
    HRESULT hr = S_OK;

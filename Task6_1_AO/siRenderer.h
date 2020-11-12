@@ -1,5 +1,6 @@
 #pragma once
 #include "cacao.h"
+#include "rtBlas.h"
 #include "siCamera.h"
 #include "siDevice.h"
 #include "siCommandQueue.h"
@@ -31,8 +32,8 @@ class siRenderer
    bool active = false;
 
    static const uint32_t frameBuffers = 3;
-   static const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_1;
-   static const bool softwareAdapter = false;
+   static const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
+   static const bool softwareAdapter = true;
 
    siDevice device;
    siCommandQueue commandQueue;
@@ -41,6 +42,7 @@ class siRenderer
    siSwapChain swapChain;
    siDescriptorMgr descriptorMgr;
    siFenceMgr fenceMgr;
+   rtBlas blas;
 
    siViewportScissor viewportScissor;
 

@@ -77,6 +77,8 @@ void siPipelineState::createPso(
 
    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
    ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+   auto rs = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+   rs.CullMode = D3D12_CULL_MODE_NONE;
    psoDesc.InputLayout = inputLayoutDesc;
    psoDesc.pRootSignature = rootSignature.Get();
    psoDesc.VS = vertexShaderByteCode;
@@ -86,10 +88,22 @@ void siPipelineState::createPso(
       psoDesc.RTVFormats[i] = rtvFormats[i];
    psoDesc.SampleDesc = sampleDesc;
    psoDesc.SampleMask = UINT_MAX;
-   psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+   psoDesc.RasterizerState = rs;
    psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
    psoDesc.NumRenderTargets = renderTargetsCount;
-   psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+   const D3D12_DEPTH_STENCILOP_DESC defaultStencilOp =
+   { D3D12_STENCIL_OP_KEEP, D3D12_STENCIL_OP_KEEP, D3D12_STENCIL_OP_KEEP, D3D12_COMPARISON_FUNC_ALWAYS };
+   D3D12_DEPTH_STENCIL_DESC depthStencilDesc;
+   depthStencilDesc.DepthEnable = true;
+   depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+   depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_GREATER;
+   depthStencilDesc.StencilEnable = false;
+   depthStencilDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+   depthStencilDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+   depthStencilDesc.FrontFace = defaultStencilOp;
+   depthStencilDesc.BackFace = defaultStencilOp;
+
+   psoDesc.DepthStencilState = depthStencilDesc;
    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
    hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));

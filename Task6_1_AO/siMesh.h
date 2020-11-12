@@ -22,6 +22,8 @@ class siMesh
    void initBuffer(ID3D12Device* device, const siCommandList& commandList);
 public:
    [[nodiscard]] UINT getIndexCount() const { return static_cast<UINT>(indices.size()); }
+   [[nodiscard]] UINT getVertexCount() const { return static_cast<UINT>(vertices.size()); }
+
    [[nodiscard]] const D3D12_VERTEX_BUFFER_VIEW& getVertexBufferView() const { return vertexBufferView; }
    [[nodiscard]] const D3D12_INDEX_BUFFER_VIEW& getIndexBufferView() const { return indexBufferView; }
    [[nodiscard]] const siTexture& getDiffuseMap() const { return diffuseMapTexture; }

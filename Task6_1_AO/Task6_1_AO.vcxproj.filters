@@ -34,6 +34,12 @@
     <Filter Include="Resource Files\si">
       <UniqueIdentifier>{3e91069d-5d38-457c-be5a-8561b0c1e598}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\RT">
+      <UniqueIdentifier>{52c059ef-8fc9-438b-be4f-2ea639b2dab9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RT">
+      <UniqueIdentifier>{58712c16-9f48-4738-a4d5-0456f4a86b4a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -98,6 +104,9 @@
     </ClCompile>
     <ClCompile Include="siTexture.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtBlas.cpp">
+      <Filter>Source Files\RT</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="siTexture.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rtBlas.h">
+      <Filter>Header Files\RT</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -273,6 +285,9 @@
     </FxCompile>
     <FxCompile Include="si\common_math.hlsl">
       <Filter>Resource Files\si</Filter>
+    </FxCompile>
+    <FxCompile Include="depthRevert.hlsl">
+      <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
