@@ -262,6 +262,7 @@
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EnableDebuggingInformation>
     </FxCompile>
+    <ClInclude Include="alignment.h" />
     <ClInclude Include="rtBlas.h" />
     <ClInclude Include="siCamera.h" />
     <ClInclude Include="siCommandAllocator.h" />

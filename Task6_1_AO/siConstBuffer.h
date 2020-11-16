@@ -1,11 +1,9 @@
 #pragma once
-class siDescriptorMgr;
+#include "alignment.h"
 
-template <class T>
-constexpr UINT64 cbSize()
-{
-   return ((sizeof(T) + 255) & ~255) >> 8;
-}
+#define CONST_BUFFER_SIZE(Data)  AlignSize(Data, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+
+class siDescriptorMgr;
 
 
 template <class T>
@@ -16,22 +14,22 @@ class siConstBuffer
    ComPtr<ID3D12Resource> buffer;
    D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress;
 public:
-   T& get() { return data; }
-   [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS getGpuVirtualAddress() const { return gpuVirtualAddress; }
+   T& Get() { return data; }
+   [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const { return gpuVirtualAddress; }
 
-   void initBuffer(const T& data, ID3D12Device* device);
-   void gpuCopy();
+   void InitBuffer(T data, ID3D12Device* device);
+   void GpuCopy();
 };
 
-
 template <class T>
-void siConstBuffer<T>::initBuffer(const T& data, ID3D12Device* device)
+void siConstBuffer<T>::InitBuffer(T data, ID3D12Device* device)
 {
    this->data = data;
+
    HRESULT hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
       D3D12_HEAP_FLAG_NONE,
-      &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64 * cbSize<T>()),
+      &CD3DX12_RESOURCE_DESC::Buffer(AlignSize(sizeof(data), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)),
       D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
       nullptr,
       IID_PPV_ARGS(&buffer)
@@ -45,7 +43,7 @@ void siConstBuffer<T>::initBuffer(const T& data, ID3D12Device* device)
 }
 
 template <class T>
-void siConstBuffer<T>::gpuCopy()
+void siConstBuffer<T>::GpuCopy()
 {
    memcpy(gpuAddress, &data, sizeof(T));
 }

@@ -1,4 +1,6 @@
 #include "rtBlas.h"
+
+#include "alignment.h"
 #include "siMesh.h"
 
 void rtBlas::AddMeshToGeometryDesc(siMesh* pMesh)
@@ -27,7 +29,25 @@ void rtBlas::OnInit(ID3D12Device5* device, ID3D12GraphicsCommandList5* commandLi
 
    device->GetRaytracingAccelerationStructurePrebuildInfo(&blasInputs, &prebuildInfo);
 
-   //device->CreateCommittedResource()
+   HRESULT hr = device->CreateCommittedResource(
+      &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+      D3D12_HEAP_FLAG_NONE,
+      &CD3DX12_RESOURCE_DESC::Buffer(AlignSize(sizeof(prebuildInfo.ScratchDataSizeInBytes), D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT)),
+      D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+      nullptr,
+      IID_PPV_ARGS(&scratchData)
+   );
+   assert(hr == S_OK);
+
+   hr = device->CreateCommittedResource(
+      &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+      D3D12_HEAP_FLAG_NONE,
+      &CD3DX12_RESOURCE_DESC::Buffer(AlignSize(sizeof(prebuildInfo.ResultDataMaxSizeInBytes), D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT)),
+      D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+      nullptr,
+      IID_PPV_ARGS(&destData)
+   );
+   assert(hr == S_OK);
 
    blasDesc.Inputs = blasInputs;
    blasDesc.ScratchAccelerationStructureData = scratchData->GetGPUVirtualAddress();

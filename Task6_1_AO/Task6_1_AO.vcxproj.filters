@@ -40,6 +40,9 @@
     <Filter Include="Source Files\RT">
       <UniqueIdentifier>{58712c16-9f48-4738-a4d5-0456f4a86b4a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Generic">
+      <UniqueIdentifier>{b3d8ec30-40a0-404d-883d-03a2ff3bda5b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -110,9 +113,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="siWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -173,17 +173,23 @@
     <ClInclude Include="siComputeShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="structures.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cacao.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="siTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rtBlas.h">
       <Filter>Header Files\RT</Filter>
+    </ClInclude>
+    <ClInclude Include="cacao.h">
+      <Filter>Header Files\Generic</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files\Generic</Filter>
+    </ClInclude>
+    <ClInclude Include="structures.h">
+      <Filter>Header Files\Generic</Filter>
+    </ClInclude>
+    <ClInclude Include="alignment.h">
+      <Filter>Header Files\Generic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

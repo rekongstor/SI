@@ -73,8 +73,8 @@ void siImgui::onUpdate()
       ImGui::Begin("Imgui Debug");
       ImGui::DragFloat3("Camera position", &renderer->camera.position.x, 0.01f);
       ImGui::DragFloat3("Camera target", &renderer->camera.target.x, 0.01f);
-      ImGui::DragFloat3("Light Color", &renderer->defRenderConstBuffer.get().lightColor.x, 0.1f);
-      ImGui::DragFloat3("Ambient Color", &renderer->defRenderConstBuffer.get().ambientColor.x, 0.01f);
+      ImGui::DragFloat3("Light Color", &renderer->defRenderConstBuffer.Get().lightColor.x, 0.1f);
+      ImGui::DragFloat3("Ambient Color", &renderer->defRenderConstBuffer.Get().ambientColor.x, 0.01f);
       ImGui::Combo("Target output", &renderer->targetOutput, targets, _countof(targets));
       ImGui::InputInt("Target array", &renderer->targetArray);
       ImGui::InputInt("Target mip", &renderer->targetMip);
@@ -84,12 +84,12 @@ void siImgui::onUpdate()
    }
    {
       ImGui::Begin("SI Ssao");
-      ImGui::DragFloat4("PS_REG_SSAO_PARAMS", &renderer->siSsaoBuffer.get().PS_REG_SSAO_PARAMS.x, 0.001f);
-      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE.x, 0.001f);
-      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE_FPMODEL", &renderer->siSsaoBuffer.get().SSAO_FRUSTUM_SCALE_FPMODEL.x,
+      ImGui::DragFloat4("PS_REG_SSAO_PARAMS", &renderer->siSsaoBuffer.Get().PS_REG_SSAO_PARAMS.x, 0.001f);
+      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE", &renderer->siSsaoBuffer.Get().SSAO_FRUSTUM_SCALE.x, 0.001f);
+      ImGui::DragFloat4("SSAO_FRUSTUM_SCALE_FPMODEL", &renderer->siSsaoBuffer.Get().SSAO_FRUSTUM_SCALE_FPMODEL.x,
                         0.001f);
-      ImGui::DragFloat4("PS_REG_SSAO_COMMON_PARAMS", &renderer->siSsaoBuffer.get().PS_REG_SSAO_COMMON_PARAMS.x, 0.001f);
-      ImGui::Checkbox("Blur", reinterpret_cast<bool*>(&renderer->siSsaoBuffer.get().blur));
+      ImGui::DragFloat4("PS_REG_SSAO_COMMON_PARAMS", &renderer->siSsaoBuffer.Get().PS_REG_SSAO_COMMON_PARAMS.x, 0.001f);
+      ImGui::Checkbox("Blur", reinterpret_cast<bool*>(&renderer->siSsaoBuffer.Get().blur));
       ImGui::End();
    }
    {
