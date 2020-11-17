@@ -344,5 +344,6 @@ healthchecksdb
 *.gif
 
 !Task6_1_AO/sponza.obj
+!Task6_1_AO/monkey.obj
 
 *.ini
