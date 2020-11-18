@@ -24,7 +24,7 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       nullptr,
       IID_PPV_ARGS(&vBufferUploadHeap));
    assert(hr == S_OK);
-   vertexBuffer.Get()->SetName(L"Vertex buffer upload");
+   vBufferUploadHeap.Get()->SetName(L"Vertex buffer upload");
 
    commandList.updateSubresource(
       vertexBuffer.Get(),
@@ -50,8 +50,8 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       nullptr,
       IID_PPV_ARGS(&indexBuffer));
    assert(hr == S_OK);
-   vertexBuffer.Get()->SetName(L"Index buffer default");
-
+   indexBuffer.Get()->SetName(L"Index buffer default");
+   
    hr = device->CreateCommittedResource(
       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
       D3D12_HEAP_FLAG_NONE,
@@ -60,7 +60,7 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       nullptr,
       IID_PPV_ARGS(&iBufferUploadHeap));
    assert(hr == S_OK);
-   vertexBuffer.Get()->SetName(L"Index buffer upload");
+   iBufferUploadHeap.Get()->SetName(L"Index buffer upload");
 
    commandList.updateSubresource(
       indexBuffer.Get(),
@@ -76,4 +76,8 @@ void siMesh::initBuffer(ID3D12Device* device, const siCommandList& commandList)
       static_cast<UINT>(indices.size() * sizeof(DWORD)),
       DXGI_FORMAT::DXGI_FORMAT_R32_UINT
    };
+
+   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+   commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+   
 }

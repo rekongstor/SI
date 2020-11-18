@@ -26,5 +26,7 @@ public:
 
    [[nodiscard]] const D3D12_VERTEX_BUFFER_VIEW& getVertexBufferView() const { return vertexBufferView; }
    [[nodiscard]] const D3D12_INDEX_BUFFER_VIEW& getIndexBufferView() const { return indexBufferView; }
+   [[nodiscard]] const ComPtr<ID3D12Resource>& getIndexBuffer() const { return indexBuffer; }
+   [[nodiscard]] const ComPtr<ID3D12Resource>& getVertexBuffer() const { return vertexBuffer; }
    [[nodiscard]] const siTexture& getDiffuseMap() const { return diffuseMapTexture; }
 };

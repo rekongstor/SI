@@ -26,14 +26,15 @@ int main()
    siImgui imgui;
    imgui.onInit();
 
-   siWindow window(L"Cacao", 640, 480);
+   siWindow window(L"Cacao", 1280, 768);
    window.onInit();
    
    if (window.getWindow())
    {
       imgui.onInitWindow(window.getWindow());
       siRenderer renderer(&window, 3);
-      renderer.onInit(&imgui);
+      //renderer.onInit(&imgui);
+      renderer.onInit();
 
       MSG msg;
       while (renderer.isActive())

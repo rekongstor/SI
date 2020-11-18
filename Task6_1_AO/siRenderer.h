@@ -1,6 +1,6 @@
 #pragma once
 #include "cacao.h"
-#include "rtBlas.h"
+#include "rtAccelerationStructures.h"
 #include "siCamera.h"
 #include "siDevice.h"
 #include "siCommandQueue.h"
@@ -31,9 +31,9 @@ class siRenderer
    DXGI_SAMPLE_DESC sampleDesc = {1, 0};
    bool active = false;
 
-   static const uint32_t frameBuffers = 2;
+   static const uint32_t frameBuffers = 3;
    static const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
-   static const bool softwareAdapter = true;
+   static const bool softwareAdapter = false;
 
    siDevice device;
    siCommandQueue commandQueue;
@@ -42,7 +42,7 @@ class siRenderer
    siSwapChain swapChain;
    siDescriptorMgr descriptorMgr;
    siFenceMgr fenceMgr;
-   rtBlas blas;
+   rtAccelerationStructures blas;
 
    siViewportScissor viewportScissor;
 

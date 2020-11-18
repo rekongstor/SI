@@ -187,7 +187,7 @@ void siRenderer::onInit(siImgui* imgui)
    std::cout << "Initializing renderer..." << std::endl;
    HRESULT hr = S_OK;
 
-#ifdef _DEBUG
+#ifdef _GPU_VALIDATION
    // Debug
    {
       hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController0));
