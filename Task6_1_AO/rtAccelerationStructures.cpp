@@ -1,5 +1,10 @@
 #include "rtAccelerationStructures.h"
 
+#include <d3dcompiler.h>
+#include <fstream>
+
+
+
 #include "alignment.h"
 #include "siCommandAllocator.h"
 #include "siCommandQueue.h"
@@ -111,4 +116,78 @@ void rtAccelerationStructures::OnInit(ID3D12Device5* device, ID3D12GraphicsComma
    dxrCommandList->BuildRaytracingAccelerationStructure(&blasDesc, 0, nullptr);
    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(destDataBlas.Get()));
    dxrCommandList->BuildRaytracingAccelerationStructure(&tlasDesc, 0, nullptr);
+
+   // Create 7 subobjects that combine into a RTPSO:
+   // Subobjects need to be associated with DXIL exports (i.e. shaders) either by way of default or explicit associations.
+   // Default association applies to every exported shader entrypoint that doesn't have any of the same type of subobject associated with it.
+   // This simple sample utilizes default shader association except for local root signature subobject
+   // which has an explicit association specified purely for demonstration purposes.
+   // 1 - DXIL library
+   // 1 - Triangle hit group
+   // 1 - Shader config
+   // 2 - Local root signature and association
+   // 1 - Global root signature
+   // 1 - Pipeline config
+
+   // set shader
+   CD3DX12_STATE_OBJECT_DESC rtPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
+   auto lib = rtPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+
+
+   std::string hlslCode;
+   {
+      std::ifstream is("rt.cso", std::ios::binary);
+      int length;
+      is.seekg(0, std::ios::end);
+      length = is.tellg();
+      hlslCode.resize(length);
+      is.seekg(0, std::ios::beg);
+      is.read(hlslCode.data(), length);
+   }
+
+   const wchar_t* c_hitGroupName = L"MyHitGroup";
+   const wchar_t* c_raygenShaderName = L"MyRaygenShader";
+   const wchar_t* c_closestHitShaderName = L"MyClosestHitShader";
+   const wchar_t* c_missShaderName = L"MyMissShader";
+
+   D3D12_SHADER_BYTECODE rtxShaderByteCode = { hlslCode.data(), hlslCode.length() };
+   lib->SetDXILLibrary(&rtxShaderByteCode);
+   lib->DefineExport(c_raygenShaderName);
+   lib->DefineExport(c_closestHitShaderName);
+   lib->DefineExport(c_missShaderName);
+
+   auto hitGroup = rtPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+   hitGroup->SetClosestHitShaderImport(c_closestHitShaderName);
+   hitGroup->SetHitGroupExport(c_hitGroupName);
+   hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+
+   auto shaderConfig = rtPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+   UINT payloadSize = 4 * sizeof(float);   // float4 color
+   UINT attributeSize = 2 * sizeof(float); // float2 barycentrics
+   shaderConfig->Config(payloadSize, attributeSize);
+
+   // create local root signature
+   rtLocalRootSignature.onInit(device, siRootSignature::createRtLocalRootSignature());
+   
+   auto localRootSignature = rtPipeline.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+   localRootSignature->SetRootSignature(rtLocalRootSignature.get().Get());
+
+   auto rootSignatureAssociation = rtPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+   rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
+   rootSignatureAssociation->AddExport(c_raygenShaderName);
+
+   // create global root signature
+   rtGlobalRootSignature.onInit(device, siRootSignature::createRtGlobalRootSignature());
+
+   auto globalRootSignature = rtPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+   globalRootSignature->SetRootSignature(rtGlobalRootSignature.get().Get());
+
+   auto pipelineConfig = rtPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+   UINT maxRecursionDepth = 1;
+   pipelineConfig->Config(maxRecursionDepth);
+   
+   hr = device->CreateStateObject(rtPipeline, IID_PPV_ARGS(&dxrStateObject));
+   assert(hr == S_OK);
+   
+
 }

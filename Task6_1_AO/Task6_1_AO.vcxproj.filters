@@ -43,6 +43,21 @@
     <Filter Include="Header Files\Generic">
       <UniqueIdentifier>{b3d8ec30-40a0-404d-883d-03a2ff3bda5b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\ssao">
+      <UniqueIdentifier>{914bb0ce-d10c-4a97-9b3b-5665706b39cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\def">
+      <UniqueIdentifier>{7abee9bb-f3fc-4d10-a241-82804804e048}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\depthRev">
+      <UniqueIdentifier>{40eeb57b-703a-4223-8862-532ed7a3fa87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\pbr">
+      <UniqueIdentifier>{e08cb856-7bb6-4a05-b8d1-04e231e67088}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\rt">
+      <UniqueIdentifier>{9e9f5a92-056e-4d89-a75f-a4773de592a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -193,21 +208,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="ssao.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="pbrRender.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="defRenderPS.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="defRenderVS.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="ssaoBlur.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
     <FxCompile Include="cacaoPrepareDepths.hlsl">
       <Filter>Resource Files\cacao</Filter>
     </FxCompile>
@@ -265,12 +265,6 @@
     <FxCompile Include="cacaoBlur8.hlsl">
       <Filter>Resource Files\cacao\blur</Filter>
     </FxCompile>
-    <FxCompile Include="ssaoSi.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="ssaoSiApply.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
     <FxCompile Include="si\common.hlsl">
       <Filter>Resource Files\si</Filter>
     </FxCompile>
@@ -292,8 +286,32 @@
     <FxCompile Include="si\common_math.hlsl">
       <Filter>Resource Files\si</Filter>
     </FxCompile>
+    <FxCompile Include="ssao.hlsl">
+      <Filter>Resource Files\ssao</Filter>
+    </FxCompile>
+    <FxCompile Include="ssaoBlur.hlsl">
+      <Filter>Resource Files\ssao</Filter>
+    </FxCompile>
+    <FxCompile Include="ssaoSi.hlsl">
+      <Filter>Resource Files\ssao</Filter>
+    </FxCompile>
+    <FxCompile Include="ssaoSiApply.hlsl">
+      <Filter>Resource Files\ssao</Filter>
+    </FxCompile>
+    <FxCompile Include="defRenderVS.hlsl">
+      <Filter>Resource Files\def</Filter>
+    </FxCompile>
+    <FxCompile Include="defRenderPS.hlsl">
+      <Filter>Resource Files\def</Filter>
+    </FxCompile>
     <FxCompile Include="depthRevert.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\depthRev</Filter>
+    </FxCompile>
+    <FxCompile Include="pbrRender.hlsl">
+      <Filter>Resource Files\pbr</Filter>
+    </FxCompile>
+    <FxCompile Include="rt.hlsl">
+      <Filter>Resource Files\rt</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

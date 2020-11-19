@@ -47,7 +47,7 @@ void siPipelineState::createPso(
    ComPtr<ID3DBlob> vertexShader;
    hr = D3DCompileFromFile(vsFileName,
                            nullptr,
-                           nullptr,
+                           D3D_COMPILE_STANDARD_FILE_INCLUDE,
                            "main",
                            "vs_5_1",
                            D3DCOMPILE_OPTIMIZATION_LEVEL3,
@@ -59,7 +59,7 @@ void siPipelineState::createPso(
    ComPtr<ID3DBlob> pixelShader;
    hr = D3DCompileFromFile(psFileName,
                            nullptr,
-                           nullptr,
+                           D3D_COMPILE_STANDARD_FILE_INCLUDE,
                            "main",
                            "ps_5_1",
                            D3DCOMPILE_OPTIMIZATION_LEVEL3,

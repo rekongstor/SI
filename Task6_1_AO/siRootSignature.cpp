@@ -15,6 +15,48 @@ void siRootSignature::onInit(ID3D12Device* device, const ComPtr<ID3DBlob>& signa
    rootSignature.Get()->SetName(L"Root signature");
 }
 
+
+ComPtr<ID3DBlob> siRootSignature::createRtGlobalRootSignature()
+{
+   HRESULT hr = S_OK;
+
+   CD3DX12_DESCRIPTOR_RANGE descRange;
+   descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+   CD3DX12_ROOT_PARAMETER rootParameters[2];
+   rootParameters[0].InitAsDescriptorTable(1, &descRange);
+   rootParameters[1].InitAsShaderResourceView(0);
+
+   ComPtr<ID3DBlob> signature;
+
+   hr = D3D12SerializeRootSignature(
+      &CD3DX12_ROOT_SIGNATURE_DESC(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE),
+      D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
+   assert(hr == S_OK);
+
+   return signature;
+}
+
+
+ComPtr<ID3DBlob> siRootSignature::createRtLocalRootSignature()
+{
+   HRESULT hr = S_OK;
+
+   CD3DX12_ROOT_PARAMETER rootParameters[1];
+
+   rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+
+   ComPtr<ID3DBlob> signature;
+
+   hr = D3D12SerializeRootSignature(
+      &CD3DX12_ROOT_SIGNATURE_DESC(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE),
+      D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
+   assert(hr == S_OK);
+
+   return signature;
+}
+
 ComPtr<ID3DBlob> siRootSignature::createCsRsBlobCb1In1Out(uint32_t inputCount, uint32_t outputCount, D3D12_STATIC_SAMPLER_DESC* samplers, uint32_t samplersCount)
 {
    HRESULT hr = S_OK;

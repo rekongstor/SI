@@ -1,4 +1,6 @@
 #pragma once
+#include "siRootSignature.h"
+
 class siCommandQueue;
 class siCommandAllocator;
 class siMesh;
@@ -20,6 +22,13 @@ class rtAccelerationStructures
 
    ComPtr<ID3D12Resource> instanceDescs;
    ComPtr<ID3D12Resource> scratchData;
+
+   ComPtr<ID3D12StateObject> dxrStateObject;
+   ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
+
+   siRootSignature rtLocalRootSignature;
+   siRootSignature rtGlobalRootSignature;
+
 public:
    void AddMeshToGeometryDesc(siMesh* pMesh);
    void OnInit(ID3D12Device5* device, ID3D12GraphicsCommandList5* commandList);
