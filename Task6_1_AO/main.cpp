@@ -33,8 +33,8 @@ int main()
    {
       imgui.onInitWindow(window.getWindow());
       siRenderer renderer(&window, 3);
-      //renderer.onInit(&imgui);
-      renderer.onInit();
+      renderer.onInit(&imgui);
+      //renderer.onInit();
 
       MSG msg;
       while (renderer.isActive())

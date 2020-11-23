@@ -206,6 +206,9 @@
     <ClInclude Include="rtAccelerationStructures.h">
       <Filter>Header Files\RT</Filter>
     </ClInclude>
+    <ClInclude Include="rt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="cacaoPrepareDepths.hlsl">

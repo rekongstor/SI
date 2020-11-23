@@ -42,7 +42,7 @@ class siRenderer
    siSwapChain swapChain;
    siDescriptorMgr descriptorMgr;
    siFenceMgr fenceMgr;
-   rtAccelerationStructures blas;
+   rtAccelerationStructures rtObject;
 
    siViewportScissor viewportScissor;
 

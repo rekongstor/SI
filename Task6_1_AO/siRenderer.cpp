@@ -254,6 +254,15 @@ void siRenderer::onInit(siImgui* imgui)
       normals.createRtv(device.get(), &descriptorMgr);
    }
 
+   // RT Target
+   {
+      auto& rtTarget = textures["#rtTarget"];
+      rtTarget.initTexture(
+         device.get(), window->getWidth(), window->getHeight(), 1, 1, DXGI_FORMAT_R8G8B8A8_UNORM,
+         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, sampleDesc, L"RT target");
+      rtTarget.createUav(device.get(), &descriptorMgr);
+   }
+
    // creating const buffers
    {
       mainConstBuffer.InitBuffer({}, device.get());
@@ -606,7 +615,7 @@ void siRenderer::onInit(siImgui* imgui)
                             {
                                &textures["#diffuseRenderTarget"], &textures["#depthStencil"],
                                &textures["#normalsRenderTarget"], &g_SSAOOutput,
-                               &depthRev
+                               &textures["#rtTarget"]
                             },
                             {&texture},
                             defRenderConstBuffer.GetGpuVirtualAddress());
@@ -665,9 +674,9 @@ void siRenderer::onInit(siImgui* imgui)
    {
       for (auto& mesh : meshes)
       {
-         blas.AddMeshToGeometryDesc(&mesh.second);
+         //rtObject.AddMeshToGeometryDesc(&mesh.second);
       }
-      blas.OnInit(device.get(), commandList.get());
+      //rtObject.OnInit(device.get(), commandList.get());
    }
 
    gpuTimerInit(&timer, device.get(), bufferCount);
@@ -760,6 +769,9 @@ void siRenderer::updatePipeline()
 
    auto& deferredRenderTarget = textures["#deferredRenderTarget"];
 
+   auto& rtTarget = textures["#rtTarget"];
+   auto& g_SSAOOutput = textures["#g_SSAOOutput"];
+
    // drawing
    gpuTimerStartFrame(&timer);
    {
@@ -812,51 +824,80 @@ void siRenderer::updatePipeline()
       GET_TIMESTAMP(&timer, commandList.get(), "Drawing");
    }
 
+   {
+      //D3D12_DISPATCH_RAYS_DESC dispatchDesc{};
+      //dispatchDesc.HitGroupTable.StartAddress = rtObject.m_hitGroupShaderTable.Get()->GetGPUVirtualAddress();
+      //dispatchDesc.HitGroupTable.SizeInBytes = rtObject.m_hitGroupShaderTable.Get()->GetDesc().Width;
+      //dispatchDesc.HitGroupTable.StrideInBytes = dispatchDesc.HitGroupTable.SizeInBytes;
+
+      //dispatchDesc.MissShaderTable.StartAddress = rtObject.m_missShaderTable.Get()->GetGPUVirtualAddress();
+      //dispatchDesc.MissShaderTable.SizeInBytes = rtObject.m_missShaderTable.Get()->GetDesc().Width;
+      //dispatchDesc.MissShaderTable.StrideInBytes = dispatchDesc.MissShaderTable.SizeInBytes;
+
+      //dispatchDesc.RayGenerationShaderRecord.StartAddress = rtObject.m_rayGenShaderTable.Get()->GetGPUVirtualAddress();
+      //dispatchDesc.RayGenerationShaderRecord.SizeInBytes = rtObject.m_rayGenShaderTable.Get()->GetDesc().Width;
+
+      //dispatchDesc.Width = window->getWidth();
+      //dispatchDesc.Height = window->getHeight();
+      //dispatchDesc.Depth = 1;
+      //rtTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+      //commandList->SetComputeRootSignature(rtObject.rtGlobalRootSignature.get().Get());
+
+      //commandList->SetComputeRootDescriptorTable(0, textures["#rtTarget"].getUavHandle().second);
+      //commandList->SetComputeRootShaderResourceView(1, rtObject.destDataTlas.Get()->GetGPUVirtualAddress());
+
+      //commandList->SetPipelineState1(rtObject.dxrStateObject.Get());
+      //commandList->DispatchRays(&dispatchDesc);
+      //rtTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+   }
+
+
    // compute shaders
    {
       // Cacao
       if (cacaoSsao)
       {
-         auto& loadCounter = textures["#g_LoadCounter"];
-         loadCounter.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-         commandList->ClearRenderTargetView(loadCounter.getRtvHandle().first, clearColor, 0, nullptr);
-         loadCounter.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_GENERIC_READ);
+         //auto& loadCounter = textures["#g_LoadCounter"];
+         //loadCounter.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+         //commandList->ClearRenderTargetView(loadCounter.getRtvHandle().first, clearColor, 0, nullptr);
+         //loadCounter.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_GENERIC_READ);
 
 
-         computeShaders["cacaoPrepareDepths"].dispatch(commandList.get());
-         computeShaders["cacaoPrepareNormals"].dispatch(commandList.get());
-         for (int i = 0; i < 4; ++i)
-            computeShaders["cacaoSSAOq3Base"].dispatch(commandList.get(), ssaoConstBuffer[i].GetGpuVirtualAddress());
+         //computeShaders["cacaoPrepareDepths"].dispatch(commandList.get());
+         //computeShaders["cacaoPrepareNormals"].dispatch(commandList.get());
+         //for (int i = 0; i < 4; ++i)
+         //   computeShaders["cacaoSSAOq3Base"].dispatch(commandList.get(), ssaoConstBuffer[i].GetGpuVirtualAddress());
 
-         computeShaders["cacaoGenerateImportanceMap"].dispatch(commandList.get());
-         computeShaders["cacaoPostprocessImportanceA"].dispatch(commandList.get());
-         computeShaders["cacaoPostprocessImportanceB"].dispatch(commandList.get());
+         //computeShaders["cacaoGenerateImportanceMap"].dispatch(commandList.get());
+         //computeShaders["cacaoPostprocessImportanceA"].dispatch(commandList.get());
+         //computeShaders["cacaoPostprocessImportanceB"].dispatch(commandList.get());
 
-         for (int i = 0; i < 4; ++i)
-            computeShaders["cacaoSSAOq3"].dispatch(commandList.get(), ssaoConstBuffer[i].GetGpuVirtualAddress());
+         //for (int i = 0; i < 4; ++i)
+         //   computeShaders["cacaoSSAOq3"].dispatch(commandList.get(), ssaoConstBuffer[i].GetGpuVirtualAddress());
 
-         int blurPassCount = this->cacaoSettings.blurPassCount;
-         blurPassCount = FFX_CACAO_CLAMP(blurPassCount, 0, MAX_BLUR_PASSES);
+         //int blurPassCount = this->cacaoSettings.blurPassCount;
+         //blurPassCount = FFX_CACAO_CLAMP(blurPassCount, 0, MAX_BLUR_PASSES);
 
-         if (blurPassCount)
-         {
-            uint32_t w = 4 * BLUR_WIDTH - 2 * blurPassCount;
-            uint32_t h = 3 * BLUR_HEIGHT - 2 * blurPassCount;
-            uint32_t dispatchWidth = dispatchSize(w, bsInfo.ssaoBufferWidth);
-            uint32_t dispatchHeight = dispatchSize(h, bsInfo.ssaoBufferHeight);
-            char name[] = "cacaoBlur0";
-            name[9] = ('0' + blurPassCount);
-            for (int i = 0; i < 4; ++i)
-            {
-               computeShaders[name].dispatch(commandList.get(), ssaoConstBuffer[i].GetGpuVirtualAddress(),
-                                             dispatchWidth, dispatchHeight);
-            }
-            computeShaders["cacaoApplyBlurred"].dispatch(commandList.get());
-         }
-         else
-         {
-            computeShaders["cacaoApply"].dispatch(commandList.get());
-         }
+         //if (blurPassCount)
+         //{
+         //   uint32_t w = 4 * BLUR_WIDTH - 2 * blurPassCount;
+         //   uint32_t h = 3 * BLUR_HEIGHT - 2 * blurPassCount;
+         //   uint32_t dispatchWidth = dispatchSize(w, bsInfo.ssaoBufferWidth);
+         //   uint32_t dispatchHeight = dispatchSize(h, bsInfo.ssaoBufferHeight);
+         //   char name[] = "cacaoBlur0";
+         //   name[9] = ('0' + blurPassCount);
+         //   for (int i = 0; i < 4; ++i)
+         //   {
+         //      computeShaders[name].dispatch(commandList.get(), ssaoConstBuffer[i].GetGpuVirtualAddress(),
+         //                                    dispatchWidth, dispatchHeight);
+         //   }
+         //   computeShaders["cacaoApplyBlurred"].dispatch(commandList.get());
+         //}
+         //else
+         //{
+         //   computeShaders["cacaoApply"].dispatch(commandList.get());
+         //}
       }
       else
       {
@@ -864,7 +905,6 @@ void siRenderer::updatePipeline()
          computeShaders["ssaoSiApply"].dispatch(commandList.get());
       }
       GET_TIMESTAMP(&timer, commandList.get(), "SSAO");
-      computeShaders["depthRevert"].dispatch(commandList.get());
       computeShaders["deferredRender"].dispatch(commandList.get());
       GET_TIMESTAMP(&timer, commandList.get(), "Rendering");
    }

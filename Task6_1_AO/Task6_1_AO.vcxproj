@@ -105,7 +105,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GPU_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_GPU_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -453,6 +453,7 @@
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Debug_GPU_Validation|x64'">false</EnableDebuggingInformation>
     </FxCompile>
     <ClInclude Include="alignment.h" />
+    <ClInclude Include="rt.h" />
     <ClInclude Include="rtAccelerationStructures.h" />
     <ClInclude Include="siCamera.h" />
     <ClInclude Include="siCommandAllocator.h" />
