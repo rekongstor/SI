@@ -14,6 +14,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Task6_1_AO", "Task6_1_AO\Ta
 		{E3D54879-4A97-4D68-99A3-E8562C7952AB} = {E3D54879-4A97-4D68-99A3-E8562C7952AB}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RTDLGI", "RTDLGI\RTDLGI.vcxproj", "{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F54A3267-E19B-4E01-BA07-5B691A77C296} = {F54A3267-E19B-4E01-BA07-5B691A77C296}
+		{E3D54879-4A97-4D68-99A3-E8562C7952AB} = {E3D54879-4A97-4D68-99A3-E8562C7952AB}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_GPU_Validation|x64 = Debug_GPU_Validation|x64
@@ -46,6 +52,14 @@ Global
 		{D85FAD70-8465-4CC9-A99E-762BD949B8B2}.Release_GPU_Validation|x64.Build.0 = Release_GPU_Validation|x64
 		{D85FAD70-8465-4CC9-A99E-762BD949B8B2}.Release|x64.ActiveCfg = Release|x64
 		{D85FAD70-8465-4CC9-A99E-762BD949B8B2}.Release|x64.Build.0 = Release|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Debug_GPU_Validation|x64.ActiveCfg = Debug_GPU_Validation|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Debug_GPU_Validation|x64.Build.0 = Debug_GPU_Validation|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Debug|x64.ActiveCfg = Debug|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Debug|x64.Build.0 = Debug|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Release_GPU_Validation|x64.ActiveCfg = Release_GPU_Validation|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Release_GPU_Validation|x64.Build.0 = Release_GPU_Validation|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Release|x64.ActiveCfg = Release|x64
+		{725C5E9B-24F4-4940-B40E-EDB5DFA0FE28}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
