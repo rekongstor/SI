@@ -20,6 +20,7 @@ inline void ThrowIfFailed(HRESULT hr)
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
+using Event = Microsoft::WRL::Wrappers::Event;
 
 using float1 = float;
 using float2 = XMFLOAT2;

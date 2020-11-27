@@ -48,10 +48,10 @@
     <ClCompile Include="rnd_DescriptorHeapMgr.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="rnd_FenceMgr.cpp">
+    <ClCompile Include="rnd_Texture.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="rnd_Texture.cpp">
+    <ClCompile Include="rnd_CommandMgr.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,7 +80,7 @@
     <ClInclude Include="rnd_Texture.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="rnd_FenceMgr.h">
+    <ClInclude Include="rnd_CommandMgr.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
   </ItemGroup>

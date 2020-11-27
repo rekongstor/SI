@@ -2,8 +2,7 @@
 #include "rnd_TextureMgr.h"
 #include "core_Window.h"
 
-#pragma optimize("", off)
-void rnd_SwapChainMgr::OnInit(IDXGIFactory4* factory, ID3D12CommandQueue* commandQueue, rnd_TextureMgr* textureMgr, core_Window* window, DXGI_FORMAT backBufferFormat, bool windowed)
+void rnd_SwapChainMgr::OnInit(IDXGIFactory4* factory, ID3D12CommandQueue* commandQueue, ID3D12Device* device, rnd_TextureMgr* textureMgr, rnd_DescriptorHeapMgr* descriptorMgr, core_Window* window, DXGI_FORMAT backBufferFormat, bool windowed)
 {
    assert(textureMgr != NULL && window != NULL);
    assert(window->width > 0 && window->height > 0);
@@ -43,7 +42,9 @@ void rnd_SwapChainMgr::OnInit(IDXGIFactory4* factory, ID3D12CommandQueue* comman
 
    ID3D12Resource* backBuffer;
    ThrowIfFailed(swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer)));
-   textureMgr->backBuffer[0].OnInit(backBuffer, backBufferFormat, L"BackBuffer_0");
+   textureMgr->backBuffer[0].OnInit(backBuffer, backBufferFormat, D3D12_RESOURCE_STATE_PRESENT, L"BackBuffer_0");
+   textureMgr->backBuffer[0].CreateRtv(device, descriptorMgr);
    ThrowIfFailed(swapChain->GetBuffer(1, IID_PPV_ARGS(&backBuffer)));
-   textureMgr->backBuffer[1].OnInit(backBuffer, backBufferFormat, L"BackBuffer_1");
+   textureMgr->backBuffer[1].OnInit(backBuffer, backBufferFormat, D3D12_RESOURCE_STATE_PRESENT, L"BackBuffer_1");
+   textureMgr->backBuffer[1].CreateRtv(device, descriptorMgr);
 }

@@ -1,6 +1,12 @@
 #include "rnd_Dx12.h"
 #include "core_Window.h"
 
+// Managers
+rnd_SwapChainMgr swapChainMgr;
+rnd_DescriptorHeapMgr descriptorHeapMgr;
+rnd_TextureMgr textureMgr;
+rnd_CommandMgr commandMgr;
+
 void rnd_Dx12::EnableGpuValidation()
 {
    ComPtr<ID3D12Debug> debugController;
@@ -15,7 +21,6 @@ void rnd_Dx12::EnableGpuValidation()
    dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, true);
 }
 
-
 inline bool IsDirectXRaytracingSupported(IDXGIAdapter1* adapter)
 {
    ComPtr<ID3D12Device> testDevice;
@@ -25,7 +30,6 @@ inline bool IsDirectXRaytracingSupported(IDXGIAdapter1* adapter)
       && SUCCEEDED(testDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &featureSupportData, sizeof(featureSupportData)))
       && featureSupportData.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED;
 }
-
 
 void rnd_Dx12::OnInit(core_Window* window)
 {
@@ -58,7 +62,7 @@ void rnd_Dx12::OnInit(core_Window* window)
    D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
    ComPtr<IDXGIAdapter1> adapterTmp;
    DXGI_ADAPTER_DESC1 desc;
-   for (UINT adapterID = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(adapterID, &adapterTmp); ++adapterID)
+   for (UINT adapterId = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(adapterId, &adapterTmp); ++adapterId)
    {
       ThrowIfFailed(adapterTmp->GetDesc1(&desc));
 
@@ -87,60 +91,23 @@ void rnd_Dx12::OnInit(core_Window* window)
 
 #pragma endregion 
 
-   // TODO: Add bundles?
-#pragma region CommandQueues 
-   D3D12_COMMAND_QUEUE_DESC commandQueueDesc = {
-      D3D12_COMMAND_LIST_TYPE_DIRECT,
-      D3D12_COMMAND_QUEUE_PRIORITY_NORMAL, // set higher priority, could be failed
-      D3D12_COMMAND_QUEUE_FLAG_NONE, // disable GPU timeout
-      0 // multi-GPU
-   };
-   ThrowIfFailed(device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue)));
-   commandQueue->SetName(L"Command queue direct");
-   commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
-   ThrowIfFailed(device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueueCompute)));
-   commandQueueCompute->SetName(L"Command queue compute");
-   commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-   ThrowIfFailed(device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueueCopy)));
-   commandQueueCopy->SetName(L"Command queue copy");
-  
+
+
+#pragma region Fences
+   ThrowIfFailed(device->CreateFence(fenceValues[currentFrame], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+   ++fenceValues[currentFrame];
+   fence->SetName(L"Fence");
+
+   fenceEvent.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
+   assert(fenceEvent.IsValid());
 #pragma endregion 
 
-#pragma region CommandAllocators
-   ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocators[0])));
-   commandAllocators[0]->SetName(L"COMMAND ALLOCATOR 0: Direct");
-   ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocators[1])));
-   commandAllocators[1]->SetName(L"COMMAND ALLOCATOR 1: Direct");
+   commandMgr.OnInit(device.Get());
+   descriptorHeapMgr.OnInit(device.Get());
+   swapChainMgr.OnInit(factory.Get(), commandMgr.commandQueue.Get(), device.Get(), &textureMgr, &descriptorHeapMgr, window, DXGI_FORMAT_R8G8B8A8_UNORM, true);
 
-   ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&commandAllocatorCompute)));
-   commandAllocatorCompute->SetName(L"COMMAND ALLOCATOR: Compute");
-   ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&commandAllocatorCopy)));
-   commandAllocatorCopy->SetName(L"COMMAND ALLOCATOR: Copy");
-#pragma endregion 
-
-#pragma region CommandList
-   ThrowIfFailed(device->CreateCommandList(        /*multi-gpu*/ 0, 
-      D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[0].Get(), /* Initial PSO */ nullptr, 
-      IID_PPV_ARGS(&commandList)));
-   commandList->SetName(L"Command List Direct");
-
-   ThrowIfFailed(device->CreateCommandList(        /*multi-gpu*/ 0,
-      D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocatorCompute.Get(), /* Initial PSO */ nullptr,
-      IID_PPV_ARGS(&commandListCompute)));
-   commandListCompute->SetName(L"Command List Compute");
-
-   ThrowIfFailed(device->CreateCommandList(        /*multi-gpu*/ 0,
-      D3D12_COMMAND_LIST_TYPE_COPY, commandAllocatorCopy.Get(), /* Initial PSO */ nullptr,
-      IID_PPV_ARGS(&commandListCopy)));
-   commandListCopy->SetName(L"Command List Copy");
-#pragma endregion 
-
-   swapChainMgr.OnInit(factory.Get(), commandQueue.Get(), &textureMgr, window, DXGI_FORMAT_R8G8B8A8_UNORM, true);
-   fenceMgr.OnInit(device.Get());
-   descriptorHeapMgr;
+   WaitForGpu();
 }
-
-
 
 void rnd_Dx12::OnUpdate()
 {
@@ -151,26 +118,58 @@ void rnd_Dx12::OnUpdate()
 
 void rnd_Dx12::MoveToNextFrame()
 {
-   ThrowIfFailed(commandList->Close());
-   ID3D12CommandList* cmdLists = { commandList.Get() };
-   commandQueue->ExecuteCommandLists(1, &cmdLists);
+   commandMgr.SetBarrier({ {textureMgr.backBuffer[currentFrame], D3D12_RESOURCE_STATE_PRESENT} });
 
-   swapChainMgr.swapChain->Present(0, 0);
+   ExecuteCommandList();
 
-   fenceMgr.MoveToNextFrame(commandQueue.Get(), swapChainMgr.swapChain.Get(), swapChainMgr.currentFrame);
+   if (tearingSupported) {
+      ThrowIfFailed(swapChainMgr.swapChain->Present(syncInterval != UINT_MAX ? syncInterval : 0, DXGI_PRESENT_ALLOW_TEARING));
+   } else {
+      ThrowIfFailed(swapChainMgr.swapChain->Present(syncInterval != UINT_MAX ? syncInterval : 1, 0));
+   }
+
+   const UINT64 currentFenceValue = fenceValues[currentFrame];
+   ThrowIfFailed(commandMgr.commandQueue->Signal(fence.Get(), currentFenceValue));
+
+   currentFrame = swapChainMgr.swapChain->GetCurrentBackBufferIndex();
+
+   if (fence->GetCompletedValue() < fenceValues[currentFrame]) {
+      ThrowIfFailed(fence->SetEventOnCompletion(fenceValues[currentFrame], fenceEvent.Get()));
+      WaitForSingleObjectEx(fenceEvent.Get(), INFINITE, FALSE);
+   }
+
+   fenceValues[currentFrame] = currentFenceValue + 1;
+}
+
+void rnd_Dx12::ExecuteCommandList()
+{
+   ThrowIfFailed(commandMgr.commandList->Close());
+   ID3D12CommandList* commandLists[] = { commandMgr.Get() };
+   commandMgr.commandQueue->ExecuteCommandLists(ARRAYSIZE(commandLists), commandLists);
 }
 
 void rnd_Dx12::WaitForGpu()
 {
-   ThrowIfFailed(commandList->Close());
+   if (commandMgr.commandQueue && fence && fenceEvent.IsValid()) {
+      UINT64 fenceValue = fenceValues[currentFrame];
+      if (SUCCEEDED(commandMgr.commandQueue->Signal(fence.Get(), fenceValue))) {
+         // Wait until the Signal has been processed.
+         if (SUCCEEDED(fence->SetEventOnCompletion(fenceValue, fenceEvent.Get()))) {
+            WaitForSingleObjectEx(fenceEvent.Get(), INFINITE, FALSE);
 
-   ID3D12CommandList* cmdLists = { commandList.Get() };
-   commandQueue->ExecuteCommandLists(1, &cmdLists);
-
-   fenceMgr.WaitForGpu(commandQueue.Get());
+            fenceValues[currentFrame]++;
+         }
+      }
+   }
 }
 
 void rnd_Dx12::PopulateGraphicsCommandList()
 {
-   // TODO: Make implementation
+   ThrowIfFailed(commandMgr.commandAllocators[currentFrame]->Reset());
+   ThrowIfFailed(commandMgr.commandList->Reset(commandMgr.commandAllocators[currentFrame].Get(), nullptr)); // TODO: initial pipeline state!
+
+   commandMgr.SetBarrier({ {textureMgr.backBuffer[currentFrame], D3D12_RESOURCE_STATE_RENDER_TARGET} });
+
+   FLOAT color[]{ 0.1,0.2,0.3,0.4 };
+   commandMgr.commandList->ClearRenderTargetView(textureMgr.backBuffer[currentFrame].rtvHandle.first, color, 1, &scissorRect);
 }

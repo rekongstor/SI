@@ -161,20 +161,20 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="core_Imgui.cpp" />
+    <ClCompile Include="rnd_CommandMgr.cpp" />
     <ClCompile Include="rnd_DescriptorHeapMgr.cpp" />
     <ClCompile Include="rnd_Dx12.cpp" />
     <ClCompile Include="core_Window.cpp" />
-    <ClCompile Include="rnd_FenceMgr.cpp" />
     <ClCompile Include="rnd_SwapChainMgr.cpp" />
     <ClCompile Include="rnd_Texture.cpp" />
     <ClCompile Include="rnd_TextureMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h" />
+    <ClInclude Include="rnd_CommandMgr.h" />
     <ClInclude Include="rnd_DescriptorHeapMgr.h" />
     <ClInclude Include="rnd_Dx12.h" />
     <ClInclude Include="core_Window.h" />
-    <ClInclude Include="rnd_FenceMgr.h" />
     <ClInclude Include="rnd_SwapChainMgr.h" />
     <ClInclude Include="rnd_Texture.h" />
     <ClInclude Include="rnd_TextureMgr.h" />
