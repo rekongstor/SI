@@ -50,7 +50,7 @@ std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_Desc
 std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_DescriptorHeapMgr::GetRtvHandle()
 {
    --rtvCount;
-   assert(rtvHeapLeft >= 0);
+   assert(rtvCount >= 0);
    auto ret = rtvHandle;
    rtvHandle.first.Offset(1, rtvIncrSize);
    rtvHandle.second.Offset(1, rtvIncrSize);
@@ -60,7 +60,7 @@ std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_Desc
 std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_DescriptorHeapMgr::GetCbvSrvUavHandle()
 {
    --cbvSrvUavCount;
-   assert(cbvSrvUavHeapLeft >= 0);
+   assert(cbvSrvUavCount >= 0);
    auto ret = cbvSrvUavHandle;
    cbvSrvUavHandle.first.Offset(1, cbvSrvUavIncrSize);
    cbvSrvUavHandle.second.Offset(1, cbvSrvUavIncrSize);
@@ -70,7 +70,7 @@ std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_Desc
 std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_DescriptorHeapMgr::GetSamplerHandle()
 {
    --svCount;
-   assert(samplerHeapLeft >= 0);
+   assert(svCount >= 0);
    auto ret = samplerHandle;
    samplerHandle.first.Offset(1, svIncrSize);
    samplerHandle.second.Offset(1, svIncrSize);

@@ -3,6 +3,7 @@
 #include "rnd_SwapChainMgr.h"
 #include "rnd_DescriptorHeapMgr.h"
 #include "rnd_CommandMgr.h"
+#include "rnd_RayTracingPipeline.h"
 class core_Window;
 
 class rnd_Dx12
@@ -41,10 +42,13 @@ public:
    rnd_DescriptorHeapMgr descriptorHeapMgr;
    rnd_TextureMgr textureMgr;
    rnd_CommandMgr commandMgr;
+   rnd_RayTracingPipeline rayTracingPipeline;
 
    int currentFrame = 0;
-   int syncInterval = UINT_MAX;
+   int syncInterval = 0; // UINT_MAX for V-Sync
+   bool windowed = true;
    bool rtxSupported = false;
    bool tearingSupported = false;
+
 };
 

@@ -72,19 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IntDir)CompiledShaders;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GPU_Validation|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IntDir)CompiledShaders;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IntDir)CompiledShaders;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GPU_Validation|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)3rd_party\imgui;$(IntDir)CompiledShaders;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -165,20 +165,52 @@
     <ClCompile Include="rnd_DescriptorHeapMgr.cpp" />
     <ClCompile Include="rnd_Dx12.cpp" />
     <ClCompile Include="core_Window.cpp" />
+    <ClCompile Include="rnd_RayTracingPipeline.cpp" />
     <ClCompile Include="rnd_SwapChainMgr.cpp" />
     <ClCompile Include="rnd_Texture.cpp" />
     <ClCompile Include="rnd_TextureMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h" />
+    <ClInclude Include="HlslCompat.h" />
+    <ClInclude Include="RayTracingHlslCompat.h" />
     <ClInclude Include="rnd_CommandMgr.h" />
     <ClInclude Include="rnd_DescriptorHeapMgr.h" />
     <ClInclude Include="rnd_Dx12.h" />
     <ClInclude Include="core_Window.h" />
+    <ClInclude Include="rnd_RayTracingPipeline.h" />
     <ClInclude Include="rnd_SwapChainMgr.h" />
     <ClInclude Include="rnd_Texture.h" />
     <ClInclude Include="rnd_TextureMgr.h" />
     <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Raytracing.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.3</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release_GPU_Validation|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release_GPU_Validation|x64'">6.3</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug_GPU_Validation|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug_GPU_Validation|x64'">6.3</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.3</ShaderModel>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">g_p%(Filename)</VariableName>
+      <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)CompiledShaders\%(Filename).hlsl.h</HeaderFileOutput>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Release_GPU_Validation|x64'">g_p%(Filename)</VariableName>
+      <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release_GPU_Validation|x64'">$(IntDir)CompiledShaders\%(Filename).hlsl.h</HeaderFileOutput>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Debug_GPU_Validation|x64'">g_p%(Filename)</VariableName>
+      <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug_GPU_Validation|x64'">$(IntDir)CompiledShaders\%(Filename).hlsl.h</HeaderFileOutput>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">g_p%(Filename)</VariableName>
+      <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)CompiledShaders\%(Filename).hlsl.h</HeaderFileOutput>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release_GPU_Validation|x64'">
+      </EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug_GPU_Validation|x64'">
+      </EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -59,7 +59,7 @@ void rnd_Dx12::OnInit(core_Window* window)
 #pragma endregion
 
 #pragma region Device
-   D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
+   D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
    ComPtr<IDXGIAdapter1> adapterTmp;
    DXGI_ADAPTER_DESC1 desc;
    for (UINT adapterId = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(adapterId, &adapterTmp); ++adapterId)
@@ -85,13 +85,10 @@ void rnd_Dx12::OnInit(core_Window* window)
 
    device.Get()->SetName(L"Device");
 #pragma endregion
-
    // TODO: PSOs here
 #pragma region PSO
 
 #pragma endregion 
-
-
 
 #pragma region Fences
    ThrowIfFailed(device->CreateFence(fenceValues[currentFrame], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
@@ -102,9 +99,12 @@ void rnd_Dx12::OnInit(core_Window* window)
    assert(fenceEvent.IsValid());
 #pragma endregion 
 
+#pragma region Managers
    commandMgr.OnInit(device.Get());
    descriptorHeapMgr.OnInit(device.Get());
-   swapChainMgr.OnInit(factory.Get(), commandMgr.commandQueue.Get(), device.Get(), &textureMgr, &descriptorHeapMgr, window, DXGI_FORMAT_R8G8B8A8_UNORM, true);
+   swapChainMgr.OnInit(factory.Get(), commandMgr.commandQueue.Get(), device.Get(), &textureMgr, &descriptorHeapMgr, window, DXGI_FORMAT_R8G8B8A8_UNORM, windowed);
+   rayTracingPipeline.OnInit(this);
+#pragma endregion 
 
    WaitForGpu();
 }
@@ -172,4 +172,7 @@ void rnd_Dx12::PopulateGraphicsCommandList()
 
    FLOAT color[]{ 0.1,0.2,0.3,0.4 };
    commandMgr.commandList->ClearRenderTargetView(textureMgr.backBuffer[currentFrame].rtvHandle.first, color, 1, &scissorRect);
+
+   rayTracingPipeline.DoRaytracing();
+   rayTracingPipeline.CopyRaytracingOutputToBackbuffer();
 }

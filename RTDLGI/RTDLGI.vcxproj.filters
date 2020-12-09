@@ -54,6 +54,9 @@
     <ClCompile Include="rnd_CommandMgr.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="rnd_RayTracingPipeline.cpp">
+      <Filter>Source Files\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h">
@@ -83,5 +86,19 @@
     <ClInclude Include="rnd_CommandMgr.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="rnd_RayTracingPipeline.h">
+      <Filter>Header Files\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="HlslCompat.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTracingHlslCompat.h">
+      <Filter>Header Files\DX12</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Raytracing.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -25,6 +25,7 @@ void rnd_SwapChainMgr::OnInit(IDXGIFactory4* factory, ID3D12CommandQueue* comman
 
    DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsDesc {};
    fsDesc.Windowed = windowed;
+   window->fullscreen = !windowed;
 
    ComPtr<IDXGISwapChain1> swapChainTmp;
    bool prevIsFullscreen = window->IsFullscreen();
