@@ -33,16 +33,15 @@ void core_Imgui::InitWindow(core_Window* window)
    imguiProc = ImGui_ImplWin32_WndProcHandler;
 }
 
-void core_Imgui::InitRender(ID3D12Device* device, uint32_t bufferCount, ID3D12DescriptorHeap* heap,
+void core_Imgui::InitRender(ID3D12Device* device, ID3D12DescriptorHeap* heap,
                            std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> handles)
 {
    assert(device != NULL);
-   assert(bufferCount != NULL);
    assert(heap != NULL);
    assert(handles.first.ptr != NULL);
    assert(handles.second.ptr != NULL);
 
-   ImGui_ImplDX12_Init(device, bufferCount,
+   ImGui_ImplDX12_Init(device, FRAME_COUNT,
                        DXGI_FORMAT_R8G8B8A8_UNORM, heap,
                        handles.first,
                        handles.second);

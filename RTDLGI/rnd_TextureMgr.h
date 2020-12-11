@@ -4,6 +4,8 @@
 class rnd_TextureMgr
 {
 public:
-   rnd_Texture backBuffer[2];
+   rnd_Texture backBuffer[FRAME_COUNT];
+
+   rnd_Texture rayTracingOutput;
 };
 
