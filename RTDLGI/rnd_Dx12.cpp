@@ -1,7 +1,8 @@
 #include "rnd_Dx12.h"
-#include <Raytracing.hlsl.h>
 #include "core_Window.h"
+#include "core_Imgui.h"
 #include "RayTracingHlslCompat.h"
+#include <Raytracing.hlsl.h>
 
 wchar_t name[256]{ 0 };
 
@@ -151,7 +152,7 @@ inline void PrintStateObjectDesc(const D3D12_STATE_OBJECT_DESC* desc)
 
 #pragma endregion
 
-void rnd_Dx12::OnInit(core_Window* window)
+void rnd_Dx12::OnInit()
 {
 #pragma region Factory
 #ifdef GPU_VALIDATION
@@ -171,14 +172,13 @@ void rnd_Dx12::OnInit(core_Window* window)
 #pragma endregion
 
 #pragma region Window
-   this->window = window;
-   viewport.Width = window->width;
-   viewport.Height = window->height;
+   viewport.Width = (float)window->width;
+   viewport.Height = (float)window->height;
    viewport.TopLeftX = viewport.TopLeftY = 0.f;
    viewport.MaxDepth = 1.f;
    viewport.MinDepth = 0.f;
 
-   scissorRect.left = scissorRect.top = 0.f;
+   scissorRect.left = scissorRect.top = 0;
    scissorRect.right = window->width;
    scissorRect.bottom = window->height;
 #pragma endregion
@@ -357,6 +357,9 @@ void rnd_Dx12::OnInit(core_Window* window)
 
    InitRaytracing();
 
+   if (imgui)
+      imgui->InitRender();
+
    WaitForGpu();
 }
 
@@ -367,11 +370,18 @@ void rnd_Dx12::PopulateGraphicsCommandList()
 
    SetBarrier({ {textureMgr.backBuffer[currentFrame], D3D12_RESOURCE_STATE_RENDER_TARGET} });
 
-   FLOAT color[]{ 0.1,0.2,0.3,0.4 };
+   FLOAT color[]{ 0.1f, 0.2f, 0.3f, 0.4f };
    commandList->ClearRenderTargetView(textureMgr.backBuffer[currentFrame].rtvHandle.first, color, 1, &scissorRect);
 
    DoRaytracing();
    CopyRaytracingOutputToBackbuffer();
+
+   commandList->OMSetRenderTargets(1,
+      &textureMgr.backBuffer[currentFrame].rtvHandle.first,
+      FALSE,
+      nullptr);
+   if (imgui)
+      imgui->OnRender();
 }
 
 #pragma region RT
@@ -895,11 +905,11 @@ void rnd_Dx12::BuildShaderTables()
 
 void rnd_Dx12::CreateRaytracingOutputResource()
 {
-   auto backbufferFormat = renderer->swapChainFormat;
+   auto backbufferFormat = swapChainFormat;
    auto& raytracingOutput = textureMgr.rayTracingOutput;
 
    // Create the output resource. The dimensions and format should match the swap-chain.
-   auto uavDesc = CD3DX12_RESOURCE_DESC::Tex2D(backbufferFormat, renderer->window->width, renderer->window->height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+   auto uavDesc = CD3DX12_RESOURCE_DESC::Tex2D(backbufferFormat, window->width, window->height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
    auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
    ThrowIfFailed(device->CreateCommittedResource(
@@ -907,7 +917,7 @@ void rnd_Dx12::CreateRaytracingOutputResource()
    raytracingOutput.buffer.Get()->SetName(L"Raytracing output");
    raytracingOutput.state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
-   auto descHandle = renderer->GetCbvSrvUavHandle();
+   auto descHandle = GetCbvSrvUavHandle();
    raytracingOutput.srvHandle.first = descHandle.first;
    raytracingOutput.srvHandle.second = descHandle.second;
    D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
@@ -939,7 +949,7 @@ void rnd_Dx12::CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* ray
    }
 }
 
-void rnd_Dx12::CreateBufferSRV(SrvBuffer* srvBuffer, double numElements, int strideInBytes)
+void rnd_Dx12::CreateBufferSRV(SrvBuffer* srvBuffer, int numElements, int strideInBytes)
 {
    // SRV
    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -965,6 +975,9 @@ void rnd_Dx12::CreateBufferSRV(SrvBuffer* srvBuffer, double numElements, int str
 #pragma region Functional
 void rnd_Dx12::OnUpdate()
 {
+   if (imgui)
+      imgui->OnUpdate();
+
    PopulateGraphicsCommandList();
 
    MoveToNextFrame();
@@ -1027,7 +1040,7 @@ void rnd_Dx12::SetBarrier(const std::vector<std::pair<rnd_Texture&, D3D12_RESOUR
       }
    }
    if (!barriers.empty()) {
-      commandList->ResourceBarrier(barriers.size(), barriers.data());
+      commandList->ResourceBarrier((UINT)barriers.size(),barriers.data());
    }
 }
 

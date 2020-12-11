@@ -36,7 +36,13 @@ using DescHandlePair = std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESC
 
 
 class rnd_Dx12;
+class core_Imgui;
+class core_Window;
+
+extern core_Imgui* imgui;
+extern core_Window* window;
 extern rnd_Dx12* renderer;
+
 
 inline void ThrowIfFailed(HRESULT hr, const wchar_t* errMsg = L"")
 {

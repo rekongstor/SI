@@ -41,10 +41,8 @@ bool core_Window::OnInit(int width, int height, LONG winStyle)
       window = CreateWindowEx(0, name, name, winStyle, 0, 0,
          width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
       if (window) {
-         if (window) {
-            ShowWindow(window, SW_SHOWDEFAULT);
-            UpdateWindow(window);
-         }
+         ShowWindow(window, SW_SHOWDEFAULT);
+         UpdateWindow(window);
       }
       return true;
    }

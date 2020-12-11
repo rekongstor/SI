@@ -150,7 +150,7 @@ class rnd_Dx12
 {
 public:
    // Global functions
-   void OnInit(core_Window* window);
+   void OnInit();
    void OnUpdate();
    
    // Graphics
@@ -161,7 +161,6 @@ public:
    void MoveToNextFrame();
 
 #pragma region Core
-   core_Window* window;
    ComPtr<IDXGIFactory6> factory;
    ComPtr<IDXGIAdapter1> adapter;
    ComPtr<ID3D12Device> device;
@@ -296,7 +295,7 @@ public:
 
    void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
    void CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
-   void CreateBufferSRV(SrvBuffer* m_indexBuffer, double param2, int param3);
+   void CreateBufferSRV(SrvBuffer* srvBuffer, int numElements, int strideInBytes);
 
    bool rtxSupported = false;
 #pragma endregion 

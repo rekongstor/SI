@@ -3,23 +3,30 @@
 #include "rnd_DX12.h"
 
 bool procRunning = true;
-rnd_Dx12* renderer;
+core_Imgui* imgui = nullptr;
+core_Window* window = nullptr;
+rnd_Dx12* renderer = nullptr;
+
+extern LRESULT(*imguiProc)(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 int main()
 {
-   core_Imgui imgui;
-   core_Window window;
+   core_Imgui imguiInst;
+   core_Window windowInst;
    rnd_Dx12 rendererInst;
+
+   imgui = &imguiInst;
+   window = &windowInst;
    renderer = &rendererInst;
 
-   imgui.OnInit();
-   if (!window.OnInit(640, 480, WS_POPUPWINDOW))
+   imgui->OnInit();
+
+   if (!window->OnInit(640, 480, WS_POPUPWINDOW))
       return 1;
 
-   renderer->OnInit(&window);
+   imgui->InitWindow();
+   renderer->OnInit();
 
-   imgui.InitWindow(&window);
-   //imgui.InitRender(renderer->device.Get(), renderer->dsvHeap.Get(), renderer->GetCbvSrvUavHandle());
    MSG msg;
    while (procRunning)
    {
