@@ -25,6 +25,12 @@
     <Filter Include="Source Files\DX12">
       <UniqueIdentifier>{6bf2a775-b34d-4415-b5fd-25571c03e55f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DX12\buffers">
+      <UniqueIdentifier>{9e508d34-28ab-4310-81ab-f53393f8879b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DX12\buffers">
+      <UniqueIdentifier>{a097a8a4-7d37-4797-b895-dfdae0890449}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -42,8 +48,14 @@
     <ClCompile Include="rnd_TextureMgr.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="rnd_Texture.cpp">
-      <Filter>Source Files\DX12</Filter>
+    <ClCompile Include="rnd_Texture2D.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_IndexBuffer.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_VertexBuffer.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,14 +74,20 @@
     <ClInclude Include="rnd_TextureMgr.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="rnd_Texture.h">
-      <Filter>Header Files\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="HlslCompat.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="RayTracingHlslCompat.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_Texture2D.h">
+      <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_IndexBuffer.h">
+      <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_VertexBuffer.h">
+      <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

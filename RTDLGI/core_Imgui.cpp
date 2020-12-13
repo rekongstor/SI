@@ -57,5 +57,5 @@ void core_Imgui::OnUpdate()
 void core_Imgui::OnRender()
 {
    ImGui::Render();
-   ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), renderer->commandList.Get());
+   ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), renderer->CommandList());
 }

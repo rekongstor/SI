@@ -1,5 +1,7 @@
 #pragma once
 #include "rnd_TextureMgr.h"
+#include "rnd_IndexBuffer.h"
+#include "rnd_VertexBuffer.h"
 class core_Window;
 
 // TODO: Refactor
@@ -167,8 +169,20 @@ public:
 #pragma endregion
 
 #pragma region Command List
-   void SetBarrier(const std::vector<std::pair<rnd_Texture&, D3D12_RESOURCE_STATES>>& texturesStates);
+   void SetBarrier(const std::vector<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates);
 
+   // TODO: After we'll settle fences and barriers, we'll need to get proper command lists, queues and allocators
+   ID3D12CommandQueue* CommandQueue() { return commandQueue.Get(); }
+   ID3D12CommandQueue* CommandQueueCompute() { return commandQueue.Get(); } 
+   ID3D12CommandQueue* CommandQueueCopy() { return commandQueue.Get(); }
+   ID3D12CommandAllocator* CommandAllocator() { return commandAllocators[currentFrame].Get(); }
+   ID3D12CommandAllocator* CommandAllocatorCompute() { return commandAllocators[currentFrame].Get(); }
+   ID3D12CommandAllocator* CommandAllocatorCopy() { return commandAllocators[currentFrame].Get(); }
+   ID3D12GraphicsCommandList* CommandList() { return commandList.Get(); }
+   ID3D12GraphicsCommandList* CommandListCompute() { return commandList.Get(); }
+   ID3D12GraphicsCommandList* CommandListCopy() { return commandList.Get(); }
+
+private:
    ComPtr<ID3D12CommandQueue> commandQueue;
    ComPtr<ID3D12CommandQueue> commandQueueCompute;
    ComPtr<ID3D12CommandQueue> commandQueueCopy;
@@ -178,6 +192,7 @@ public:
    ComPtr<ID3D12GraphicsCommandList> commandList;
    ComPtr<ID3D12GraphicsCommandList> commandListCompute;
    ComPtr<ID3D12GraphicsCommandList> commandListCopy;
+public:
 #pragma endregion 
 
 #pragma region Descriptor heaps
@@ -264,8 +279,9 @@ public:
    CubeConstantBuffer m_cubeCB;
 
    // Geometry
-   SrvBuffer m_indexBuffer;
-   SrvBuffer m_vertexBuffer;
+   rnd_IndexBuffer indexBuffer;
+   rnd_VertexBuffer vertexBuffer;
+   
 
    // Acceleration structure
    ComPtr<ID3D12Resource> m_bottomLevelAccelerationStructure;
@@ -295,11 +311,14 @@ public:
 
    void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
    void CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
-   void CreateBufferSRV(SrvBuffer* srvBuffer, int numElements, int strideInBytes);
 
    bool rtxSupported = false;
 #pragma endregion 
 
    rnd_TextureMgr textureMgr;
+
+   void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, ComPtr<ID3D12Resource> buffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
+   void ResolveUploadBuffer();
+   std::vector<UploadPair> uploadBuffers;
 };
 

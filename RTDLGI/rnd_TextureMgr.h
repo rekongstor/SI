@@ -1,11 +1,11 @@
 #pragma once
-#include "rnd_Texture.h"
+#include "rnd_Texture2D.h"
 
 class rnd_TextureMgr
 {
 public:
-   rnd_Texture backBuffer[FRAME_COUNT];
+   rnd_Texture2D backBuffer[FRAME_COUNT];
 
-   rnd_Texture rayTracingOutput;
+   rnd_Texture2D rayTracingOutput;
 };
 

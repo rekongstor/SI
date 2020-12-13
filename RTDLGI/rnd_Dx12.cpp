@@ -4,7 +4,7 @@
 #include "RayTracingHlslCompat.h"
 #include <Raytracing.hlsl.h>
 
-wchar_t name[256]{ 0 };
+wchar_t nameBuffer[256] {};
 
 #pragma region RT helpers
 
@@ -247,7 +247,7 @@ void rnd_Dx12::OnInit()
 #pragma region CommandAllocators
    for (int i = 0; i < FRAME_COUNT; ++i)
    {
-      swprintf(name, _countof(name), L"COMMAND ALLOCATOR %d: Direct", i);
+      LPCWSTR name = FormatWStr(L"COMMAND ALLOCATOR %d: Direct", i);
       ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocators[i])));
       commandAllocators[i]->SetName(name); 
    }
@@ -263,7 +263,7 @@ void rnd_Dx12::OnInit()
       D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[0].Get(), /* Initial PSO */ nullptr,
       IID_PPV_ARGS(&commandList)));
    commandList->SetName(L"Command List Direct");
-   commandList->Close();
+   //commandList->Close();
 
    ThrowIfFailed(device->CreateCommandList(        /*multi-gpu*/ 0,
       D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocatorCompute.Get(), /* Initial PSO */ nullptr,
@@ -348,10 +348,10 @@ void rnd_Dx12::OnInit()
    ID3D12Resource* backBuffer;
    for (int i = 0; i < FRAME_COUNT; ++i)
    {
-      swprintf(name, _countof(name), L"BackBuffer_%d", i);
+      LPCWSTR name = FormatWStr(L"BackBuffer_%d", i);
       ThrowIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
       textureMgr.backBuffer[i].OnInit(backBuffer, swapChainFormat, D3D12_RESOURCE_STATE_PRESENT, name);
-      textureMgr.backBuffer[i].CreateRtv(device.Get(), GetRtvHandle());
+      textureMgr.backBuffer[i].CreateRtv();
    }
 #pragma endregion
 
@@ -515,7 +515,7 @@ void rnd_Dx12::DoRaytracing()
    {
       descriptorSetCommandList->SetDescriptorHeaps(1, cbvSrvUavHeap.GetAddressOf());
       // Set index and successive vertex buffer descriptor tables
-      commandList->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, m_indexBuffer.srvDescHandle.second);
+      commandList->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, indexBuffer.srvHandle.second);
       commandList->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, textureMgr.rayTracingOutput.srvHandle.second);
    };
 
@@ -709,13 +709,13 @@ void rnd_Dx12::BuildGeometry()
        { XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
    };
 
-   AllocateUploadBuffer(device.Get(), indices, sizeof(indices), &m_indexBuffer.buffer);
-   AllocateUploadBuffer(device.Get(), vertices, sizeof(vertices), &m_vertexBuffer.buffer);
+   indexBuffer.OnInit(indices, sizeof(indices), L"INDEX BUFFER");
+   vertexBuffer.OnInit(vertices, sizeof(vertices), sizeof(vertices[0]), L"VERTEX BUFFER");
 
-   // Vertex buffer is passed to the shader along with index buffer as a descriptor table.
-   // Vertex buffer descriptor must follow index buffer descriptor in the descriptor heap.
-   CreateBufferSRV(&m_indexBuffer, sizeof(indices) / 4, 0);
-   CreateBufferSRV(&m_vertexBuffer, ARRAYSIZE(vertices), sizeof(vertices[0]));
+   indexBuffer.CreateSrv();
+   vertexBuffer.CreateSrv();
+
+   ResolveUploadBuffer();
 }
 
 void rnd_Dx12::BuildAccelerationStructures()
@@ -727,13 +727,13 @@ void rnd_Dx12::BuildAccelerationStructures()
 
    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
    geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-   geometryDesc.Triangles.IndexBuffer = m_indexBuffer.buffer->GetGPUVirtualAddress();
-   geometryDesc.Triangles.IndexCount = static_cast<UINT>(m_indexBuffer.buffer->GetDesc().Width) / sizeof(Index);
+   geometryDesc.Triangles.IndexBuffer = indexBuffer.buffer->GetGPUVirtualAddress();
+   geometryDesc.Triangles.IndexCount = static_cast<UINT>(indexBuffer.buffer->GetDesc().Width) / sizeof(Index);
    geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R16_UINT;
    geometryDesc.Triangles.Transform3x4 = 0;
    geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-   geometryDesc.Triangles.VertexCount = static_cast<UINT>(m_vertexBuffer.buffer->GetDesc().Width) / sizeof(Vertex);
-   geometryDesc.Triangles.VertexBuffer.StartAddress = m_vertexBuffer.buffer->GetGPUVirtualAddress();
+   geometryDesc.Triangles.VertexCount = static_cast<UINT>(vertexBuffer.buffer->GetDesc().Width) / sizeof(Vertex);
+   geometryDesc.Triangles.VertexBuffer.StartAddress = vertexBuffer.buffer->GetGPUVirtualAddress();
    geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
 
    // Mark the geometry as opaque. 
@@ -948,28 +948,6 @@ void rnd_Dx12::CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* ray
       rootSignatureAssociation->AddExport(hitGroupName);
    }
 }
-
-void rnd_Dx12::CreateBufferSRV(SrvBuffer* srvBuffer, int numElements, int strideInBytes)
-{
-   // SRV
-   D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-   srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-   srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-   srvDesc.Buffer.NumElements = numElements;
-   if (strideInBytes == 0) {
-      srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-      srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
-      srvDesc.Buffer.StructureByteStride = 0;
-   } else {
-      srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-      srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-      srvDesc.Buffer.StructureByteStride = strideInBytes;
-   }
-   auto descHandle = renderer->GetCbvSrvUavHandle();
-   srvBuffer->srvDescHandle.first = descHandle.first;
-   srvBuffer->srvDescHandle.second = descHandle.second;
-   device->CreateShaderResourceView(srvBuffer->buffer.Get(), &srvDesc, descHandle.first);
-}
 #pragma endregion 
 
 #pragma region Functional
@@ -1030,7 +1008,7 @@ void rnd_Dx12::WaitForGpu()
    }
 }
 
-void rnd_Dx12::SetBarrier(const std::vector<std::pair<rnd_Texture&, D3D12_RESOURCE_STATES>>& texturesStates)
+void rnd_Dx12::SetBarrier(const std::vector<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates)
 {
    std::vector<D3D12_RESOURCE_BARRIER> barriers;
    for (auto& texSt : texturesStates) {
@@ -1041,6 +1019,23 @@ void rnd_Dx12::SetBarrier(const std::vector<std::pair<rnd_Texture&, D3D12_RESOUR
    }
    if (!barriers.empty()) {
       commandList->ResourceBarrier((UINT)barriers.size(),barriers.data());
+   }
+}
+
+void rnd_Dx12::AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, ComPtr<ID3D12Resource> buffer)
+{
+   uploadBuffers.push_back({uploadBuffer, buffer}); 
+}
+
+void rnd_Dx12::ResolveUploadBuffer()
+{
+   if (!uploadBuffers.empty())
+   {
+      ExecuteCommandList(); // TODO: Execute COPY command list!
+
+      WaitForGpu(); // TODO: COPY realization
+
+      uploadBuffers.clear();
    }
 }
 
