@@ -8,12 +8,13 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //*********************************************************
-
 #ifndef RAYTRACING_HLSL
 #define RAYTRACING_HLSL
 
 #define HLSL
 #include "RaytracingHlslCompat.h"
+#include "SceneConstBuf.h"
+#include "CubeConstBuf.h"
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 RWTexture2D<float4> RenderTarget : register(u0);

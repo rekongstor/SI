@@ -15,16 +15,16 @@ int main()
    core_Window windowInst;
    rnd_Dx12 rendererInst;
 
-   imgui = &imguiInst;
+   //imgui = &imguiInst;
    window = &windowInst;
    renderer = &rendererInst;
 
-   imgui->OnInit();
+   imguiInst.OnInit();
 
    if (!window->OnInit(640, 480, WS_POPUPWINDOW))
       return 1;
 
-   imgui->InitWindow();
+   imguiInst.InitWindow();
    renderer->OnInit();
 
    MSG msg;

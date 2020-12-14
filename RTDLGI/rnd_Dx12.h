@@ -1,4 +1,6 @@
 #pragma once
+#include "PassRaytracing.h"
+#include "rnd_ConstantBufferMgr.h"
 #include "rnd_TextureMgr.h"
 #include "rnd_IndexBuffer.h"
 #include "rnd_VertexBuffer.h"
@@ -243,79 +245,41 @@ public:
 #pragma endregion
 
 #pragma region Raytracing
+   PassRaytracing rtxPass;
+
    void InitRaytracing();
-   void UpdateCameraMatrices();
    void DoRaytracing();
    void CopyRaytracingOutputToBackbuffer();
 
    // DirectX Raytracing (DXR) attributes
    ComPtr<ID3D12Device5> m_dxrDevice;
    ComPtr<ID3D12GraphicsCommandList5> m_dxrCommandList;
-   ComPtr<ID3D12StateObject> m_dxrStateObject;
 
    // Root signatures
    ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
-   ComPtr<ID3D12RootSignature> m_raytracingLocalRootSignature;
-
-   struct CubeConstantBuffer
-   {
-      XMFLOAT4 albedo;
-   };
-
-   struct SceneConstantBuffer
-   {
-      XMMATRIX projectionToWorld;
-      XMVECTOR cameraPosition;
-      XMVECTOR lightPosition;
-      XMVECTOR lightAmbientColor;
-      XMVECTOR lightDiffuseColor;
-   };
-
-   // Raytracing scene
-   XMVECTOR m_eye;
-   XMVECTOR m_at;
-   XMVECTOR m_up;
-   SceneConstantBuffer m_sceneCB[FRAME_COUNT];
-   CubeConstantBuffer m_cubeCB;
 
    // Geometry
    rnd_IndexBuffer indexBuffer;
    rnd_VertexBuffer vertexBuffer;
-   
 
    // Acceleration structure
    ComPtr<ID3D12Resource> m_bottomLevelAccelerationStructure;
    ComPtr<ID3D12Resource> m_topLevelAccelerationStructure;
 
-   // Shader tables
-   ComPtr<ID3D12Resource> m_missShaderTable;
-   ComPtr<ID3D12Resource> m_hitGroupShaderTable;
-   ComPtr<ID3D12Resource> m_rayGenShaderTable;
-
-   void CreateRaytracingPipelineStateObject();
    void CreateRaytracingInterfaces();
    void CreateRootSignatures();
    void BuildGeometry();
    void BuildAccelerationStructures();
    void CreateConstantBuffers();
-   void BuildShaderTables();
    void CreateRaytracingOutputResource();
 
-   union AlignedSceneConstantBuffer
-   {
-      SceneConstantBuffer constants;
-      uint8_t alignmentPadding[AlignConst(sizeof(SceneConstantBuffer), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)];
-   };
-   AlignedSceneConstantBuffer* m_mappedConstantData;
-   ComPtr<ID3D12Resource>       m_perFrameConstants;
-
    void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
-   void CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
 
    bool rtxSupported = false;
 #pragma endregion 
 
    rnd_TextureMgr textureMgr;
+   rnd_ConstantBufferMgr constantBufferMgr;
 
    void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, ComPtr<ID3D12Resource> buffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
    void ResolveUploadBuffer();

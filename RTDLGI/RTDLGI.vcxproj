@@ -159,18 +159,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="rnd_ConstantBufferMgr.cpp" />
+    <ClCompile Include="rnd_ConstantBuffer.cpp" />
+    <ClCompile Include="CubeConstBuf.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="core_Imgui.cpp" />
+    <ClCompile Include="PassRaytracing.cpp" />
     <ClCompile Include="rnd_Dx12.cpp" />
     <ClCompile Include="core_Window.cpp" />
     <ClCompile Include="rnd_IndexBuffer.cpp" />
     <ClCompile Include="rnd_Texture2D.cpp" />
     <ClCompile Include="rnd_TextureMgr.cpp" />
     <ClCompile Include="rnd_VertexBuffer.cpp" />
+    <ClCompile Include="SceneConstBuf.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="rnd_ConstantBufferMgr.h" />
+    <ClInclude Include="rnd_ConstantBuffer.h" />
     <ClInclude Include="core_Imgui.h" />
+    <ClInclude Include="CubeConstBuf.h" />
     <ClInclude Include="HlslCompat.h" />
+    <ClInclude Include="PassRaytracing.h" />
     <ClInclude Include="RayTracingHlslCompat.h" />
     <ClInclude Include="rnd_Dx12.h" />
     <ClInclude Include="core_Window.h" />
@@ -178,6 +187,7 @@
     <ClInclude Include="rnd_Texture2D.h" />
     <ClInclude Include="rnd_TextureMgr.h" />
     <ClInclude Include="rnd_VertexBuffer.h" />
+    <ClInclude Include="SceneConstBuf.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

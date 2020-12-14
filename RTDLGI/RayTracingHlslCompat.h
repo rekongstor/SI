@@ -46,20 +46,6 @@ static const wchar_t* hitGroupName = L"_" QUOTE(HIT_GROUP);
 #endif
 
 
-struct SceneConstantBuffer
-{
-    XMMATRIX projectionToWorld;
-    XMVECTOR cameraPosition;
-    XMVECTOR lightPosition;
-    XMVECTOR lightAmbientColor;
-    XMVECTOR lightDiffuseColor;
-};
-
-struct CubeConstantBuffer
-{
-    XMFLOAT4 albedo;
-};
-
 struct Vertex
 {
     XMFLOAT3 position;

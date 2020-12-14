@@ -31,6 +31,24 @@
     <Filter Include="Header Files\DX12\buffers">
       <UniqueIdentifier>{a097a8a4-7d37-4797-b895-dfdae0890449}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\DX12\constantBuffers">
+      <UniqueIdentifier>{ac9c016e-80f1-44f5-b2a4-a0656fceb0d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\constantBuffers">
+      <UniqueIdentifier>{fb391869-7631-4447-859a-dc073833c31e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DX12\passes">
+      <UniqueIdentifier>{5a6df074-12f3-41cc-bec7-0cdfb8b8c8f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\passes">
+      <UniqueIdentifier>{e06585ec-bb5c-450d-8232-bfc07cc2b963}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\constantBuffers\CBs">
+      <UniqueIdentifier>{7351d7f3-2676-4879-813d-45e9e8b2007f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DX12\constantBuffers\CBs">
+      <UniqueIdentifier>{a834e247-9202-4d21-b795-37757ac5fc31}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -56,6 +74,21 @@
     </ClCompile>
     <ClCompile Include="rnd_VertexBuffer.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="PassRaytracing.cpp">
+      <Filter>Source Files\DX12\passes</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_ConstantBufferMgr.cpp">
+      <Filter>Source Files\DX12\constantBuffers</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_ConstantBuffer.cpp">
+      <Filter>Source Files\DX12\constantBuffers</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneConstBuf.cpp">
+      <Filter>Source Files\DX12\constantBuffers\CBs</Filter>
+    </ClCompile>
+    <ClCompile Include="CubeConstBuf.cpp">
+      <Filter>Source Files\DX12\constantBuffers\CBs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +121,21 @@
     </ClInclude>
     <ClInclude Include="rnd_VertexBuffer.h">
       <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_ConstantBufferMgr.h">
+      <Filter>Header Files\DX12\constantBuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_ConstantBuffer.h">
+      <Filter>Header Files\DX12\constantBuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="CubeConstBuf.h">
+      <Filter>Header Files\DX12\constantBuffers\CBs</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneConstBuf.h">
+      <Filter>Header Files\DX12\constantBuffers\CBs</Filter>
+    </ClInclude>
+    <ClInclude Include="PassRaytracing.h">
+      <Filter>Header Files\DX12\passes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
