@@ -9,7 +9,7 @@ struct CubeConstantBuffer
 #ifndef HLSL
 #include "rnd_ConstantBuffer.h"
 
-class CubeConstBuf : public CubeConstantBuffer, public rnd_ConstantBuffer
+class CubeConstBuf : public CubeConstantBuffer, public rnd_ImmutableConstBuffer<CubeConstantBuffer>
 {
    void OnInit(LPCWSTR name) override;
    void Update() override;

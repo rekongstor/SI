@@ -121,15 +121,9 @@ void PassRaytracing::OnInit()
 {
    cubeCb = dynamic_cast<CubeConstBuf*>(renderer->constantBufferMgr.Get(cubeCbName));
    sceneCb[0] = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(sceneCbName0));
-   sceneCb[1] = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(sceneCbName1));
+   sceneCb[1] = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(sceneCbName0));
 
    InitializeScene();
-
-   CreateRootSignature();
-
-   CreateRaytracingPipelineStateObject();
-
-   BuildShaderTables();
 }
 
 void PassRaytracing::CreateRootSignature()
@@ -174,20 +168,18 @@ void PassRaytracing::InitializeScene()
       XMFLOAT4 lightDiffuseColor;
 
       lightPosition = XMFLOAT4(0.0f, 1.8f, -3.0f, 0.0f);
-      sceneCb[renderer->currentFrame]->lightPosition = XMLoadFloat4(&lightPosition);
+      sceneCb[0]->lightPosition = XMLoadFloat4(&lightPosition);
+      sceneCb[1]->lightPosition = XMLoadFloat4(&lightPosition);
 
       lightAmbientColor = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-      sceneCb[renderer->currentFrame]->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
+      sceneCb[0]->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
+      sceneCb[1]->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
 
       lightDiffuseColor = XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f);
-      sceneCb[renderer->currentFrame]->lightDiffuseColor = XMLoadFloat4(&lightDiffuseColor);
+      sceneCb[0]->lightDiffuseColor = XMLoadFloat4(&lightDiffuseColor);
+      sceneCb[1]->lightDiffuseColor = XMLoadFloat4(&lightDiffuseColor);
    }
 
-   // Apply the initial values to all frames' buffer instances.
-   for (auto& sceneCB : sceneCb)
-   {
-      sceneCB = sceneCb[renderer->currentFrame];
-   }
 }
 
 void PassRaytracing::Execute()
@@ -245,10 +237,8 @@ void PassRaytracing::Execute()
 
    // Copy the updated scene constant buffer to GPU.
    // This should be already updated from cbMgr->Update()
-   // TODO: Make update
-   // memcpy(&m_mappedConstantData[frameIndex].constants, &m_sceneCB[frameIndex], sizeof(m_sceneCB[frameIndex]));
-   auto cbGpuAddress = sceneCb[frameIndex]->buffer->GetGPUVirtualAddress();
-
+   sceneCb[frameIndex]->Update();
+   auto cbGpuAddress = sceneCb[frameIndex]->buffer->GetGPUVirtualAddress() + frameIndex * sizeof(sceneCb[frameIndex]->mappedData[0]);
    renderer->CommandList()->SetComputeRootConstantBufferView(GlobalRootSignatureParams::SceneConstantSlot, cbGpuAddress);
 
    // Bind the heaps, acceleration structure and dispatch rays.

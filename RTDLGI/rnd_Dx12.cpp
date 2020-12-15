@@ -250,8 +250,8 @@ void rnd_Dx12::OnInit()
 
    constantBufferMgr.InitConstBuffers();
 
-   InitRaytracing();
    rtxPass.OnInit();
+   InitRaytracing();
 
    if (imgui)
       imgui->InitRender();
@@ -288,13 +288,16 @@ void rnd_Dx12::InitRaytracing()
 
    // Create root signatures for the shaders.
    CreateRootSignatures();
+   rtxPass.CreateRootSignature();
 
+   rtxPass.CreateRaytracingPipelineStateObject();
    // Build geometry to be used in the sample.
    BuildGeometry();
 
    // Build raytracing acceleration structures from the generated geometry.
    BuildAccelerationStructures();
 
+   rtxPass.BuildShaderTables();
    // Create an output 2D texture to store the raytracing result to.
    CreateRaytracingOutputResource();
 }
@@ -553,7 +556,7 @@ void rnd_Dx12::OnUpdate()
    if (imgui)
       imgui->OnUpdate();
 
-   constantBufferMgr.UpdateConstBuffers();
+   //constantBufferMgr.UpdateConstBuffers();
 
    PopulateGraphicsCommandList();
 

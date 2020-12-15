@@ -15,6 +15,7 @@ struct SceneConstantBuffer
 
 class SceneConstBuf : public SceneConstantBuffer, public rnd_ImmutableConstBuffer<SceneConstantBuffer>
 {
+public:
    void OnInit(LPCWSTR name) override;
    void Update() override;
 };

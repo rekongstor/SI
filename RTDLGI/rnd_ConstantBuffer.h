@@ -20,7 +20,12 @@ class rnd_ImmutableConstBuffer : public rnd_ConstantBuffer
 {
 public:
    void OnInit(LPCWSTR name) = 0;
-   T* mappedData = nullptr;
+   union AlignedData
+   {
+      T buffer;
+      uint8_t alignment[AlignConst(sizeof(T), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT)];
+   };
+   AlignedData* mappedData;
 };
 
 
@@ -37,7 +42,7 @@ template<class T>
 class ConstBufInitializer : public rnd_ConstBufferInitializer
 {
 public:
-   T constBuf;
+      T constBuf;
 
    ConstBufInitializer(LPCWSTR name) : rnd_ConstBufferInitializer(name, &constBuf) {}
 };
