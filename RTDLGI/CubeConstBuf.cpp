@@ -1,7 +1,7 @@
 #include "CubeConstBuf.h"
 #include "rnd_Dx12.h"
 
-const ConstBufInitializer<CubeConstBuf> cubeCbName(L"CubeConstBuffer");
+const ConstBufInitializer<CubeConstBuf> CUBE_CB(L"CubeConstBuffer");
 
 void CubeConstBuf::OnInit(LPCWSTR name)
 {

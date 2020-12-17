@@ -16,12 +16,17 @@
 #include "SceneConstBuf.h"
 #include "CubeConstBuf.h"
 
-RaytracingAccelerationStructure Scene : register(t0, space0);
+// Global root signature
 RWTexture2D<float4> RenderTarget : register(u0);
+
+RaytracingAccelerationStructure Scene : register(t0, space0);
+
+ConstantBuffer<SceneConstantBuffer> g_sceneCB : register(b0);
+
 ByteAddressBuffer Indices : register(t1, space0);
 StructuredBuffer<Vertex> Vertices : register(t2, space0);
 
-ConstantBuffer<SceneConstantBuffer> g_sceneCB : register(b0);
+// Local root signature
 ConstantBuffer<CubeConstantBuffer> g_cubeCB : register(b1);
 
 // Load three 16 bit indices from a byte addressed buffer.

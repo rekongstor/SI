@@ -90,6 +90,9 @@
     <ClCompile Include="CubeConstBuf.cpp">
       <Filter>Source Files\DX12\constantBuffers\CBs</Filter>
     </ClCompile>
+    <ClCompile Include="rnd_RootSignatureMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h">
@@ -136,6 +139,12 @@
     </ClInclude>
     <ClInclude Include="PassRaytracing.h">
       <Filter>Header Files\DX12\passes</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_RootSignatureMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DBuffer.h">
+      <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

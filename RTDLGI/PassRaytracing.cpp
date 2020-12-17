@@ -119,24 +119,15 @@ inline void PrintStateObjectDesc(const D3D12_STATE_OBJECT_DESC* desc)
 
 void PassRaytracing::OnInit()
 {
-   cubeCb = dynamic_cast<CubeConstBuf*>(renderer->constantBufferMgr.Get(cubeCbName));
-   sceneCb[0] = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(sceneCbName0));
-   sceneCb[1] = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(sceneCbName0));
+   cubeCb = dynamic_cast<CubeConstBuf*>(renderer->constantBufferMgr.Get(CUBE_CB));
+   sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
 
    InitializeScene();
 }
 
 void PassRaytracing::CreateRootSignature()
 {
-   // Local Root Signature
-   // This is a root signature that enables a shader to have unique arguments that come from shader tables.
-   {
-      CD3DX12_ROOT_PARAMETER rootParameters[LocalRootSignatureParams::Count];
-      rootParameters[LocalRootSignatureParams::CubeConstantSlot].InitAsConstants(SizeOfInUint32(CubeConstantBuffer), 1);
-      CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
-      localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-      renderer->SerializeAndCreateRaytracingRootSignature(localRootSignatureDesc, &m_raytracingLocalRootSignature);
-   }
+   m_raytracingLocalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ Const(SizeOfInUint32(CubeConstantBuffer), 1) }, {}, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
 }
 
 void PassRaytracing::InitializeScene()
@@ -168,16 +159,13 @@ void PassRaytracing::InitializeScene()
       XMFLOAT4 lightDiffuseColor;
 
       lightPosition = XMFLOAT4(0.0f, 1.8f, -3.0f, 0.0f);
-      sceneCb[0]->lightPosition = XMLoadFloat4(&lightPosition);
-      sceneCb[1]->lightPosition = XMLoadFloat4(&lightPosition);
+      sceneCb->lightPosition = XMLoadFloat4(&lightPosition);
 
       lightAmbientColor = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-      sceneCb[0]->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
-      sceneCb[1]->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
+      sceneCb->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
 
       lightDiffuseColor = XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f);
-      sceneCb[0]->lightDiffuseColor = XMLoadFloat4(&lightDiffuseColor);
-      sceneCb[1]->lightDiffuseColor = XMLoadFloat4(&lightDiffuseColor);
+      sceneCb->lightDiffuseColor = XMLoadFloat4(&lightDiffuseColor);
    }
 
 }
@@ -200,8 +188,8 @@ void PassRaytracing::Execute()
       float secondsToRotateAround = 8.0f;
       float angleToRotateBy = -360.0f * (0.f / secondsToRotateAround);
       XMMATRIX rotate = XMMatrixRotationY(XMConvertToRadians(angleToRotateBy));
-      const XMVECTOR& prevLightPosition = sceneCb[renderer->PreviousFrame()]->lightPosition;
-      sceneCb[renderer->currentFrame]->lightPosition = XMVector3Transform(prevLightPosition, rotate);
+      const XMVECTOR prevLightPosition = sceneCb->lightPosition;
+      sceneCb->lightPosition = XMVector3Transform(prevLightPosition, rotate);
    }
 
 
@@ -230,22 +218,22 @@ void PassRaytracing::Execute()
       descriptorSetCommandList->SetDescriptorHeaps(1, renderer->cbvSrvUavHeap.GetAddressOf());
       // Set index and successive vertex buffer descriptor tables
       renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, renderer->indexBuffer.srvHandle.second);
-      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.rayTracingOutput.srvHandle.second);
+      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.rayTracingOutput.uavHandle.second);
    };
 
    renderer->CommandList()->SetComputeRootSignature(renderer->m_raytracingGlobalRootSignature.Get());
 
    // Copy the updated scene constant buffer to GPU.
    // This should be already updated from cbMgr->Update()
-   sceneCb[frameIndex]->Update();
-   auto cbGpuAddress = sceneCb[frameIndex]->buffer->GetGPUVirtualAddress() + frameIndex * sizeof(sceneCb[frameIndex]->mappedData[0]);
+   sceneCb->Update();
+   auto cbGpuAddress = sceneCb->buffer->GetGPUVirtualAddress() + frameIndex * sizeof(sceneCb->mappedData[0]);
    renderer->CommandList()->SetComputeRootConstantBufferView(GlobalRootSignatureParams::SceneConstantSlot, cbGpuAddress);
 
    // Bind the heaps, acceleration structure and dispatch rays.
    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
    SetCommonPipelineState(renderer->CommandList());
-   renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->m_topLevelAccelerationStructure->GetGPUVirtualAddress());
-   DispatchRays(renderer->m_dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc);
+   renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->topLevelAccelerationStructure->GetGPUVirtualAddress());
+   DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc);
 }
 
 void PassRaytracing::UpdateCameraMatrices()
@@ -253,13 +241,13 @@ void PassRaytracing::UpdateCameraMatrices()
    // Update camera matrices passed into the shader.
    auto frameIndex = renderer->currentFrame;
 
-   sceneCb[frameIndex]->cameraPosition = m_eye;
+   sceneCb->cameraPosition = m_eye;
    float fovAngleY = 45.0f;
    XMMATRIX view = XMMatrixLookAtLH(m_eye, m_at, m_up);
    XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), (float)window->width / (float)window->height, 1.0f, 125.0f);
    XMMATRIX viewProj = view * proj;
 
-   sceneCb[frameIndex]->projectionToWorld = XMMatrixInverse(nullptr, viewProj);
+   sceneCb->projectionToWorld = XMMatrixInverse(nullptr, viewProj);
 }
 
 void PassRaytracing::CreateRaytracingPipelineStateObject()
@@ -330,7 +318,7 @@ void PassRaytracing::CreateRaytracingPipelineStateObject()
 #endif
 
    // Create the state object.
-   ThrowIfFailed(renderer->m_dxrDevice->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&m_dxrStateObject)), L"Couldn't create DirectX Raytracing state object.\n");
+   ThrowIfFailed(renderer->dxrDevice->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&m_dxrStateObject)), L"Couldn't create DirectX Raytracing state object.\n");
 }
 
 void PassRaytracing::CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline)

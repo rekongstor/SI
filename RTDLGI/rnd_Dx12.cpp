@@ -3,7 +3,7 @@
 #include "core_Imgui.h"
 #include "RayTracingHlslCompat.h"
 
-wchar_t nameBuffer[256] {};
+wchar_t nameBuffer[256]{};
 
 #pragma region RT helpers
 
@@ -243,7 +243,7 @@ void rnd_Dx12::OnInit()
    {
       LPCWSTR name = FormatWStr(L"BackBuffer_%d", i);
       ThrowIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
-      textureMgr.backBuffer[i].OnInit(backBuffer, swapChainFormat, D3D12_RESOURCE_STATE_PRESENT, name);
+      textureMgr.backBuffer[i].OnInit(backBuffer, D3D12_RESOURCE_STATE_PRESENT, name);
       textureMgr.backBuffer[i].CreateRtv();
    }
 #pragma endregion
@@ -284,10 +284,21 @@ void rnd_Dx12::PopulateGraphicsCommandList()
 void rnd_Dx12::InitRaytracing()
 {
    // Create raytracing interfaces: raytracing device and commandlist.
-   CreateRaytracingInterfaces();
+   ThrowIfFailed(device->QueryInterface(IID_PPV_ARGS(&dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
+   ThrowIfFailed(commandList->QueryInterface(IID_PPV_ARGS(&dxrCommandList)), L"Couldn't get DirectX Raytracing interface for the command list.\n");
 
    // Create root signatures for the shaders.
-   CreateRootSignatures();
+   m_raytracingGlobalRootSignature = rootSignatureMgr.CreateRootSignature({
+      DescTable({
+         DescRange(RngType::UAV, 1, 0)
+      }),
+      SRV(0),
+      CBV(0),
+      DescTable({
+         DescRange(RngType::SRV, 2, 1)
+      })
+      });
+
    rtxPass.CreateRootSignature();
 
    rtxPass.CreateRaytracingPipelineStateObject();
@@ -317,31 +328,6 @@ void rnd_Dx12::CopyRaytracingOutputToBackbuffer()
    commandList->CopyResource(renderTarget.buffer.Get(), rayTracingOutput.buffer.Get());
 
    SetBarrier({ {renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET}, {rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} }); // TODO: Do I need this?
-}
-
-void rnd_Dx12::CreateRaytracingInterfaces()
-{
-   ThrowIfFailed(device->QueryInterface(IID_PPV_ARGS(&m_dxrDevice)), L"Couldn't get DirectX Raytracing interface for the device.\n");
-   ThrowIfFailed(commandList->QueryInterface(IID_PPV_ARGS(&m_dxrCommandList)), L"Couldn't get DirectX Raytracing interface for the command list.\n");
-}
-
-void rnd_Dx12::CreateRootSignatures()
-{
-   // Global Root Signature
-   // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
-   {
-      CD3DX12_DESCRIPTOR_RANGE ranges[2]; // Performance TIP: Order from most frequent to least frequent.
-      ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);  // 1 output texture
-      ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);  // 2 static index and vertex buffers.
-
-      CD3DX12_ROOT_PARAMETER rootParameters[GlobalRootSignatureParams::Count];
-      rootParameters[GlobalRootSignatureParams::OutputViewSlot].InitAsDescriptorTable(1, &ranges[0]);
-      rootParameters[GlobalRootSignatureParams::AccelerationStructureSlot].InitAsShaderResourceView(0);
-      rootParameters[GlobalRootSignatureParams::SceneConstantSlot].InitAsConstantBufferView(0);
-      rootParameters[GlobalRootSignatureParams::VertexBuffersSlot].InitAsDescriptorTable(1, &ranges[1]);
-      CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
-      SerializeAndCreateRaytracingRootSignature(globalRootSignatureDesc, &m_raytracingGlobalRootSignature);
-   }
 }
 
 void rnd_Dx12::BuildGeometry()
@@ -454,11 +440,11 @@ void rnd_Dx12::BuildAccelerationStructures()
    topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
 
    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo = {};
-   m_dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
+   dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
    ThrowIfFalse(topLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
 
    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo = {};
-   m_dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
+   dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
    ThrowIfFalse(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
 
    ComPtr<ID3D12Resource> scratchResource;
@@ -474,8 +460,8 @@ void rnd_Dx12::BuildAccelerationStructures()
    {
       D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 
-      AllocateUAVBuffer(device.Get(), bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, &m_bottomLevelAccelerationStructure, initialResourceState, L"BottomLevelAccelerationStructure");
-      AllocateUAVBuffer(device.Get(), topLevelPrebuildInfo.ResultDataMaxSizeInBytes, &m_topLevelAccelerationStructure, initialResourceState, L"TopLevelAccelerationStructure");
+      AllocateUAVBuffer(device.Get(), bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, &bottomLevelAccelerationStructure, initialResourceState, L"BottomLevelAccelerationStructure");
+      AllocateUAVBuffer(device.Get(), topLevelPrebuildInfo.ResultDataMaxSizeInBytes, &topLevelAccelerationStructure, initialResourceState, L"TopLevelAccelerationStructure");
    }
 
    // Create an instance desc for the bottom-level acceleration structure.
@@ -483,18 +469,18 @@ void rnd_Dx12::BuildAccelerationStructures()
    D3D12_RAYTRACING_INSTANCE_DESC instanceDesc = {};
    instanceDesc.Transform[0][0] = instanceDesc.Transform[1][1] = instanceDesc.Transform[2][2] = 1;
    instanceDesc.InstanceMask = 1;
-   instanceDesc.AccelerationStructure = m_bottomLevelAccelerationStructure->GetGPUVirtualAddress();
+   instanceDesc.AccelerationStructure = bottomLevelAccelerationStructure->GetGPUVirtualAddress();
    AllocateUploadBuffer(device.Get(), &instanceDesc, sizeof(instanceDesc), &instanceDescs, L"InstanceDescs");
 
    // Bottom Level Acceleration Structure desc
    {
       bottomLevelBuildDesc.ScratchAccelerationStructureData = scratchResource->GetGPUVirtualAddress();
-      bottomLevelBuildDesc.DestAccelerationStructureData = m_bottomLevelAccelerationStructure->GetGPUVirtualAddress();
+      bottomLevelBuildDesc.DestAccelerationStructureData = bottomLevelAccelerationStructure->GetGPUVirtualAddress();
    }
 
    // Top Level Acceleration Structure desc
    {
-      topLevelBuildDesc.DestAccelerationStructureData = m_topLevelAccelerationStructure->GetGPUVirtualAddress();
+      topLevelBuildDesc.DestAccelerationStructureData = topLevelAccelerationStructure->GetGPUVirtualAddress();
       topLevelBuildDesc.ScratchAccelerationStructureData = scratchResource->GetGPUVirtualAddress();
       topLevelBuildDesc.Inputs.InstanceDescs = instanceDescs->GetGPUVirtualAddress();
    }
@@ -502,13 +488,13 @@ void rnd_Dx12::BuildAccelerationStructures()
    auto BuildAccelerationStructure = [&](auto* raytracingCommandList)
    {
       raytracingCommandList->BuildRaytracingAccelerationStructure(&bottomLevelBuildDesc, 0, nullptr);
-      auto c = CD3DX12_RESOURCE_BARRIER::UAV(m_bottomLevelAccelerationStructure.Get());
+      auto c = CD3DX12_RESOURCE_BARRIER::UAV(bottomLevelAccelerationStructure.Get());
       commandList->ResourceBarrier(1, &c);
       raytracingCommandList->BuildRaytracingAccelerationStructure(&topLevelBuildDesc, 0, nullptr);
    };
 
    // Build acceleration structure.
-   BuildAccelerationStructure(m_dxrCommandList.Get());
+   BuildAccelerationStructure(dxrCommandList.Get());
 
    // Kick off acceleration structure construction.
    ExecuteCommandList();
@@ -522,21 +508,8 @@ void rnd_Dx12::CreateRaytracingOutputResource()
    auto backbufferFormat = swapChainFormat;
    auto& raytracingOutput = textureMgr.rayTracingOutput;
 
-   // Create the output resource. The dimensions and format should match the swap-chain.
-   auto uavDesc = CD3DX12_RESOURCE_DESC::Tex2D(backbufferFormat, window->width, window->height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-   auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-   ThrowIfFailed(device->CreateCommittedResource(
-      &defaultHeapProperties, D3D12_HEAP_FLAG_NONE, &uavDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&raytracingOutput.buffer)));
-   raytracingOutput.buffer.Get()->SetName(L"Raytracing output");
-   raytracingOutput.state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-
-   auto descHandle = GetCbvSrvUavHandle();
-   raytracingOutput.srvHandle.first = descHandle.first;
-   raytracingOutput.srvHandle.second = descHandle.second;
-   D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
-   UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-   device->CreateUnorderedAccessView(raytracingOutput.buffer.Get(), nullptr, &UAVDesc, descHandle.first);
+   raytracingOutput.OnInit(backbufferFormat, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
+   raytracingOutput.CreateUav();
 }
 
 void rnd_Dx12::SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig)
@@ -610,7 +583,7 @@ void rnd_Dx12::WaitForGpu()
    }
 }
 
-void rnd_Dx12::SetBarrier(const std::vector<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates)
+void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates)
 {
    std::vector<D3D12_RESOURCE_BARRIER> barriers;
    for (auto& texSt : texturesStates) {

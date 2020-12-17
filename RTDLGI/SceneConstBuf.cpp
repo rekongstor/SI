@@ -1,8 +1,7 @@
 #include "SceneConstBuf.h"
 #include "rnd_Dx12.h"
 
-ConstBufInitializer<SceneConstBuf> sceneCbName0(L"SceneConstBuffer0");
-ConstBufInitializer<SceneConstBuf> sceneCbName1(L"SceneConstBuffer1");
+ConstBufInitializer<SceneConstBuf> SCENE_CB(L"SceneConstBuffer0");
 
 void SceneConstBuf::OnInit(LPCWSTR name)
 {

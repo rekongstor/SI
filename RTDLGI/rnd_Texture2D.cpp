@@ -1,12 +1,44 @@
 #include "rnd_Texture2D.h"
 #include "rnd_Dx12.h"
 
-void rnd_Texture2D::OnInit(ID3D12Resource* buffer, DXGI_FORMAT format, D3D12_RESOURCE_STATES initialState, LPCWSTR name /*= L""*/)
+float zeroClearValue[] = {0, 0, 0 ,0};
+float onesClearValue[] = {1, 1, 1, 1};
+
+void rnd_Texture2D::OnInit(ID3D12Resource* buffer, D3D12_RESOURCE_STATES initialState, LPCWSTR name /*= L""*/)
 {
    this->buffer = buffer;
-   this->format = buffer->GetDesc().Format;;
+   this->format = buffer->GetDesc().Format;
    this->state = initialState;
+   this->flags = buffer->GetDesc().Flags;
 
+   buffer->SetName(name);
+}
+
+void rnd_Texture2D::OnInit(DXGI_FORMAT format, Buffer2D dim, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, LPCWSTR name, int arrSize, int mips, float* clearValue)
+{
+   this->format = format;
+   this->width = dim.width;
+   this->height = dim.height;
+   this->arrSize = arrSize;
+   this->mips = mips;
+   this->state = initialState;
+   this->flags = flags;
+
+   auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+   auto bufferDesc(CD3DX12_RESOURCE_DESC::Tex2D(format, dim.width, dim.height, arrSize, mips, 1, 0, flags));
+
+   D3D12_CLEAR_VALUE clearVal;
+   clearVal.Format = format;
+   memcpy(clearVal.Color, clearValue, sizeof(float) * 4);
+      
+   ThrowIfFailed(renderer->device->CreateCommittedResource(
+      &heapProperties,
+      D3D12_HEAP_FLAG_NONE,
+      &bufferDesc,
+      initialState,
+      (flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)) ? &clearVal : nullptr,
+      IID_PPV_ARGS(&buffer)));
    buffer->SetName(name);
 }
 
@@ -18,6 +50,7 @@ void rnd_Texture2D::SetState(D3D12_RESOURCE_STATES nextState)
 
 void rnd_Texture2D::CreateDsv()
 {
+   ThrowIfFalse(flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
    dsvHandle = renderer->GetDsvHandle();
    renderer->device->CreateDepthStencilView(buffer.Get(), nullptr, dsvHandle.first);
    ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
@@ -25,6 +58,7 @@ void rnd_Texture2D::CreateDsv()
 
 void rnd_Texture2D::CreateRtv()
 {
+   ThrowIfFalse(flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
    rtvHandle = renderer->GetRtvHandle();
    renderer->device->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
    ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
@@ -32,6 +66,7 @@ void rnd_Texture2D::CreateRtv()
 
 void rnd_Texture2D::CreateSrv()
 {
+   ThrowIfFalse(!(flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE));
    srvHandle = renderer->GetCbvSrvUavHandle();
 
    DXGI_FORMAT srvFormat;
@@ -65,22 +100,24 @@ void rnd_Texture2D::CreateSrv()
    ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
 }
 
-void rnd_Texture2D::CreateUav(int32_t mipLevel)
+void rnd_Texture2D::CreateUav(int mipSlice, int arrSlice)
 {
+   ThrowIfFalse(flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
    uavHandle = renderer->GetCbvSrvUavHandle();
-   if (mipLevel >= 0) {
-      D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
-      ZeroMemory(&desc, sizeof(desc));
-      desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-      desc.Format = format;
-      desc.Texture2DArray.MipSlice = mipLevel;
-      desc.Texture2DArray.ArraySize = 4;
-      desc.Texture2DArray.FirstArraySlice = 0;
+   //if (arrSize > 0) {
+   D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
+   ZeroMemory(&desc, sizeof(desc));
+   desc.ViewDimension = arrSize > 1 ? D3D12_UAV_DIMENSION_TEXTURE2DARRAY : D3D12_UAV_DIMENSION_TEXTURE2D;
+   desc.Format = format;
+   desc.Texture2DArray.MipSlice = mipSlice;
+   desc.Texture2DArray.ArraySize = arrSize;
+   desc.Texture2DArray.FirstArraySlice = arrSlice;
 
-      renderer->device->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle.first);
-      ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
-      return;
-   }
-   renderer->device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
+   renderer->device->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle.first);
+   //}
+   //else
+   //{
+   //renderer->device->CreateUnorderedAccessView(buffer.Get(), nullptr, nullptr, uavHandle.first);
+   //}
    ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
 }

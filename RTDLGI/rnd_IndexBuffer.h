@@ -1,4 +1,6 @@
 #pragma once
+#include "D3DBuffer.h"
+
 class rnd_IndexBuffer : public D3DBuffer
 {
 public:

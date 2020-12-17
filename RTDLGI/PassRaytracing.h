@@ -7,7 +7,7 @@ class PassRaytracing
 {
 public:
    CubeConstBuf* cubeCb;
-   SceneConstBuf* sceneCb[FRAME_COUNT];
+   SceneConstBuf* sceneCb;
    ComPtr<ID3D12RootSignature> m_raytracingLocalRootSignature;
    ComPtr<ID3D12StateObject> m_dxrStateObject;
 

@@ -34,6 +34,16 @@ using uint = unsigned int;
 using DescHandlePair = std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>;
 using UploadPair = std::pair<ComPtr<ID3D12Resource>, ComPtr<ID3D12Resource>>;
 
+struct State
+{
+   uint64_t state = 0;
+
+   State() = default;
+   State(uint64_t st) : state(st) {}
+   bool Is(uint64_t st) { return state & st; }
+   void Set(uint64_t st) { state |= st; }
+};
+
 
 #define FRAME_COUNT 2
 #define SizeOfInUint32(obj) ((sizeof(obj) - 1) / sizeof(UINT32) + 1)
@@ -48,14 +58,6 @@ extern core_Window* window;
 extern rnd_Dx12* renderer;
 
 extern wchar_t nameBuffer[256];
-
-struct D3DBuffer
-{
-   ComPtr<ID3D12Resource> buffer;
-   D3D12_RESOURCE_STATES state; // atomic?
-   DXGI_FORMAT format;
-};
-
 
 inline void ThrowIfFailed(HRESULT hr, const wchar_t* errMsg = L"")
 {

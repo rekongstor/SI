@@ -1,4 +1,5 @@
 #pragma once
+#include "D3DBuffer.h"
 
 class rnd_VertexBuffer : public D3DBuffer
 {

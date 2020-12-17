@@ -94,6 +94,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <DisableSpecificWarnings>4244;4267;4838</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -110,6 +111,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <DisableSpecificWarnings>4244;4267;4838</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,6 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <DisableSpecificWarnings>4244;4267;4838</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,6 +151,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <DisableSpecificWarnings>4244;4267;4838</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -168,12 +172,14 @@
     <ClCompile Include="rnd_Dx12.cpp" />
     <ClCompile Include="core_Window.cpp" />
     <ClCompile Include="rnd_IndexBuffer.cpp" />
+    <ClCompile Include="rnd_RootSignatureMgr.cpp" />
     <ClCompile Include="rnd_Texture2D.cpp" />
     <ClCompile Include="rnd_TextureMgr.cpp" />
     <ClCompile Include="rnd_VertexBuffer.cpp" />
     <ClCompile Include="SceneConstBuf.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="D3DBuffer.h" />
     <ClInclude Include="rnd_ConstantBufferMgr.h" />
     <ClInclude Include="rnd_ConstantBuffer.h" />
     <ClInclude Include="core_Imgui.h" />
@@ -184,6 +190,7 @@
     <ClInclude Include="rnd_Dx12.h" />
     <ClInclude Include="core_Window.h" />
     <ClInclude Include="rnd_IndexBuffer.h" />
+    <ClInclude Include="rnd_RootSignatureMgr.h" />
     <ClInclude Include="rnd_Texture2D.h" />
     <ClInclude Include="rnd_TextureMgr.h" />
     <ClInclude Include="rnd_VertexBuffer.h" />

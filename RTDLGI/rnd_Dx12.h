@@ -4,26 +4,10 @@
 #include "rnd_TextureMgr.h"
 #include "rnd_IndexBuffer.h"
 #include "rnd_VertexBuffer.h"
-class core_Window;
+#include "rnd_RootSignatureMgr.h"
 
 // TODO: Refactor
 #pragma region Raytracing helpers 
-namespace GlobalRootSignatureParams {
-   enum Value {
-      OutputViewSlot = 0,
-      AccelerationStructureSlot,
-      SceneConstantSlot,
-      VertexBuffersSlot,
-      Count
-   };
-}
-
-namespace LocalRootSignatureParams {
-   enum Value {
-      CubeConstantSlot = 0,
-      Count
-   };
-}
 
 class GpuUploadBuffer
 {
@@ -171,8 +155,6 @@ public:
 #pragma endregion
 
 #pragma region Command List
-   void SetBarrier(const std::vector<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates);
-
    // TODO: After we'll settle fences and barriers, we'll need to get proper command lists, queues and allocators
    ID3D12CommandQueue* CommandQueue() { return commandQueue.Get(); }
    ID3D12CommandQueue* CommandQueueCompute() { return commandQueue.Get(); } 
@@ -244,16 +226,19 @@ public:
    bool tearingSupported = false;
 #pragma endregion
 
-#pragma region Raytracing
+#pragma region Passes
    PassRaytracing rtxPass;
+#pragma endregion 
+
+#pragma region Raytracing
 
    void InitRaytracing();
    void DoRaytracing();
    void CopyRaytracingOutputToBackbuffer();
 
    // DirectX Raytracing (DXR) attributes
-   ComPtr<ID3D12Device5> m_dxrDevice;
-   ComPtr<ID3D12GraphicsCommandList5> m_dxrCommandList;
+   ComPtr<ID3D12Device5> dxrDevice;
+   ComPtr<ID3D12GraphicsCommandList5> dxrCommandList;
 
    // Root signatures
    ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
@@ -263,14 +248,11 @@ public:
    rnd_VertexBuffer vertexBuffer;
 
    // Acceleration structure
-   ComPtr<ID3D12Resource> m_bottomLevelAccelerationStructure;
-   ComPtr<ID3D12Resource> m_topLevelAccelerationStructure;
+   ComPtr<ID3D12Resource> bottomLevelAccelerationStructure;
+   ComPtr<ID3D12Resource> topLevelAccelerationStructure;
 
-   void CreateRaytracingInterfaces();
-   void CreateRootSignatures();
    void BuildGeometry();
    void BuildAccelerationStructures();
-   void CreateConstantBuffers();
    void CreateRaytracingOutputResource();
 
    void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
@@ -280,6 +262,9 @@ public:
 
    rnd_TextureMgr textureMgr;
    rnd_ConstantBufferMgr constantBufferMgr;
+   rnd_RootSignatureMgr rootSignatureMgr;
+
+   void SetBarrier(const std::initializer_list<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates);
 
    void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, ComPtr<ID3D12Resource> buffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
    void ResolveUploadBuffer();

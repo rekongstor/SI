@@ -20,8 +20,7 @@ public:
    void Update() override;
 };
 
-extern ConstBufInitializer<SceneConstBuf> sceneCbName0;
-extern ConstBufInitializer<SceneConstBuf> sceneCbName1;
+extern ConstBufInitializer<SceneConstBuf> SCENE_CB;
 #endif
 
 #endif

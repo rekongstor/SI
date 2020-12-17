@@ -15,7 +15,7 @@ class CubeConstBuf : public CubeConstantBuffer, public rnd_ImmutableConstBuffer<
    void Update() override;
 };
 
-extern const ConstBufInitializer<CubeConstBuf> cubeCbName;
+extern const ConstBufInitializer<CubeConstBuf> CUBE_CB;
 #endif
 
 #endif
