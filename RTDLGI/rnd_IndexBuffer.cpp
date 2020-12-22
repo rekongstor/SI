@@ -34,7 +34,7 @@ void rnd_IndexBuffer::OnInit(void* srcData, UINT64 sizeInBytes, LPCWSTR name /*=
    renderer->AddUploadBuffer(uploadBuffer, buffer); // we won't release command buffer until all resources are loaded
 
    indexBufferView.SizeInBytes = sizeInBytes;
-   indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+   indexBufferView.Format = DXGI_FORMAT_R16_UINT;
    indexBufferView.BufferLocation = buffer->GetGPUVirtualAddress();
 }
 

@@ -46,6 +46,7 @@ struct State
 
 
 #define FRAME_COUNT 2
+#define MAX_MIP 16
 #define SizeOfInUint32(obj) ((sizeof(obj) - 1) / sizeof(UINT32) + 1)
 
 

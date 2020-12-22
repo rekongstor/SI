@@ -250,13 +250,19 @@ void rnd_Dx12::OnInit()
 
    constantBufferMgr.InitConstBuffers();
 
-   rtxPass.OnInit();
-   InitRaytracing();
+   //rtxPass.OnInit();
+   //InitRaytracing();
+   BuildGeometry();
+
+   forwardPass.OnInit();
+
+   textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_GENERIC_READ, L"DEPTH_BUFFER");
+   textureMgr.depthBuffer.CreateDsv();
 
    if (imgui)
       imgui->InitRender();
 
-   WaitForGpu();
+   //WaitForGpu();
 }
 
 void rnd_Dx12::PopulateGraphicsCommandList()
@@ -268,9 +274,13 @@ void rnd_Dx12::PopulateGraphicsCommandList()
 
    FLOAT color[]{ 0.1f, 0.2f, 0.3f, 0.4f };
    commandList->ClearRenderTargetView(textureMgr.backBuffer[currentFrame].rtvHandle.first, color, 1, &scissorRect);
+      
+   commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 0.f, 0, 1, &scissorRect);
 
-   DoRaytracing();
-   CopyRaytracingOutputToBackbuffer();
+   //DoRaytracing();
+   //CopyRaytracingOutputToBackbuffer();
+
+   forwardPass.Execute();
 
    commandList->OMSetRenderTargets(1,
       &textureMgr.backBuffer[currentFrame].rtvHandle.first,
@@ -335,57 +345,63 @@ void rnd_Dx12::BuildGeometry()
    // Cube indices.
    Index indices[] =
    {
-       3,1,0,
-       2,1,3,
+       //3,1,0,
+       //2,1,3,
 
-       6,4,5,
-       7,4,6,
+       //6,4,5,
+       //7,4,6,
 
-       11,9,8,
-       10,9,11,
+       //11,9,8,
+       //10,9,11,
 
-       14,12,13,
-       15,12,14,
+       //14,12,13,
+       //15,12,14,
 
-       19,17,16,
-       18,17,19,
+       //19,17,16,
+       //18,17,19,
 
-       22,20,21,
-       23,20,22
+       //22,20,21,
+       //23,20,22,
+
+      0,1,2
    };
 
    // Cube vertices positions and corresponding triangle normals.
    Vertex vertices[] =
    {
-       { XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-       { XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-       { XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-       { XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
 
-       { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-       { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-       { XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-       { XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
 
-       { XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-       { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-       { XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-       { XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
 
-       { XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-       { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-       { XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-       { XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       //{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
 
-       { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-       { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-       { XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-       { XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       //{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       //{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       //{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       //{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
 
-       { XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       { XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       { XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       { XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       //{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       //{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       //{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       //{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+
+       { XMFLOAT3(-1.0f, -1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       { XMFLOAT3(-1.0f, 1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       { XMFLOAT3(1.0f, 1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
    };
 
    indexBuffer.OnInit(indices, sizeof(indices), L"INDEX BUFFER");
@@ -583,7 +599,7 @@ void rnd_Dx12::WaitForGpu()
    }
 }
 
-void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates)
+void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<D3DBuffer&, D3D12_RESOURCE_STATES>>& texturesStates)
 {
    std::vector<D3D12_RESOURCE_BARRIER> barriers;
    for (auto& texSt : texturesStates) {

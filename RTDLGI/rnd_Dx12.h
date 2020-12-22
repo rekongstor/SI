@@ -1,4 +1,5 @@
 #pragma once
+#include "PassForward.h"
 #include "PassRaytracing.h"
 #include "rnd_ConstantBufferMgr.h"
 #include "rnd_TextureMgr.h"
@@ -228,6 +229,7 @@ public:
 
 #pragma region Passes
    PassRaytracing rtxPass;
+   PassForward forwardPass;
 #pragma endregion 
 
 #pragma region Raytracing
@@ -264,7 +266,8 @@ public:
    rnd_ConstantBufferMgr constantBufferMgr;
    rnd_RootSignatureMgr rootSignatureMgr;
 
-   void SetBarrier(const std::initializer_list<std::pair<rnd_Texture2D&, D3D12_RESOURCE_STATES>>& texturesStates);
+   void SetBarrier(const std::initializer_list<std::pair<D3DBuffer&, D3D12_RESOURCE_STATES>>& texturesStates);
+   rnd_Texture2D& BackBuffer() { return textureMgr.backBuffer[currentFrame]; }
 
    void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, ComPtr<ID3D12Resource> buffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
    void ResolveUploadBuffer();

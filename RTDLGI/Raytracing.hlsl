@@ -161,10 +161,9 @@ FUNCTION_NAME(CLOSEST_HIT_SHADER) (inout RayPayload payload, in MyAttributes att
     // as all the per-vertex normals are the same and match triangle's normal in this sample. 
     float3 triangleNormal = HitAttribute(vertexNormals, attr);
 
-    float4 diffuseColor = CalculateDiffuseLighting(hitPosition, triangleNormal);
-    float4 color = g_sceneCB.lightAmbientColor + diffuseColor;
+    float4 diffuseColor = float4(1, 0, 0, 1); // CalculateDiffuseLighting(hitPosition, triangleNormal);
 
-    payload.color = color;
+    payload.color = diffuseColor;
 }
 
 [shader("miss")]

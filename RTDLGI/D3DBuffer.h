@@ -23,4 +23,9 @@ struct D3DBuffer
    ComPtr<ID3D12Resource> buffer;
    D3D12_RESOURCE_STATES state; // atomic?
    DXGI_FORMAT format;
+
+   void SetState(D3D12_RESOURCE_STATES nextState)
+   {
+      state = nextState;
+   }
 };

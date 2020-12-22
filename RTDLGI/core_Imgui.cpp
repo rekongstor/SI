@@ -5,6 +5,8 @@
 #include <examples/imgui_impl_dx12.h>
 #include <examples/imgui_impl_win32.h>
 
+#include "SceneConstBuf.h"
+
 extern bool procRunning;
 extern LRESULT (*imguiProc)(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -50,7 +52,10 @@ void core_Imgui::OnUpdate()
    ImGui::NewFrame();
 
 #pragma region "Debug window"
-   ImGui::ShowDemoWindow();
+   ImGui::Begin("Camera");
+   SceneConstBuf* sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
+   ImGui::DragFloat3("Position", sceneCb->cameraPosition.m128_f32, 0.01);
+   ImGui::End();
 #pragma endregion
 }
 

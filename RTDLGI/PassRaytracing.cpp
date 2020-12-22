@@ -121,7 +121,7 @@ void PassRaytracing::OnInit()
 {
    cubeCb = dynamic_cast<CubeConstBuf*>(renderer->constantBufferMgr.Get(CUBE_CB));
    sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
-
+   sceneCb->cameraPosition = { 0,2,-5,1 };
    InitializeScene();
 }
 
@@ -136,20 +136,8 @@ void PassRaytracing::InitializeScene()
       cubeCb->albedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
    }
 
-   // Initialize the view and projection inverse matrices.
-   m_eye = {0.0f, 2.0f, -5.0f, 1.0f};
+   m_up = { 0.0f, 1.0f, 0.0f, 1.0f };
    m_at = {0.0f, 0.0f, 0.0f, 1.0f};
-   XMVECTOR right = {1.0f, 0.0f, 0.0f, 0.0f};
-
-   XMVECTOR direction = XMVector4Normalize(m_at - m_eye);
-   m_up = XMVector3Normalize(XMVector3Cross(direction, right));
-
-   // Rotate camera around Y axis.
-   XMMATRIX rotate = XMMatrixRotationY(XMConvertToRadians(45.0f));
-   m_eye = XMVector3Transform(m_eye, rotate);
-   m_up = XMVector3Transform(m_up, rotate);
-
-   UpdateCameraMatrices();
 
    // Setup lights.
    {
@@ -172,26 +160,7 @@ void PassRaytracing::InitializeScene()
 
 void PassRaytracing::Execute()
 {
-   // Rotate the camera around Y axis.
-   {
-      float secondsToRotateAround = 24.0f;
-      float angleToRotateBy = 360.0f * (0.f / secondsToRotateAround);
-      XMMATRIX rotate = XMMatrixRotationY(XMConvertToRadians(angleToRotateBy));
-      m_eye = XMVector3Transform(m_eye, rotate);
-      m_up = XMVector3Transform(m_up, rotate);
-      m_at = XMVector3Transform(m_at, rotate);
-      UpdateCameraMatrices();
-   }
-
-   // Rotate the second light around Y axis.
-   {
-      float secondsToRotateAround = 8.0f;
-      float angleToRotateBy = -360.0f * (0.f / secondsToRotateAround);
-      XMMATRIX rotate = XMMatrixRotationY(XMConvertToRadians(angleToRotateBy));
-      const XMVECTOR prevLightPosition = sceneCb->lightPosition;
-      sceneCb->lightPosition = XMVector3Transform(prevLightPosition, rotate);
-   }
-
+   UpdateCameraMatrices();
 
    auto frameIndex = renderer->currentFrame;
 
@@ -218,7 +187,7 @@ void PassRaytracing::Execute()
       descriptorSetCommandList->SetDescriptorHeaps(1, renderer->cbvSrvUavHeap.GetAddressOf());
       // Set index and successive vertex buffer descriptor tables
       renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, renderer->indexBuffer.srvHandle.second);
-      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.rayTracingOutput.uavHandle.second);
+      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.rayTracingOutput.uavHandle[0].second);
    };
 
    renderer->CommandList()->SetComputeRootSignature(renderer->m_raytracingGlobalRootSignature.Get());
@@ -238,13 +207,11 @@ void PassRaytracing::Execute()
 
 void PassRaytracing::UpdateCameraMatrices()
 {
-   // Update camera matrices passed into the shader.
-   auto frameIndex = renderer->currentFrame;
+   m_eye = sceneCb->cameraPosition;
 
-   sceneCb->cameraPosition = m_eye;
-   float fovAngleY = 45.0f;
+   float fovAngleY = 90.0f;
    XMMATRIX view = XMMatrixLookAtLH(m_eye, m_at, m_up);
-   XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), (float)window->width / (float)window->height, 1.0f, 125.0f);
+   XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), (float)window->width / (float)window->height, 0.01f, 100.0f);
    XMMATRIX viewProj = view * proj;
 
    sceneCb->projectionToWorld = XMMatrixInverse(nullptr, viewProj);

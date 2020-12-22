@@ -15,7 +15,7 @@ int main()
    core_Window windowInst;
    rnd_Dx12 rendererInst;
 
-   //imgui = &imguiInst;
+   imgui = &imguiInst;
    window = &windowInst;
    renderer = &rendererInst;
 
