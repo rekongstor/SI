@@ -94,7 +94,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
-      <DisableSpecificWarnings>4244;4267;4838;4305</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4267;4838;4305;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -111,7 +111,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
-      <DisableSpecificWarnings>4244;4267;4838;4305</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4267;4838;4305;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,7 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
-      <DisableSpecificWarnings>4244;4267;4838;4305</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4267;4838;4305;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,7 +151,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
-      <DisableSpecificWarnings>4244;4267;4838;4305</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4244;4267;4838;4305;4018</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

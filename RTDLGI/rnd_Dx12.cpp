@@ -3,7 +3,7 @@
 #include "core_Imgui.h"
 #include "RayTracingHlslCompat.h"
 
-wchar_t nameBuffer[256]{};
+wchar_t nameBuffer[4096]{};
 
 #pragma region RT helpers
 
@@ -111,8 +111,11 @@ void rnd_Dx12::OnInit()
 
 #pragma region Fences
    ThrowIfFailed(device->CreateFence(fenceValues[currentFrame], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+   ThrowIfFailed(device->CreateFence(fenceValueCopy, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fenceCopy)));
    ++fenceValues[currentFrame];
+   ++fenceValueCopy;
    fence->SetName(L"Fence");
+   fenceCopy->SetName(L"FenceCopy");
 
    fenceEvent.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
    assert(fenceEvent.IsValid());
@@ -156,7 +159,7 @@ void rnd_Dx12::OnInit()
       D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[0].Get(), /* Initial PSO */ nullptr,
       IID_PPV_ARGS(&commandList)));
    commandList->SetName(L"Command List Direct");
-   //commandList->Close();
+   commandList->Close();
 
    ThrowIfFailed(device->CreateCommandList(        /*multi-gpu*/ 0,
       D3D12_COMMAND_LIST_TYPE_COMPUTE, commandAllocatorCompute.Get(), /* Initial PSO */ nullptr,
@@ -168,7 +171,7 @@ void rnd_Dx12::OnInit()
       D3D12_COMMAND_LIST_TYPE_COPY, commandAllocatorCopy.Get(), /* Initial PSO */ nullptr,
       IID_PPV_ARGS(&commandListCopy)));
    commandListCopy->SetName(L"Command List Copy");
-   commandListCopy->Close();
+   //commandListCopy->Close();
 #pragma endregion 
 
 #pragma region Descriptor heap
@@ -249,20 +252,20 @@ void rnd_Dx12::OnInit()
 #pragma endregion
 
    constantBufferMgr.InitConstBuffers();
-
-   //rtxPass.OnInit();
-   //InitRaytracing();
    BuildGeometry();
 
    forwardPass.OnInit();
 
-   textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_GENERIC_READ, L"DEPTH_BUFFER");
+   rtxPass.OnInit();
+   InitRaytracing();
+
+   textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_DEPTH_WRITE, L"DEPTH_BUFFER");
    textureMgr.depthBuffer.CreateDsv();
 
    if (imgui)
       imgui->InitRender();
 
-   //WaitForGpu();
+   WaitForGpu();
 }
 
 void rnd_Dx12::PopulateGraphicsCommandList()
@@ -312,8 +315,6 @@ void rnd_Dx12::InitRaytracing()
    rtxPass.CreateRootSignature();
 
    rtxPass.CreateRaytracingPipelineStateObject();
-   // Build geometry to be used in the sample.
-   BuildGeometry();
 
    // Build raytracing acceleration structures from the generated geometry.
    BuildAccelerationStructures();
@@ -411,6 +412,8 @@ void rnd_Dx12::BuildGeometry()
    vertexBuffer.CreateSrv();
 
    ResolveUploadBuffer();
+
+   SetBarrier({ {indexBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE}, {vertexBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE} });
 }
 
 void rnd_Dx12::BuildAccelerationStructures()
@@ -599,6 +602,28 @@ void rnd_Dx12::WaitForGpu()
    }
 }
 
+void rnd_Dx12::ExecuteCopyCommandList()
+{
+   ThrowIfFailed(commandListCopy->Close());
+   ID3D12CommandList* commandLists[] = { commandListCopy.Get() };
+   commandQueueCopy->ExecuteCommandLists(ARRAYSIZE(commandLists), commandLists);
+}
+
+void rnd_Dx12::WaitForGpuCopy()
+{
+   if (commandQueueCopy && fenceCopy && fenceEventCopy.IsValid()) {
+      UINT64 fenceValue = fenceValueCopy;
+      if (SUCCEEDED(commandQueueCopy->Signal(fenceCopy.Get(), fenceValue))) {
+         // Wait until the Signal has been processed.
+         if (SUCCEEDED(fenceCopy->SetEventOnCompletion(fenceValue, fenceEventCopy.Get()))) {
+            WaitForSingleObjectEx(fenceEventCopy.Get(), INFINITE, FALSE);
+
+            fenceValueCopy++;
+         }
+      }
+   }
+}
+
 void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<D3DBuffer&, D3D12_RESOURCE_STATES>>& texturesStates)
 {
    std::vector<D3D12_RESOURCE_BARRIER> barriers;
@@ -622,9 +647,9 @@ void rnd_Dx12::ResolveUploadBuffer()
 {
    if (!uploadBuffers.empty())
    {
-      ExecuteCommandList(); // TODO: Execute COPY command list!
+      ExecuteCopyCommandList(); // TODO: Execute COPY command list!
 
-      WaitForGpu(); // TODO: COPY realization
+      WaitForGpuCopy(); // TODO: COPY realization
 
       uploadBuffers.clear();
    }

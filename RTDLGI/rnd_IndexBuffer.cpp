@@ -28,8 +28,9 @@ void rnd_IndexBuffer::OnInit(void* srcData, UINT64 sizeInBytes, LPCWSTR name /*=
 
    D3D12_SUBRESOURCE_DATA subresourceData{ srcData, sizeInBytes, sizeInBytes };
    UpdateSubresources(renderer->CommandListCopy(), buffer.Get(), uploadBuffer, 0, 0, 1, &subresourceData);
-   auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-   renderer->CommandListCopy()->ResourceBarrier(1, &barrier);
+
+   this->format = DXGI_FORMAT_R16_UINT;
+   this->state = D3D12_RESOURCE_STATE_COPY_DEST;
 
    renderer->AddUploadBuffer(uploadBuffer, buffer); // we won't release command buffer until all resources are loaded
 

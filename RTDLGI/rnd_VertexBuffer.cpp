@@ -26,10 +26,11 @@ void rnd_VertexBuffer::OnInit(void* srcData, UINT64 sizeInBytes, int sizeOfEleme
       IID_PPV_ARGS(&buffer)));
    buffer->SetName(name);
 
+   this->format = DXGI_FORMAT_UNKNOWN;
+   this->state = D3D12_RESOURCE_STATE_COPY_DEST;
+
    D3D12_SUBRESOURCE_DATA subresourceData{ srcData, sizeInBytes, sizeInBytes };
    UpdateSubresources(renderer->CommandListCopy(), buffer.Get(), uploadBuffer, 0, 0, 1, &subresourceData);
-   auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-   renderer->CommandListCopy()->ResourceBarrier(1, &barrier);
 
    renderer->AddUploadBuffer(uploadBuffer, buffer); // we won't release command buffer until all resources are loaded
 

@@ -58,7 +58,7 @@ extern core_Imgui* imgui;
 extern core_Window* window;
 extern rnd_Dx12* renderer;
 
-extern wchar_t nameBuffer[256];
+extern wchar_t nameBuffer[4096];
 
 inline void ThrowIfFailed(HRESULT hr, const wchar_t* errMsg = L"")
 {

@@ -144,8 +144,6 @@ public:
    
    // Graphics
    int PreviousFrame() { return (FRAME_COUNT + currentFrame - 1) % FRAME_COUNT; }
-   void ExecuteCommandList();
-   void WaitForGpu();
    void PopulateGraphicsCommandList();
    void MoveToNextFrame();
 
@@ -159,14 +157,19 @@ public:
    // TODO: After we'll settle fences and barriers, we'll need to get proper command lists, queues and allocators
    ID3D12CommandQueue* CommandQueue() { return commandQueue.Get(); }
    ID3D12CommandQueue* CommandQueueCompute() { return commandQueue.Get(); } 
-   ID3D12CommandQueue* CommandQueueCopy() { return commandQueue.Get(); }
+   ID3D12CommandQueue* CommandQueueCopy() { return commandQueueCopy.Get(); }
    ID3D12CommandAllocator* CommandAllocator() { return commandAllocators[currentFrame].Get(); }
    ID3D12CommandAllocator* CommandAllocatorCompute() { return commandAllocators[currentFrame].Get(); }
-   ID3D12CommandAllocator* CommandAllocatorCopy() { return commandAllocators[currentFrame].Get(); }
+   ID3D12CommandAllocator* CommandAllocatorCopy() { return commandAllocatorCopy.Get(); }
    ID3D12GraphicsCommandList* CommandList() { return commandList.Get(); }
    ID3D12GraphicsCommandList* CommandListCompute() { return commandList.Get(); }
-   ID3D12GraphicsCommandList* CommandListCopy() { return commandList.Get(); }
+   ID3D12GraphicsCommandList* CommandListCopy() { return commandListCopy.Get(); }
 
+   void ExecuteCommandList();
+   void WaitForGpu();
+
+   void ExecuteCopyCommandList();
+   void WaitForGpuCopy();
 private:
    ComPtr<ID3D12CommandQueue> commandQueue;
    ComPtr<ID3D12CommandQueue> commandQueueCompute;
@@ -177,6 +180,16 @@ private:
    ComPtr<ID3D12GraphicsCommandList> commandList;
    ComPtr<ID3D12GraphicsCommandList> commandListCompute;
    ComPtr<ID3D12GraphicsCommandList> commandListCopy;
+
+   ComPtr<ID3D12Fence1> fence;
+   ComPtr<ID3D12Fence1> fenceCopy;
+   ComPtr<ID3D12Fence1> fenceCompute;
+   uint64_t fenceValues[FRAME_COUNT];
+   uint64_t fenceValueCopy;
+   uint64_t fenceValueCompute;
+   Event fenceEvent;
+   Event fenceEventCopy;
+   Event fenceEventCompute;
 public:
 #pragma endregion 
 
@@ -205,12 +218,6 @@ public:
    int rtvCount = 10;
    int cbvSrvUavCount = 300;
    int svCount = 10;
-#pragma endregion 
-
-#pragma region Fences
-   ComPtr<ID3D12Fence1> fence;
-   uint64_t fenceValues[FRAME_COUNT];
-   Event fenceEvent;
 #pragma endregion 
 
 #pragma region Swap chain
