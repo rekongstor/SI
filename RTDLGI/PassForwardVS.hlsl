@@ -25,6 +25,5 @@ VS_OUT main(in Vertex v)
    VS_OUT output;
    output.pos = mul(g_sceneCB.viewProj, float4(v.position, 1.f));
    output.normal = output.pos * 0.5 + 0.5;
-   output.pos /= output.pos.w;
    return output;
 }

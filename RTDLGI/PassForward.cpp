@@ -41,7 +41,7 @@ void PassForward::OnInit()
    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
    ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
    auto rs = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-   rs.CullMode = D3D12_CULL_MODE_NONE;
+   rs.CullMode = D3D12_CULL_MODE_BACK;
    psoDesc.InputLayout = inputLayoutDesc;
    psoDesc.pRootSignature = forwardRootSignature.Get();
    psoDesc.VS = vertexShaderByteCode;

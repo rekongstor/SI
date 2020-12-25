@@ -256,7 +256,7 @@ void rnd_Dx12::OnInit()
    lightPosition = XMFLOAT3(0, 1, -1);
    lightAmbientColor = XMFLOAT3(0.5, 0.0, 0.5);
    lightDiffuseColor = XMFLOAT3(0.0, 0.5, 0.5);
-   fovAngleY = 60.0f;
+   fovAngleY = 60.f;
 
    constantBufferMgr.InitConstBuffers();
    BuildGeometry();
