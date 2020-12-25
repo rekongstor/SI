@@ -17,8 +17,6 @@
 #define MISS_SHADER MissShader
 
 #ifdef HLSL
-#include "HlslCompat.h"
-
 #define HIT_GROUP_FUNC void ##HIT_GROUP ()
 #define MAKE_FN_NAME(x) void  _ ## x 
 #define FUNCTION_NAME(signal) MAKE_FN_NAME(signal)

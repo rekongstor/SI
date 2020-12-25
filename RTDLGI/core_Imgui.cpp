@@ -53,8 +53,9 @@ void core_Imgui::OnUpdate()
 
 #pragma region "Debug window"
    ImGui::Begin("Camera");
-   SceneConstBuf* sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
-   ImGui::DragFloat3("Position", sceneCb->cameraPosition.m128_f32, 0.01);
+   ImGui::DragFloat3("Position", &renderer->camPos.x, 0.01);
+   ImGui::DragFloat2("Pitch/Yaw", &renderer->camDir.x, 0.01);
+   ImGui::DragFloat("Fov", &renderer->fovAngleY, 0.1);
    ImGui::End();
 #pragma endregion
 }

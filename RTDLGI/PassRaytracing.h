@@ -27,11 +27,8 @@ public:
 
    void CreateRootSignature();
 
-   void InitializeScene();
-
    void Execute();
 
-   void UpdateCameraMatrices();
    void CreateRaytracingPipelineStateObject();
    void CreateLocalRootSignatureSubobjects(CD3DX12_STATE_OBJECT_DESC* raytracingPipeline);
    void BuildShaderTables();
