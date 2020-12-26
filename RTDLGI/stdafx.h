@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
+#include <corecrt_math_defines.h>
 
 #include <initguid.h>
 #include <dxgi1_6.h>

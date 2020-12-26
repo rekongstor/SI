@@ -12,6 +12,7 @@
 #define RAYTRACING_HLSL
 
 #define HLSL
+#include "HlslCompat.h"
 #include "RaytracingHlslCompat.h"
 #include "SceneConstBuf.h"
 #include "CubeConstBuf.h"
@@ -21,13 +22,21 @@ RWTexture2D<float4> RenderTarget : register(u0);
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 
-ConstantBuffer<SceneConstantBuffer> g_sceneCB : register(b0);
+
+cbuffer g_sceneCB : register(b0)
+{
+   SceneConstantBuffer g_sceneCB;
+}
 
 ByteAddressBuffer Indices : register(t1, space0);
 StructuredBuffer<Vertex> Vertices : register(t2, space0);
 
 // Local root signature
-ConstantBuffer<CubeConstantBuffer> g_cubeCB : register(b1);
+
+cbuffer g_cubeCB : register(b1, space1)
+{
+   CubeConstantBuffer g_cubeCB;
+}
 
 // Load three 16 bit indices from a byte addressed buffer.
 uint3 Load3x16BitIndices(uint offsetBytes)
@@ -61,7 +70,7 @@ uint3 Load3x16BitIndices(uint offsetBytes)
     return indices;
 }
 
-typedef BuiltInTriangleIntersectionAttributes MyAttributes;
+struct MyAttributes { float2 barycentrics; };
 struct RayPayload
 {
     float4 color;
@@ -74,7 +83,7 @@ float3 HitWorldPosition()
 }
 
 // Retrieve attribute at a hit position interpolated from vertex attributes using the hit's barycentrics.
-float3 HitAttribute(float3 vertexAttribute[3], BuiltInTriangleIntersectionAttributes attr)
+float3 HitAttribute(float3 vertexAttribute[3], MyAttributes attr)
 {
     return vertexAttribute[0] +
         attr.barycentrics.x * (vertexAttribute[1] - vertexAttribute[0]) +
@@ -91,11 +100,11 @@ inline void GenerateCameraRay(uint2 index, out float3 origin, out float3 directi
     screenPos.y = -screenPos.y;
 
     // Unproject the pixel coordinate into a ray.
-    float4 world = mul(float4(screenPos, 0, 1), g_sceneCB.projectionToWorld);
+    float4 world = mul(g_sceneCB.viewProjInv, float4(screenPos, 1, 1));
 
     world.xyz /= world.w;
     origin = g_sceneCB.cameraPosition.xyz;
-    direction = normalize(world.xyz - origin);
+    direction = normalize(world.xyz - origin * 2);
 }
 
 // Diffuse lighting calculation.
@@ -106,7 +115,7 @@ float4 CalculateDiffuseLighting(float3 hitPosition, float3 normal)
     // Diffuse contribution.
     float fNDotL = max(0.0f, dot(pixelToLight, normal));
 
-    return g_cubeCB.albedo * g_sceneCB.lightDiffuseColor * fNDotL;
+    return float4(1.f, 1.f, 1.f, 1.f);
 }
 
 
@@ -161,15 +170,16 @@ FUNCTION_NAME(CLOSEST_HIT_SHADER) (inout RayPayload payload, in MyAttributes att
     // as all the per-vertex normals are the same and match triangle's normal in this sample. 
     float3 triangleNormal = HitAttribute(vertexNormals, attr);
 
-    float4 diffuseColor = float4(1, 0, 0, 1); // CalculateDiffuseLighting(hitPosition, triangleNormal);
+    float4 diffuseColor = CalculateDiffuseLighting(hitPosition, triangleNormal);
+    float4 color = float4(g_sceneCB.lightAmbientColor, 1) + diffuseColor;
 
-    payload.color = diffuseColor;
+    payload.color = color;
 }
 
 [shader("miss")]
 FUNCTION_NAME(MISS_SHADER) (inout RayPayload payload)
 {
-    float4 background = float4(0.0f, 0.2f, 0.4f, 1.0f);
+    float4 background = float4(0.5f, 0.2f, 0.4f, 1.0f);
     payload.color = background;
 }
 

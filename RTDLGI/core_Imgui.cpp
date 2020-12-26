@@ -51,10 +51,15 @@ void core_Imgui::OnUpdate()
    ImGui_ImplWin32_NewFrame();
    ImGui::NewFrame();
 
+   //ImGui::ShowDemoWindow();
+
 #pragma region "Debug window"
    ImGui::Begin("Camera");
-   SceneConstBuf* sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
-   ImGui::DragFloat3("Position", sceneCb->cameraPosition.m128_f32, 0.01);
+   ImGui::DragFloat3("Position", &renderer->camPos.x);
+   ImGui::SliderFloat("Pitch", &renderer->camDir.x, -M_PI_2, M_PI_2);
+   ImGui::DragFloat("Yaw", &renderer->camDir.y, 0.01);
+   renderer->camDir.y = fmodf(renderer->camDir.y, 2 * M_PI);
+   ImGui::SliderFloat("Fov", &renderer->fovAngleY, 1, 180);
    ImGui::End();
 #pragma endregion
 }

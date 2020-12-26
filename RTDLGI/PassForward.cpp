@@ -41,7 +41,7 @@ void PassForward::OnInit()
    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
    ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
    auto rs = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-   rs.CullMode = D3D12_CULL_MODE_NONE;
+   rs.CullMode = D3D12_CULL_MODE_BACK;
    psoDesc.InputLayout = inputLayoutDesc;
    psoDesc.pRootSignature = forwardRootSignature.Get();
    psoDesc.VS = vertexShaderByteCode;
@@ -60,7 +60,7 @@ void PassForward::OnInit()
    D3D12_DEPTH_STENCIL_DESC depthStencilDesc;
    depthStencilDesc.DepthEnable = true;
    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-   depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_GREATER;
+   depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
    depthStencilDesc.StencilEnable = false;
    depthStencilDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
    depthStencilDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;

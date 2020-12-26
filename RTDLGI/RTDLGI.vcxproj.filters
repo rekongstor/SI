@@ -49,11 +49,11 @@
     <Filter Include="Header Files\DX12\constantBuffers\CBs">
       <UniqueIdentifier>{a834e247-9202-4d21-b795-37757ac5fc31}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\PassRaytracing">
-      <UniqueIdentifier>{dfc84343-b2f1-4bf0-9e95-1a4ecb36ca80}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files\PassForward">
+    <Filter Include="Source Files\DX12\passes\PassForward">
       <UniqueIdentifier>{ca7a0048-4ee3-464c-ab51-f75685137031}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\passes\PassRaytracing">
+      <UniqueIdentifier>{dfc84343-b2f1-4bf0-9e95-1a4ecb36ca80}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -81,9 +81,6 @@
     <ClCompile Include="rnd_VertexBuffer.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
-    <ClCompile Include="PassRaytracing.cpp">
-      <Filter>Source Files\DX12\passes</Filter>
-    </ClCompile>
     <ClCompile Include="rnd_ConstantBufferMgr.cpp">
       <Filter>Source Files\DX12\constantBuffers</Filter>
     </ClCompile>
@@ -99,14 +96,17 @@
     <ClCompile Include="rnd_Texture3D.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
-    <ClCompile Include="PassForward.cpp">
-      <Filter>Source Files\DX12\passes</Filter>
-    </ClCompile>
     <ClCompile Include="rnd_RootSignatureMgr.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
     <ClCompile Include="rnd_PipelineStateMgr.cpp">
       <Filter>Source Files\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="PassForward.cpp">
+      <Filter>Source Files\DX12\passes\PassForward</Filter>
+    </ClCompile>
+    <ClCompile Include="PassRaytracing.cpp">
+      <Filter>Source Files\DX12\passes\PassRaytracing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -168,18 +168,18 @@
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
     <ClInclude Include="RayTracingHlslCompat.h">
-      <Filter>Resource Files\PassRaytracing</Filter>
+      <Filter>Source Files\DX12\passes\PassRaytracing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Raytracing.hlsl">
-      <Filter>Resource Files\PassRaytracing</Filter>
+      <Filter>Source Files\DX12\passes\PassRaytracing</Filter>
     </FxCompile>
     <FxCompile Include="PassForwardVS.hlsl">
-      <Filter>Resource Files\PassForward</Filter>
+      <Filter>Source Files\DX12\passes\PassForward</Filter>
     </FxCompile>
     <FxCompile Include="PassForwardPS.hlsl">
-      <Filter>Resource Files\PassForward</Filter>
+      <Filter>Source Files\DX12\passes\PassForward</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

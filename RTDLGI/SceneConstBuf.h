@@ -3,11 +3,12 @@
 
 struct SceneConstantBuffer
 {
-   XMMATRIX projectionToWorld;
-   XMVECTOR cameraPosition;
-   XMVECTOR lightPosition;
-   XMVECTOR lightAmbientColor;
-   XMVECTOR lightDiffuseColor;
+   XMMATRIX viewProj;
+   XMMATRIX viewProjInv;
+   XMFLOAT3 cameraPosition;
+   XMFLOAT3 lightPosition;
+   XMFLOAT3 lightAmbientColor;
+   XMFLOAT3 lightDiffuseColor;
 };
 
 #ifndef HLSL

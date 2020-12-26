@@ -251,6 +251,13 @@ void rnd_Dx12::OnInit()
    }
 #pragma endregion
 
+   camPos = XMFLOAT3(0, 0, 3);
+   camDir = XMFLOAT2(0, 0);
+   lightPosition = XMFLOAT3(0, 1, -1);
+   lightAmbientColor = XMFLOAT3(0.5, 0.0, 0.5);
+   lightDiffuseColor = XMFLOAT3(0.0, 0.5, 0.5);
+   fovAngleY = 60.f;
+
    constantBufferMgr.InitConstBuffers();
    BuildGeometry();
 
@@ -278,10 +285,10 @@ void rnd_Dx12::PopulateGraphicsCommandList()
    FLOAT color[]{ 0.1f, 0.2f, 0.3f, 0.4f };
    commandList->ClearRenderTargetView(textureMgr.backBuffer[currentFrame].rtvHandle.first, color, 1, &scissorRect);
       
-   commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 0.f, 0, 1, &scissorRect);
+   commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &scissorRect);
 
-   //DoRaytracing();
-   //CopyRaytracingOutputToBackbuffer();
+   DoRaytracing();
+   CopyRaytracingOutputToBackbuffer();
 
    forwardPass.Execute();
 
@@ -346,63 +353,57 @@ void rnd_Dx12::BuildGeometry()
    // Cube indices.
    Index indices[] =
    {
-       //3,1,0,
-       //2,1,3,
+       3,1,0,
+       2,1,3,
 
-       //6,4,5,
-       //7,4,6,
+       6,4,5,
+       7,4,6,
 
-       //11,9,8,
-       //10,9,11,
+       11,9,8,
+       10,9,11,
 
-       //14,12,13,
-       //15,12,14,
+       14,12,13,
+       15,12,14,
 
-       //19,17,16,
-       //18,17,19,
+       19,17,16,
+       18,17,19,
 
-       //22,20,21,
-       //23,20,22,
-
-      0,1,2
+       22,20,21,
+       23,20,22,
    };
 
    // Cube vertices positions and corresponding triangle normals.
    Vertex vertices[] =
    {
-       //{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-       //{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-       //{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-       //{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       { XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       { XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
 
-       //{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-       //{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-       //{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-       //{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       { XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
 
-       //{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-       //{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-       //{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-       //{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
 
-       //{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-       //{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-       //{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-       //{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+       { XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
 
-       //{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-       //{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-       //{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-       //{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       { XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+       { XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
 
-       //{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       //{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       //{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       //{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-
-       { XMFLOAT3(-1.0f, -1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       { XMFLOAT3(-1.0f, 1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-       { XMFLOAT3(1.0f, 1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       { XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       { XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       { XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+       { XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
    };
 
    indexBuffer.OnInit(indices, sizeof(indices), L"INDEX BUFFER");
@@ -548,7 +549,7 @@ void rnd_Dx12::OnUpdate()
    if (imgui)
       imgui->OnUpdate();
 
-   //constantBufferMgr.UpdateConstBuffers();
+   constantBufferMgr.UpdateConstBuffers();
 
    PopulateGraphicsCommandList();
 

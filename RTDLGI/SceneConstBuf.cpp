@@ -1,5 +1,6 @@
 #include "SceneConstBuf.h"
 #include "rnd_Dx12.h"
+#include "core_Window.h"
 
 ConstBufInitializer<SceneConstBuf> SCENE_CB(L"SceneConstBuffer0");
 
@@ -10,7 +11,7 @@ void SceneConstBuf::OnInit(LPCWSTR name)
 
    // Allocate one constant buffer per frame, since it gets updated every frame.
    size_t cbSize = FRAME_COUNT * AlignConst(sizeof(SceneConstantBuffer), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
-   const D3D12_RESOURCE_DESC constantBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(cbSize);
+   D3D12_RESOURCE_DESC constantBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(cbSize);
 
    ThrowIfFailed(renderer->device->CreateCommittedResource(
       &uploadHeapProperties,
@@ -30,5 +31,22 @@ void SceneConstBuf::OnInit(LPCWSTR name)
 void SceneConstBuf::Update()
 {
    SceneConstantBuffer* buf = this;
+   float x = renderer->camPos.x;
+   float y = renderer->camPos.y;
+   float z = renderer->camPos.z;
+   float pitch = renderer->camDir.x;
+   float yaw = renderer->camDir.y;
+
+   XMMATRIX view = XMMatrixInverse(nullptr, XMMatrixRotationRollPitchYaw(pitch, -yaw, 0.f) * XMMatrixTranslation(x, y, z));
+   XMMATRIX proj = XMMatrixPerspectiveFovRH(XMConvertToRadians(renderer->fovAngleY), (float)window->width / (float)window->height, 0.01f, 10000.0f);
+
+   viewProj = view * proj;
+   viewProjInv = XMMatrixInverse(nullptr, viewProj);
+
+   cameraPosition = renderer->camPos;
+   lightPosition = renderer->lightPosition;
+   lightAmbientColor = renderer->lightAmbientColor;
+   lightDiffuseColor = renderer->lightDiffuseColor;
+
    memcpy(&mappedData[renderer->currentFrame].buffer, buf, sizeof(SceneConstantBuffer));
 }

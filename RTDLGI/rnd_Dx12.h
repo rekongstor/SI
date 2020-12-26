@@ -269,6 +269,14 @@ public:
    bool rtxSupported = false;
 #pragma endregion 
 
+   float fovAngleY;
+   XMFLOAT3 camPos;
+   XMFLOAT2 camDir;
+
+   XMFLOAT3 lightPosition;
+   XMFLOAT3 lightAmbientColor;
+   XMFLOAT3 lightDiffuseColor;
+
    rnd_TextureMgr textureMgr;
    rnd_ConstantBufferMgr constantBufferMgr;
    rnd_RootSignatureMgr rootSignatureMgr;

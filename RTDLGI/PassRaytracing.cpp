@@ -121,47 +121,15 @@ void PassRaytracing::OnInit()
 {
    cubeCb = dynamic_cast<CubeConstBuf*>(renderer->constantBufferMgr.Get(CUBE_CB));
    sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
-   sceneCb->cameraPosition = { 0,2,-5,1 };
-   InitializeScene();
 }
 
 void PassRaytracing::CreateRootSignature()
 {
-   m_raytracingLocalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ Const(SizeOfInUint32(CubeConstantBuffer), 1) }, {}, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
-}
-
-void PassRaytracing::InitializeScene()
-{
-   {
-      cubeCb->albedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-   }
-
-   m_up = { 0.0f, 1.0f, 0.0f, 1.0f };
-   m_at = {0.0f, 0.0f, 0.0f, 1.0f};
-
-   // Setup lights.
-   {
-      // Initialize the lighting parameters.
-      XMFLOAT4 lightPosition;
-      XMFLOAT4 lightAmbientColor;
-      XMFLOAT4 lightDiffuseColor;
-
-      lightPosition = XMFLOAT4(0.0f, 1.8f, -3.0f, 0.0f);
-      sceneCb->lightPosition = XMLoadFloat4(&lightPosition);
-
-      lightAmbientColor = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-      sceneCb->lightAmbientColor = XMLoadFloat4(&lightAmbientColor);
-
-      lightDiffuseColor = XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f);
-      sceneCb->lightDiffuseColor = XMLoadFloat4(&lightDiffuseColor);
-   }
-
+   m_raytracingLocalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ Const(SizeOfInUint32(CubeConstantBuffer), 1, 1) }, {}, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
 }
 
 void PassRaytracing::Execute()
 {
-   UpdateCameraMatrices();
-
    auto frameIndex = renderer->currentFrame;
 
    auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
@@ -194,7 +162,6 @@ void PassRaytracing::Execute()
 
    // Copy the updated scene constant buffer to GPU.
    // This should be already updated from cbMgr->Update()
-   sceneCb->Update();
    auto cbGpuAddress = sceneCb->buffer->GetGPUVirtualAddress() + frameIndex * sizeof(sceneCb->mappedData[0]);
    renderer->CommandList()->SetComputeRootConstantBufferView(GlobalRootSignatureParams::SceneConstantSlot, cbGpuAddress);
 
@@ -203,18 +170,6 @@ void PassRaytracing::Execute()
    SetCommonPipelineState(renderer->CommandList());
    renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->topLevelAccelerationStructure->GetGPUVirtualAddress());
    DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc);
-}
-
-void PassRaytracing::UpdateCameraMatrices()
-{
-   m_eye = sceneCb->cameraPosition;
-
-   float fovAngleY = 90.0f;
-   XMMATRIX view = XMMatrixLookAtLH(m_eye, m_at, m_up);
-   XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), (float)window->width / (float)window->height, 0.01f, 100.0f);
-   XMMATRIX viewProj = view * proj;
-
-   sceneCb->projectionToWorld = XMMatrixInverse(nullptr, viewProj);
 }
 
 void PassRaytracing::CreateRaytracingPipelineStateObject()
