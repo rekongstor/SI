@@ -8,22 +8,19 @@ cbuffer g_sceneCB : register(b0)
    SceneConstantBuffer g_sceneCB;
 }
 
-struct Vertex
-{
-    float3 position : POSITION;
-    float3 normal : NORMAL0;
-};
-
 struct VS_OUT
 {
    float4 pos : SV_POSITION;
    float4 normal : NORMAL0;
+   float4 color : COLOR0;
 };
 
 VS_OUT main(in Vertex v)
 {
    VS_OUT output;
    output.pos = mul(g_sceneCB.viewProj, float4(v.position, 1.f));
-   output.normal = output.pos * 0.5 + 0.5;
+   output.normal = normalize(mul(float4(v.normal, 0.f), g_sceneCB.viewProjInv));
+   output.color = mul(g_sceneCB.viewProjInv, output.pos);
+   output.color.xyz = output.color.xyz / (2.f * output.color.w) + 0.5f;
    return output;
 }

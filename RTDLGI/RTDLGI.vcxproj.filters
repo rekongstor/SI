@@ -55,6 +55,12 @@
     <Filter Include="Source Files\DX12\passes\PassRaytracing">
       <UniqueIdentifier>{dfc84343-b2f1-4bf0-9e95-1a4ecb36ca80}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\DX12\passes\PathForward">
+      <UniqueIdentifier>{c313d13e-3922-4849-9856-910e04127bbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DX12\passes\PassRaytracing">
+      <UniqueIdentifier>{0a5c3d10-f182-4629-afee-9b5d33e73a27}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -108,6 +114,9 @@
     <ClCompile Include="PassRaytracing.cpp">
       <Filter>Source Files\DX12\passes\PassRaytracing</Filter>
     </ClCompile>
+    <ClCompile Include="rnd_Mesh.cpp">
+      <Filter>Source Files\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h">
@@ -118,9 +127,6 @@
     </ClInclude>
     <ClInclude Include="rnd_Dx12.h">
       <Filter>Header Files\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="rnd_TextureMgr.h">
       <Filter>Header Files\DX12</Filter>
@@ -146,17 +152,11 @@
     <ClInclude Include="SceneConstBuf.h">
       <Filter>Header Files\DX12\constantBuffers\CBs</Filter>
     </ClInclude>
-    <ClInclude Include="PassRaytracing.h">
-      <Filter>Header Files\DX12\passes</Filter>
-    </ClInclude>
     <ClInclude Include="D3DBuffer.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
     <ClInclude Include="rnd_Texture3D.h">
       <Filter>Header Files\DX12\buffers</Filter>
-    </ClInclude>
-    <ClInclude Include="PassForward.h">
-      <Filter>Header Files\DX12\passes</Filter>
     </ClInclude>
     <ClInclude Include="rnd_RootSignatureMgr.h">
       <Filter>Header Files\DX12</Filter>
@@ -164,11 +164,23 @@
     <ClInclude Include="rnd_PipelineStateMgr.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="HlslCompat.h">
+    <ClInclude Include="rnd_Mesh.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HlslCompat.h">
+      <Filter>Header Files\DX12\passes</Filter>
+    </ClInclude>
+    <ClInclude Include="PassForward.h">
+      <Filter>Header Files\DX12\passes\PathForward</Filter>
+    </ClInclude>
+    <ClInclude Include="PassRaytracing.h">
+      <Filter>Header Files\DX12\passes\PassRaytracing</Filter>
+    </ClInclude>
     <ClInclude Include="RayTracingHlslCompat.h">
-      <Filter>Source Files\DX12\passes\PassRaytracing</Filter>
+      <Filter>Header Files\DX12\passes\PassRaytracing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -173,6 +173,7 @@
     <ClCompile Include="rnd_Dx12.cpp" />
     <ClCompile Include="core_Window.cpp" />
     <ClCompile Include="rnd_IndexBuffer.cpp" />
+    <ClCompile Include="rnd_Mesh.cpp" />
     <ClCompile Include="rnd_PipelineStateMgr.cpp" />
     <ClCompile Include="rnd_RootSignatureMgr.cpp" />
     <ClCompile Include="rnd_Texture2D.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="rnd_Dx12.h" />
     <ClInclude Include="core_Window.h" />
     <ClInclude Include="rnd_IndexBuffer.h" />
+    <ClInclude Include="rnd_Mesh.h" />
     <ClInclude Include="rnd_PipelineStateMgr.h" />
     <ClInclude Include="rnd_RootSignatureMgr.h" />
     <ClInclude Include="rnd_Texture2D.h" />

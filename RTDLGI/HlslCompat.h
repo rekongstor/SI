@@ -12,11 +12,28 @@
 #ifndef HLSLCOMPAT_H
 #define HLSLCOMPAT_H
 
+typedef float2 XMFLOAT2;
 typedef float3 XMFLOAT3;
 typedef float4 XMFLOAT4;
 typedef float4 XMVECTOR;
 typedef float4x4 XMMATRIX;
 typedef float4x4 XMFLOAT4X4;
 typedef uint UINT;
+
+#ifndef HLSL
+#define SEM(semantic)
+
+// Shader will use byte encoding to access indices.
+typedef UINT16 Index;
+#else
+#define SEM(semantic) : semantic
+#endif
+
+struct Vertex
+{
+   XMFLOAT3 position SEM(SV_POSITION0);
+   XMFLOAT3 normal SEM(NORMAL0);
+   XMFLOAT2 uv SEM(TEXCOORD0);
+};
 
 #endif // HLSLCOMPAT_H

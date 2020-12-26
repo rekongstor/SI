@@ -69,9 +69,14 @@ inline void ThrowIfFailed(HRESULT hr, const wchar_t* errMsg = L"")
    }
 }
 
-inline void ThrowIfFalse(bool value)
+inline void ThrowIfFalse(bool value, const wchar_t* errMsg = L"")
 {
-   ThrowIfFailed(value ? S_OK : E_FAIL);
+   ThrowIfFailed(value ? S_OK : E_FAIL, errMsg);
+}
+
+inline void ThrowMsg(const wchar_t* errMsg = L"")
+{
+   ThrowIfFailed(E_FAIL, errMsg);
 }
 
 inline wchar_t* FormatWStr(LPCWSTR format, ...)

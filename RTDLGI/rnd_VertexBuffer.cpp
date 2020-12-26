@@ -1,11 +1,11 @@
 #include "rnd_VertexBuffer.h"
 #include "rnd_Dx12.h"
 
-void rnd_VertexBuffer::OnInit(void* srcData, UINT64 sizeInBytes, int sizeOfElement, LPCWSTR name /*= L""*/)
+void rnd_VertexBuffer::OnInit(void* srcData, UINT64 count, int sizeOfElement, LPCWSTR name /*= L""*/)
 {
    ID3D12Resource* uploadBuffer;
    auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-   auto bufferDesc(CD3DX12_RESOURCE_DESC::Buffer(sizeInBytes, D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE));
+   auto bufferDesc(CD3DX12_RESOURCE_DESC::Buffer(count * sizeOfElement, D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE));
    ThrowIfFailed(renderer->device->CreateCommittedResource(
       &heapProperties,
       D3D12_HEAP_FLAG_NONE,
@@ -13,10 +13,10 @@ void rnd_VertexBuffer::OnInit(void* srcData, UINT64 sizeInBytes, int sizeOfEleme
       D3D12_RESOURCE_STATE_GENERIC_READ,
       nullptr,
       IID_PPV_ARGS(&uploadBuffer)));
-   uploadBuffer->SetName(FormatWStr(L"[UploadBuf] %s", name));
+   uploadBuffer->SetName(FormatWStr(L"[UploadBuf-VertexBuf] %s", name));
 
    heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-   bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeInBytes);
+   bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(count * sizeOfElement);
    ThrowIfFailed(renderer->device->CreateCommittedResource(
       &heapProperties,
       D3D12_HEAP_FLAG_NONE,
@@ -24,17 +24,17 @@ void rnd_VertexBuffer::OnInit(void* srcData, UINT64 sizeInBytes, int sizeOfEleme
       D3D12_RESOURCE_STATE_COPY_DEST,
       nullptr,
       IID_PPV_ARGS(&buffer)));
-   buffer->SetName(name);
+   buffer->SetName(FormatWStr(L"[VertexBuf] %s", name));
 
    this->format = DXGI_FORMAT_UNKNOWN;
    this->state = D3D12_RESOURCE_STATE_COPY_DEST;
 
-   D3D12_SUBRESOURCE_DATA subresourceData{ srcData, sizeInBytes, sizeInBytes };
+   D3D12_SUBRESOURCE_DATA subresourceData{ srcData, count * sizeOfElement, count * sizeOfElement};
    UpdateSubresources(renderer->CommandListCopy(), buffer.Get(), uploadBuffer, 0, 0, 1, &subresourceData);
 
    renderer->AddUploadBuffer(uploadBuffer, buffer); // we won't release command buffer until all resources are loaded
 
-   vertexBufferView.SizeInBytes = sizeInBytes;
+   vertexBufferView.SizeInBytes = count * sizeOfElement;
    vertexBufferView.BufferLocation = buffer->GetGPUVirtualAddress();
    vertexBufferView.StrideInBytes = sizeOfElement;
 }

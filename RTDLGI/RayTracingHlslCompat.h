@@ -24,9 +24,6 @@
 #else
 using namespace DirectX;
 
-// Shader will use byte encoding to access indices.
-typedef UINT16 Index;
-
 #define Q(x) #x
 #define QUOTE(x) Q(x)
 #define HIT_GROUP HitGroup
@@ -42,12 +39,5 @@ static const wchar_t* hitGroupName = L"_" QUOTE(HIT_GROUP);
 #undef CLOSEST_HIT_SHADER
 #undef MISS_SHADER
 #endif
-
-
-struct Vertex
-{
-    XMFLOAT3 position;
-    XMFLOAT3 normal;
-};
 
 #endif // RAYTRACINGHLSLCOMPAT_H
