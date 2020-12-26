@@ -15,7 +15,7 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
    camera({5.16772985, 1.89779234, -1.41415465f, 1.f}, {0.703276634f, 1.02280307f, 0.218072295f, 1.f}, 45.f,
-          static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()), 40.f, 0.1f)
+          static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()), 1000.f, 0.1f)
 {
    targetOutput = 0;
    targetArray = 0;
@@ -621,52 +621,20 @@ void siRenderer::onInit(siImgui* imgui)
                             defRenderConstBuffer.GetGpuVirtualAddress());
    }
 
-   siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
+   //siSceneLoader::loadScene("monkey.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
    //siSceneLoader::loadScene("sponza.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
+   siSceneLoader::loadScene("rtdlgi.fbx", meshes, textures, device.get(), &descriptorMgr, commandList);
 
    // creating instances
-   for (int i = 0; i < meshes.size(); ++i)
-   {
+   for (int i = 0; i < meshes.size(); ++i) {
       auto& inst = instances[i];
-      const uint32_t x = 1;
-      const uint32_t y = 1;
-      float scale = 1.0f;
-      XMFLOAT4 position = XMFLOAT4();
-      XMFLOAT4 rotation = XMFLOAT4();
-      for (uint32_t i = 0; i < x; ++i)
-      {
-         for (uint32_t j = 0; j < y; ++j)
-         {
-            XMStoreFloat4(&rotation, XMQuaternionRotationRollPitchYaw(
-                             0.f,
-                             0.f,
-                             0.f
-                          ));
-            position = {
-               (static_cast<float>(i) - static_cast<float>(x - 1) * 0.5f) * (scale * 3.5f + 1.f), 0.f,
-               (static_cast<float>(j) - static_cast<float>(y - 1) * 0.5f) * (scale * 3.5f + 1.f), 1.f
-            };
-            XMVECTOR rotVector(XMLoadFloat4(&rotation));
-            XMMATRIX rotMatrix = XMMatrixRotationQuaternion(rotVector);
-            XMVECTOR transVector(XMLoadFloat4(&position));
-            XMMATRIX transMatrix = XMMatrixTranslationFromVector(transVector);
-            XMMATRIX scaleMatrix = XMMatrixScaling(scale, scale, scale);
-            auto InverseTranspose = [](CXMMATRIX M)
-            {
-               XMMATRIX A = M;
-               A.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-               XMVECTOR det = XMMatrixDeterminant(A);
-               return XMMatrixTranspose(XMMatrixInverse(&det,
-                                                        A));
-            };
-            XMMATRIX world = scaleMatrix * rotMatrix * transMatrix;
-            perInstanceData instanceData;
-            DirectX::XMStoreFloat4x4(&instanceData.world, world);
-            DirectX::XMStoreFloat4x4(&instanceData.worldIt, InverseTranspose(world));
 
-            inst.get().emplace_back(instanceData);
-         }
-      }
+      perInstanceData instanceData;
+      instanceData.world = meshes[i].worldPos;
+      XMMATRIX worldPosIt = XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&instanceData.world)));
+      XMStoreFloat4x4(&instanceData.worldIt, worldPosIt);
+
+      inst.get().emplace_back(instanceData);
       inst.initBuffer(device.get());
    }
 

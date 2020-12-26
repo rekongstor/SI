@@ -19,8 +19,10 @@ class siMesh
    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
    D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
+
    void initBuffer(ID3D12Device* device, const siCommandList& commandList);
 public:
+   XMFLOAT4X4 worldPos;
    [[nodiscard]] UINT getIndexCount() const { return static_cast<UINT>(indices.size()); }
    [[nodiscard]] UINT getVertexCount() const { return static_cast<UINT>(vertices.size()); }
 

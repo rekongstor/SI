@@ -35,6 +35,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\3rd_party\fbx\src\miniz.c" />
+    <ClCompile Include="..\3rd_party\fbx\src\ofbx.cpp" />
     <ClCompile Include="BasicJob.cpp" />
     <ClCompile Include="Bitmap.cpp" />
     <ClCompile Include="UniqueTimer.cpp" />

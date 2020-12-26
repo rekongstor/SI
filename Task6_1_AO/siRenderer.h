@@ -32,7 +32,7 @@ class siRenderer
    bool active = false;
 
    static const uint32_t frameBuffers = 3;
-   static const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
+   static const D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_1;
    static const bool softwareAdapter = false;
 
    siDevice device;

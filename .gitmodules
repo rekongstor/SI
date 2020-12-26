@@ -16,3 +16,6 @@
 [submodule "3rd_party/Sponza"]
 	path = 3rd_party/Sponza
 	url = https://github.com/jimmiebergmann/Sponza
+[submodule "3rd_party/fbx"]
+	path = 3rd_party/fbx
+	url = https://github.com/nem0/OpenFBX
