@@ -6,6 +6,7 @@
 #include "rnd_IndexBuffer.h"
 #include "rnd_VertexBuffer.h"
 #include "rnd_RootSignatureMgr.h"
+#include "rnd_Scene.h"
 
 // TODO: Refactor
 #pragma region Raytracing helpers 
@@ -252,10 +253,6 @@ public:
    // Root signatures
    ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
 
-   // Geometry
-   rnd_IndexBuffer indexBuffer;
-   rnd_VertexBuffer vertexBuffer;
-
    // Acceleration structure
    ComPtr<ID3D12Resource> bottomLevelAccelerationStructure;
    ComPtr<ID3D12Resource> topLevelAccelerationStructure;
@@ -269,21 +266,23 @@ public:
 #pragma endregion 
 
    float fovAngleY;
-   XMFLOAT3 camPos;
+   XMFLOAT4 camPos;
    XMFLOAT2 camDir;
 
-   XMFLOAT3 lightPosition;
-   XMFLOAT3 lightAmbientColor;
-   XMFLOAT3 lightDiffuseColor;
+   XMFLOAT4 lightPosition;
+   XMFLOAT4 lightDirection;
+   XMFLOAT4 lightAmbientColor;
+   XMFLOAT4 lightDiffuseColor;
 
    rnd_TextureMgr textureMgr;
    rnd_ConstantBufferMgr constantBufferMgr;
    rnd_RootSignatureMgr rootSignatureMgr;
+   rnd_Scene scene;
 
-   void SetBarrier(const std::initializer_list<std::pair<D3DBuffer&, D3D12_RESOURCE_STATES>>& texturesStates);
+   void SetBarrier(const std::initializer_list<std::pair<rnd_Buffer&, D3D12_RESOURCE_STATES>>& texturesStates);
    rnd_Texture2D& BackBuffer() { return textureMgr.backBuffer[currentFrame]; }
 
-   void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, ComPtr<ID3D12Resource> buffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
+   void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, rnd_Buffer* rndBuffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
    void ResolveUploadBuffer();
    std::vector<UploadPair> uploadBuffers;
 };

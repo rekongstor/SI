@@ -1,12 +1,14 @@
 #pragma once
-#include "D3DBuffer.h"
+#include "rnd_UploadableBuffer.h"
 
-class rnd_IndexBuffer : public D3DBuffer
+class rnd_IndexBuffer : public rnd_UploadableBuffer
 {
 public:
-   void OnInit(void* srcData, UINT64 sizeInBytes, int sizeOfElement, LPCWSTR name = L"");
+   void OnInit(std::vector<char>& data, int sizeOfElement, LPCWSTR name = L"");
    void CreateSrv();
 
    D3D12_INDEX_BUFFER_VIEW indexBufferView;
    DescHandlePair srvHandle;
+
+   virtual ~rnd_IndexBuffer() = default;
 };

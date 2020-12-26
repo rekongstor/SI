@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
@@ -13,20 +9,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Core">
-      <UniqueIdentifier>{316346d0-cbfe-430a-8ba5-8ce59d62e1d5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Core">
       <UniqueIdentifier>{5dc780f0-1277-4cd7-a2c3-c161f363fb10}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\DX12">
       <UniqueIdentifier>{89884410-c3d2-405b-b8d8-ef1e9be8e67b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\DX12">
-      <UniqueIdentifier>{6bf2a775-b34d-4415-b5fd-25571c03e55f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\DX12\buffers">
-      <UniqueIdentifier>{9e508d34-28ab-4310-81ab-f53393f8879b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\DX12\buffers">
       <UniqueIdentifier>{a097a8a4-7d37-4797-b895-dfdae0890449}</UniqueIdentifier>
@@ -34,32 +21,45 @@
     <Filter Include="Header Files\DX12\constantBuffers">
       <UniqueIdentifier>{ac9c016e-80f1-44f5-b2a4-a0656fceb0d4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DX12\constantBuffers">
-      <UniqueIdentifier>{fb391869-7631-4447-859a-dc073833c31e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\DX12\passes">
       <UniqueIdentifier>{5a6df074-12f3-41cc-bec7-0cdfb8b8c8f5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DX12\passes">
-      <UniqueIdentifier>{e06585ec-bb5c-450d-8232-bfc07cc2b963}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\DX12\constantBuffers\CBs">
-      <UniqueIdentifier>{7351d7f3-2676-4879-813d-45e9e8b2007f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\DX12\constantBuffers\CBs">
       <UniqueIdentifier>{a834e247-9202-4d21-b795-37757ac5fc31}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\DX12\passes\PassForward">
-      <UniqueIdentifier>{ca7a0048-4ee3-464c-ab51-f75685137031}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\DX12\passes\PassRaytracing">
-      <UniqueIdentifier>{dfc84343-b2f1-4bf0-9e95-1a4ecb36ca80}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\DX12\passes\PathForward">
       <UniqueIdentifier>{c313d13e-3922-4849-9856-910e04127bbe}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\DX12\passes\PassRaytracing">
       <UniqueIdentifier>{0a5c3d10-f182-4629-afee-9b5d33e73a27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{316346d0-cbfe-430a-8ba5-8ce59d62e1d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12">
+      <UniqueIdentifier>{6bf2a775-b34d-4415-b5fd-25571c03e55f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\buffers">
+      <UniqueIdentifier>{9e508d34-28ab-4310-81ab-f53393f8879b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\constantBuffers">
+      <UniqueIdentifier>{fb391869-7631-4447-859a-dc073833c31e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\constantBuffers\CBs">
+      <UniqueIdentifier>{7351d7f3-2676-4879-813d-45e9e8b2007f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\passes">
+      <UniqueIdentifier>{e06585ec-bb5c-450d-8232-bfc07cc2b963}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\passes\PassForward">
+      <UniqueIdentifier>{ca7a0048-4ee3-464c-ab51-f75685137031}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\passes\PassRaytracing">
+      <UniqueIdentifier>{dfc84343-b2f1-4bf0-9e95-1a4ecb36ca80}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -117,6 +117,15 @@
     <ClCompile Include="rnd_Mesh.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="rnd_UploadableBuffer.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_Scene.cpp">
+      <Filter>Source Files\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_Inst.cpp">
+      <Filter>Source Files\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h">
@@ -152,9 +161,6 @@
     <ClInclude Include="SceneConstBuf.h">
       <Filter>Header Files\DX12\constantBuffers\CBs</Filter>
     </ClInclude>
-    <ClInclude Include="D3DBuffer.h">
-      <Filter>Header Files\DX12\buffers</Filter>
-    </ClInclude>
     <ClInclude Include="rnd_Texture3D.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
@@ -170,9 +176,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HlslCompat.h">
-      <Filter>Header Files\DX12\passes</Filter>
-    </ClInclude>
     <ClInclude Include="PassForward.h">
       <Filter>Header Files\DX12\passes\PathForward</Filter>
     </ClInclude>
@@ -181,6 +184,21 @@
     </ClInclude>
     <ClInclude Include="RayTracingHlslCompat.h">
       <Filter>Header Files\DX12\passes\PassRaytracing</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_Inst.h">
+      <Filter>Header Files\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_Scene.h">
+      <Filter>Header Files\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="HlslCompat.h">
+      <Filter>Header Files\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_Buffer.h">
+      <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_UploadableBuffer.h">
+      <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,12 +1,14 @@
 #pragma once
-#include "D3DBuffer.h"
+#include "rnd_UploadableBuffer.h"
 
-class rnd_VertexBuffer : public D3DBuffer
+class rnd_VertexBuffer : public rnd_UploadableBuffer
 {
 public:
-   void OnInit(void* srcData, UINT64 sizeInBytes, int sizeOfElement, LPCWSTR name = L"");
+   void OnInit(std::vector<char>& data, int sizeOfElement, LPCWSTR name = L"");
    void CreateSrv();
 
    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
    DescHandlePair srvHandle;
+
+   virtual ~rnd_VertexBuffer() = default;
 };

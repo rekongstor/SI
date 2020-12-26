@@ -104,11 +104,6 @@ void rnd_Dx12::OnInit()
    device.Get()->SetName(L"Device");
 #pragma endregion
 
-   // TODO: PSOs here
-#pragma region PSO
-
-#pragma endregion 
-
 #pragma region Fences
    ThrowIfFailed(device->CreateFence(fenceValues[currentFrame], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
    ThrowIfFailed(device->CreateFence(fenceValueCopy, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fenceCopy)));
@@ -251,14 +246,16 @@ void rnd_Dx12::OnInit()
    }
 #pragma endregion
 
-   camPos = XMFLOAT3(0, 0, 3);
-   camDir = XMFLOAT2(0, 0);
-   lightPosition = XMFLOAT3(0, 1, -1);
-   lightAmbientColor = XMFLOAT3(0.5, 0.0, 0.5);
-   lightDiffuseColor = XMFLOAT3(0.0, 0.5, 0.5);
+   camPos = { 0, 0, 3, 0 };
+   camDir = { 0, 0 };
+   lightPosition = { 0, 1, -1, 0 };
+   lightAmbientColor = { 0.5, 0.0, 0.5, 0 };
+   lightDiffuseColor = { 0.0, 0.5, 0.5, 0 };
+   lightDirection = { 0, -1, 1, 0 };
    fovAngleY = 60.f;
 
    constantBufferMgr.InitConstBuffers();
+   scene.OnInit("data/scenes/rtdlgi.fbx");
 
    forwardPass.OnInit();
 
@@ -356,13 +353,13 @@ void rnd_Dx12::BuildAccelerationStructures()
 
    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
    geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-   geometryDesc.Triangles.IndexBuffer = indexBuffer.buffer->GetGPUVirtualAddress();
-   geometryDesc.Triangles.IndexCount = static_cast<UINT>(indexBuffer.buffer->GetDesc().Width) / sizeof(Index);
+   geometryDesc.Triangles.IndexBuffer = renderer->scene.meshes[0].indexBuffer.buffer->GetGPUVirtualAddress();
+   geometryDesc.Triangles.IndexCount = static_cast<UINT>(renderer->scene.meshes[0].indexBuffer.buffer->GetDesc().Width) / sizeof(Index);
    geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R16_UINT;
    geometryDesc.Triangles.Transform3x4 = 0;
    geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-   geometryDesc.Triangles.VertexCount = static_cast<UINT>(vertexBuffer.buffer->GetDesc().Width) / sizeof(Vertex);
-   geometryDesc.Triangles.VertexBuffer.StartAddress = vertexBuffer.buffer->GetGPUVirtualAddress();
+   geometryDesc.Triangles.VertexCount = static_cast<UINT>(renderer->scene.meshes[0].vertexBuffer.buffer->GetDesc().Width) / sizeof(Vertex);
+   geometryDesc.Triangles.VertexBuffer.StartAddress = renderer->scene.meshes[0].vertexBuffer.buffer->GetGPUVirtualAddress();
    geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
 
    // Mark the geometry as opaque. 
@@ -479,6 +476,7 @@ void rnd_Dx12::OnUpdate()
    if (imgui)
       imgui->OnUpdate();
 
+   ResolveUploadBuffer();
    constantBufferMgr.UpdateConstBuffers();
 
    PopulateGraphicsCommandList();
@@ -555,7 +553,7 @@ void rnd_Dx12::WaitForGpuCopy()
    }
 }
 
-void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<D3DBuffer&, D3D12_RESOURCE_STATES>>& texturesStates)
+void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<rnd_Buffer&, D3D12_RESOURCE_STATES>>& texturesStates)
 {
    std::vector<D3D12_RESOURCE_BARRIER> barriers;
    for (auto& texSt : texturesStates) {
@@ -569,9 +567,9 @@ void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<D3DBuffer&, D3D1
    }
 }
 
-void rnd_Dx12::AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, ComPtr<ID3D12Resource> buffer)
+void rnd_Dx12::AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, rnd_Buffer* rndBuffer)
 {
-   uploadBuffers.push_back({uploadBuffer, buffer}); 
+   uploadBuffers.push_back({uploadBuffer, rndBuffer}); 
 }
 
 void rnd_Dx12::ResolveUploadBuffer()
@@ -582,6 +580,11 @@ void rnd_Dx12::ResolveUploadBuffer()
 
       WaitForGpuCopy(); // TODO: COPY realization
 
+      for (auto& rndBuffer : uploadBuffers)
+      {
+         SetBarrier({ {*rndBuffer.second, rndBuffer.second->state} });
+         rndBuffer.second->CleanUploadData();
+      }
       uploadBuffers.clear();
    }
 }

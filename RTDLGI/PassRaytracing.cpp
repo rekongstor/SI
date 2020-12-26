@@ -154,7 +154,7 @@ void PassRaytracing::Execute()
    {
       descriptorSetCommandList->SetDescriptorHeaps(1, renderer->cbvSrvUavHeap.GetAddressOf());
       // Set index and successive vertex buffer descriptor tables
-      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, renderer->indexBuffer.srvHandle.second);
+      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, renderer->scene.meshes[0].indexBuffer.srvHandle.second);
       renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.rayTracingOutput.uavHandle[0].second);
    };
 

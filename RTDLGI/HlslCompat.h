@@ -32,9 +32,14 @@ typedef uint UINT;
 
 struct Vertex
 {
-   XMFLOAT3 position SEM(SV_POSITION0);
+   XMFLOAT3 position SEM(POSITION0);
    XMFLOAT3 normal SEM(NORMAL0);
    XMFLOAT2 uv SEM(TEXCOORD0);
+};
+
+struct Instance
+{
+   XMMATRIX worldMat;
 };
 
 #endif // HLSLCOMPAT_H

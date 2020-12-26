@@ -45,6 +45,7 @@ void SceneConstBuf::Update()
 
    cameraPosition = renderer->camPos;
    lightPosition = renderer->lightPosition;
+   lightDirection = renderer->lightDirection;
    lightAmbientColor = renderer->lightAmbientColor;
    lightDiffuseColor = renderer->lightDiffuseColor;
 

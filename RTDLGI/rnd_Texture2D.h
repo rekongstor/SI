@@ -1,10 +1,10 @@
 #pragma once
-#include "D3DBuffer.h"
+#include "rnd_UploadableBuffer.h"
 
 extern float zeroClearValue[];
 extern float onesClearValue[];
 
-class rnd_Texture2D : public D3DBuffer, public Buffer2D
+class rnd_Texture2D : public rnd_UploadableBuffer, public Buffer2D
 {
    int mips;
    D3D12_RESOURCE_FLAGS flags;
@@ -23,5 +23,7 @@ public:
    void CreateRtv();
    void CreateSrv();
    void CreateUav(int mipSlice = 0);
+
+   virtual ~rnd_Texture2D() = default;
 };
 

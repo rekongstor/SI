@@ -1,7 +1,7 @@
 #pragma once
-#include "D3DBuffer.h"
+#include "rnd_UploadableBuffer.h"
 
-class rnd_Texture3D : public D3DBuffer, public Buffer3D
+class rnd_Texture3D : public rnd_UploadableBuffer, public Buffer3D
 {
    int mips;
    D3D12_RESOURCE_FLAGS flags;
@@ -17,5 +17,7 @@ public:
 
    void CreateSrv();
    void CreateUav(int mipSlice = 0);
+
+   virtual ~rnd_Texture3D() = default;
 };
 

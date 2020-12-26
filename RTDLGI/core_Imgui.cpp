@@ -56,6 +56,7 @@ void core_Imgui::OnUpdate()
 #pragma region "Debug window"
    ImGui::Begin("Camera");
    ImGui::DragFloat3("Position", &renderer->camPos.x, 0.01);
+   ImGui::DragFloat3("Light Direction", &renderer->lightDirection.x, 0.01);
    ImGui::SliderFloat("Pitch", &renderer->camDir.x, -M_PI_2, M_PI_2);
    ImGui::DragFloat("Yaw", &renderer->camDir.y, 0.01);
    renderer->camDir.y = fmodf(renderer->camDir.y, 2 * M_PI);

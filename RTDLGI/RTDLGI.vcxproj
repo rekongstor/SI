@@ -99,7 +99,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)Imgui.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)Imgui.lib;$(OutDir)Core.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3d12.dll</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
@@ -116,7 +116,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)Imgui.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)Imgui.lib;$(OutDir)Core.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3d12.dll</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
@@ -137,7 +137,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)Imgui.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)Imgui.lib;$(OutDir)Core.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3d12.dll</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
@@ -158,7 +158,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(OutDir)Imgui.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)Imgui.lib;$(OutDir)Core.lib;d3d12.lib;dxgi.lib;dxguid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3d12.dll</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
@@ -173,17 +173,20 @@
     <ClCompile Include="rnd_Dx12.cpp" />
     <ClCompile Include="core_Window.cpp" />
     <ClCompile Include="rnd_IndexBuffer.cpp" />
+    <ClCompile Include="rnd_Inst.cpp" />
     <ClCompile Include="rnd_Mesh.cpp" />
     <ClCompile Include="rnd_PipelineStateMgr.cpp" />
     <ClCompile Include="rnd_RootSignatureMgr.cpp" />
+    <ClCompile Include="rnd_Scene.cpp" />
     <ClCompile Include="rnd_Texture2D.cpp" />
     <ClCompile Include="rnd_Texture3D.cpp" />
     <ClCompile Include="rnd_TextureMgr.cpp" />
+    <ClCompile Include="rnd_UploadableBuffer.cpp" />
     <ClCompile Include="rnd_VertexBuffer.cpp" />
     <ClCompile Include="SceneConstBuf.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3DBuffer.h" />
+    <ClInclude Include="rnd_Buffer.h" />
     <ClInclude Include="PassForward.h" />
     <ClInclude Include="rnd_ConstantBufferMgr.h" />
     <ClInclude Include="rnd_ConstantBuffer.h" />
@@ -195,12 +198,15 @@
     <ClInclude Include="rnd_Dx12.h" />
     <ClInclude Include="core_Window.h" />
     <ClInclude Include="rnd_IndexBuffer.h" />
+    <ClInclude Include="rnd_Inst.h" />
     <ClInclude Include="rnd_Mesh.h" />
     <ClInclude Include="rnd_PipelineStateMgr.h" />
     <ClInclude Include="rnd_RootSignatureMgr.h" />
+    <ClInclude Include="rnd_Scene.h" />
     <ClInclude Include="rnd_Texture2D.h" />
     <ClInclude Include="rnd_Texture3D.h" />
     <ClInclude Include="rnd_TextureMgr.h" />
+    <ClInclude Include="rnd_UploadableBuffer.h" />
     <ClInclude Include="rnd_VertexBuffer.h" />
     <ClInclude Include="SceneConstBuf.h" />
     <ClInclude Include="stdafx.h" />

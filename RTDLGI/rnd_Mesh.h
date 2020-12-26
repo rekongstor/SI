@@ -9,9 +9,10 @@
 
 class rnd_Mesh
 {
+public:
    rnd_VertexBuffer vertexBuffer;
    rnd_IndexBuffer indexBuffer;
 
-   void OnInit(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, LPCWSTR name = L"");
+   void OnInit(std::vector<char>& vertices, std::vector<char>& indices, LPCWSTR name = L"");
 };
 

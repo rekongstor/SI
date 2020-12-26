@@ -32,7 +32,11 @@ void PassForward::OnInit()
    },
    {
       "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT,
-      0,D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+      0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+   },
+   {
+      "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,
+      0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
    }
    };
    D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = { inputElementDesc, _countof(inputElementDesc) };
@@ -41,7 +45,7 @@ void PassForward::OnInit()
    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
    ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
    auto rs = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-   rs.CullMode = D3D12_CULL_MODE_BACK;
+   rs.CullMode = D3D12_CULL_MODE_FRONT;
    psoDesc.InputLayout = inputLayoutDesc;
    psoDesc.pRootSignature = forwardRootSignature.Get();
    psoDesc.VS = vertexShaderByteCode;
@@ -93,7 +97,10 @@ void PassForward::Execute()
    auto& depthBuffer = renderer->textureMgr.depthBuffer.dsvHandle;
    renderer->CommandList()->OMSetRenderTargets(1, &backBuffer.first, false, &depthBuffer.first);
 
-   renderer->CommandList()->IASetVertexBuffers(0, 1, &renderer->vertexBuffer.vertexBufferView );
-   renderer->CommandList()->IASetIndexBuffer(&renderer->indexBuffer.indexBufferView);
-   renderer->CommandList()->DrawIndexedInstanced(renderer->indexBuffer.indexBufferView.SizeInBytes / sizeof(UINT16), 1, 0, 0, 0);
+   for (auto& i : renderer->scene.instances)
+   {
+      renderer->CommandList()->IASetVertexBuffers(0, 1, &i.first->vertexBuffer.vertexBufferView);
+      renderer->CommandList()->IASetIndexBuffer(&i.first->indexBuffer.indexBufferView);
+      renderer->CommandList()->DrawIndexedInstanced(i.first->indexBuffer.indexBufferView.SizeInBytes / sizeof(Index), 1, 0, 0, 0);
+   }
 }

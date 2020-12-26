@@ -171,7 +171,7 @@ FUNCTION_NAME(CLOSEST_HIT_SHADER) (inout RayPayload payload, in MyAttributes att
     float3 triangleNormal = HitAttribute(vertexNormals, attr);
 
     float4 diffuseColor = CalculateDiffuseLighting(hitPosition, triangleNormal);
-    float4 color = float4(g_sceneCB.lightAmbientColor, 1) + diffuseColor;
+    float4 color = g_sceneCB.lightAmbientColor + diffuseColor;
 
     payload.color = color;
 }
