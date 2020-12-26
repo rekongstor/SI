@@ -260,7 +260,6 @@ public:
    ComPtr<ID3D12Resource> bottomLevelAccelerationStructure;
    ComPtr<ID3D12Resource> topLevelAccelerationStructure;
 
-   void BuildGeometry();
    void BuildAccelerationStructures();
    void CreateRaytracingOutputResource();
 

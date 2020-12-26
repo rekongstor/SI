@@ -1,7 +1,7 @@
 #include "rnd_Dx12.h"
 #include "core_Window.h"
 #include "core_Imgui.h"
-#include "RayTracingHlslCompat.h"
+#include "HlslCompat.h"
 
 wchar_t nameBuffer[4096]{};
 
@@ -259,7 +259,6 @@ void rnd_Dx12::OnInit()
    fovAngleY = 60.f;
 
    constantBufferMgr.InitConstBuffers();
-   BuildGeometry();
 
    forwardPass.OnInit();
 
