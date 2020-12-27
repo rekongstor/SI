@@ -30,7 +30,10 @@ void rnd_TopLAS::OnInit(rnd_Scene* scene)
    for (auto& inst : scene->instances)
    {
       D3D12_RAYTRACING_INSTANCE_DESC &instanceDesc = instanceDescData.emplace_back();
-      instanceDesc.Transform[0][0] = instanceDesc.Transform[1][1] = instanceDesc.Transform[2][2] = 1;
+      for (int tr = 0; tr < 12; ++tr)
+      {
+         instanceDesc.Transform[tr / 4][tr % 4] = inst.second.instanceData.worldMat.r[tr / 4].m128_f32[tr % 4];
+      }
       instanceDesc.InstanceMask = 1;
       instanceDesc.InstanceID = totalInstances++;
       instanceDesc.AccelerationStructure = inst.first->bottomLas.buffer->GetGPUVirtualAddress();

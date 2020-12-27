@@ -23,7 +23,7 @@ void rnd_Scene::OnInit(LPCSTR filename)
       ofbx::Matrix tr = scene->getMesh(m)->getGlobalTransform();
       for (int t = 0; t < 16; ++t)
       {
-         instData.instanceData.worldMat.r[t / 4].m128_f32[t % 4] = tr.m[t];
+         instData.instanceData.worldMat.r[t % 4].m128_f32[t / 4] = tr.m[t];
       }
 
       const int* faceIndices = mesh->getFaceIndices();
