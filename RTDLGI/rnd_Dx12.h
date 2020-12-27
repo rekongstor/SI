@@ -187,7 +187,7 @@ private:
    ComPtr<ID3D12Fence1> fence;
    ComPtr<ID3D12Fence1> fenceCopy;
    ComPtr<ID3D12Fence1> fenceCompute;
-   uint64_t fenceValues[FRAME_COUNT];
+   uint64_t fenceValue;
    uint64_t fenceValueCopy;
    uint64_t fenceValueCompute;
    Event fenceEvent;
@@ -280,7 +280,7 @@ public:
    void SetBarrier(const std::initializer_list<std::pair<rnd_Buffer&, D3D12_RESOURCE_STATES>>& texturesStates);
    rnd_Texture2D& BackBuffer() { return textureMgr.backBuffer[currentFrame]; }
 
-   void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, rnd_Buffer* rndBuffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
+   void AddUploadBuffer(ID3D12Resource* uploadBuffer, rnd_UploadableBuffer* rndBuffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
    void ResolveUploadBuffer();
    std::vector<UploadPair> uploadBuffers;
 

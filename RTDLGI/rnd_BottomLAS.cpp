@@ -5,7 +5,7 @@
 #include "rnd_VertexBuffer.h"
 #include "HlslCompat.h"
 
-void rnd_BottomLAS::OnInit(rnd_IndexBuffer& indexBuffer, rnd_VertexBuffer& vertexBuffer)
+void rnd_BottomLAS::OnInit(rnd_IndexBuffer& indexBuffer, rnd_VertexBuffer& vertexBuffer, LPCWSTR name)
 {
    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc {};
    geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -34,10 +34,10 @@ void rnd_BottomLAS::OnInit(rnd_IndexBuffer& indexBuffer, rnd_VertexBuffer& verte
    renderer->dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
    ThrowIfFalse(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
 
-   renderer->AllocateUAVBuffer(bottomLevelPrebuildInfo.ScratchDataSizeInBytes, &scratchResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"ScratchResource");
+   ComPtr<ID3D12Resource> scratchResource;
+   renderer->AllocateUAVBuffer(bottomLevelPrebuildInfo.ScratchDataSizeInBytes, &scratchResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"BlasScratchResource");
 
-   renderer->AllocateUAVBuffer(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, &buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, L"BottomLevelAccelerationStructure");
-   this->state = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+   renderer->AllocateUAVBuffer(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, &buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, FormatWStr(L"[BLAS] %s", name));
 
    bottomLevelBuildDesc.ScratchAccelerationStructureData = scratchResource->GetGPUVirtualAddress();
    bottomLevelBuildDesc.DestAccelerationStructureData = buffer->GetGPUVirtualAddress();
@@ -46,4 +46,9 @@ void rnd_BottomLAS::OnInit(rnd_IndexBuffer& indexBuffer, rnd_VertexBuffer& verte
 
    auto c = CD3DX12_RESOURCE_BARRIER::UAV(buffer.Get());
    renderer->CommandList()->ResourceBarrier(1, &c);
+
+   this->state = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+   renderer->ExecuteCommandList();
+   renderer->WaitForGpu();
 }

@@ -4,9 +4,8 @@
 
 class rnd_BottomLAS : public rnd_UploadableBuffer
 {
-   ID3D12Resource* scratchResource;
 public:
-   void OnInit(rnd_IndexBuffer& indexBuffer, rnd_VertexBuffer& vertexBuffer);
+   void OnInit(rnd_IndexBuffer& indexBuffer, rnd_VertexBuffer& vertexBuffer, LPCWSTR name = L"");
 
    void CleanUploadData() override {}
 };

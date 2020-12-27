@@ -130,7 +130,7 @@
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
     <ClCompile Include="rnd_TopLAS.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -210,7 +210,7 @@
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
     <ClInclude Include="rnd_TopLAS.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

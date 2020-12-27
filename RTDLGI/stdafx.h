@@ -34,10 +34,10 @@ using float3x4 = XMFLOAT3X4;
 using float4x3 = XMFLOAT4X3;
 using uint = unsigned int;
 
-class rnd_Buffer;
+class rnd_UploadableBuffer;
 
 using DescHandlePair = std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE>;
-using UploadPair = std::pair<ComPtr<ID3D12Resource>, rnd_Buffer*>;
+using UploadPair = std::pair<ID3D12Resource*, rnd_UploadableBuffer*>;
 
 struct State
 {

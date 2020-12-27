@@ -9,7 +9,7 @@ void rnd_Mesh::OnInit(std::vector<char>& vertices, std::vector<char>& indices, L
 
    renderer->ResolveUploadBuffer();
 
-   bottomLas.OnInit(indexBuffer, vertexBuffer);
+   bottomLas.OnInit(indexBuffer, vertexBuffer, name);
 
    indexBuffer.CreateSrv();
    vertexBuffer.CreateSrv();

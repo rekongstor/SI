@@ -76,27 +76,33 @@ void rnd_Dx12::OnInit()
    }
    IDXGIAdapter1** ppAdapter = &adapter;
    *ppAdapter = adapterTmp.Detach();
-   ComPtr<ID3D12Device> testDevice;
-   D3D12_FEATURE_DATA_D3D12_OPTIONS5 featureSupportData{};
-
-   rtxSupported = SUCCEEDED(D3D12CreateDevice(adapter.Get(), featureLevel, IID_PPV_ARGS(&testDevice)))
-      && SUCCEEDED(testDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &featureSupportData, sizeof(featureSupportData)))
-      && featureSupportData.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED;
+   {
+      ComPtr<ID3D12Device> testDevice;
+      D3D12_FEATURE_DATA_D3D12_OPTIONS5 featureSupportData{};
+      rtxSupported = SUCCEEDED(D3D12CreateDevice(adapter.Get(), featureLevel, IID_PPV_ARGS(&testDevice)));
+      if (rtxSupported)
+         rtxSupported = SUCCEEDED(testDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &featureSupportData, sizeof(featureSupportData)));
+      if (rtxSupported)
+         rtxSupported = featureSupportData.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED;
+   }
 
    ThrowIfFailed(D3D12CreateDevice(adapter.Get(), featureLevel, IID_PPV_ARGS(&device)));
    device.Get()->SetName(L"Device");
 #pragma endregion
 
 #pragma region Fences
-   ThrowIfFailed(device->CreateFence(fenceValues[currentFrame], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+   ThrowIfFailed(device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
    ThrowIfFailed(device->CreateFence(fenceValueCopy, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fenceCopy)));
-   ++fenceValues[currentFrame];
+   ++fenceValue;
    ++fenceValueCopy;
    fence->SetName(L"Fence");
    fenceCopy->SetName(L"FenceCopy");
 
    fenceEvent.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
    assert(fenceEvent.IsValid());
+
+   fenceEventCopy.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
+   assert(fenceEventCopy.IsValid());
 #pragma endregion
 
    // TODO: Add bundles?
@@ -244,7 +250,6 @@ void rnd_Dx12::OnInit()
 
    constantBufferMgr.InitConstBuffers();
    scene.OnInit("data/scenes/rtdlgi.fbx");
-   ResolveUploadBuffer();
 
    forwardPass.OnInit();
 
@@ -259,6 +264,7 @@ void rnd_Dx12::OnInit()
 
    ExecuteCommandList();
    WaitForGpu();
+   CommandList()->Close();
 }
 
 void rnd_Dx12::PopulateGraphicsCommandList()
@@ -376,17 +382,17 @@ void rnd_Dx12::MoveToNextFrame()
       ThrowIfFailed(swapChain->Present(syncInterval != UINT_MAX ? syncInterval : 1, 0));
    }
 
-   const UINT64 currentFenceValue = fenceValues[currentFrame];
+   const UINT64 currentFenceValue = fenceValue;
    ThrowIfFailed(commandQueue->Signal(fence.Get(), currentFenceValue));
 
    currentFrame = swapChain->GetCurrentBackBufferIndex();
 
-   if (fence->GetCompletedValue() < fenceValues[currentFrame]) {
-      ThrowIfFailed(fence->SetEventOnCompletion(fenceValues[currentFrame], fenceEvent.Get()));
+   if (fence->GetCompletedValue() < fenceValue) {
+      ThrowIfFailed(fence->SetEventOnCompletion(fenceValue, fenceEvent.Get()));
       WaitForSingleObjectEx(fenceEvent.Get(), INFINITE, FALSE);
    }
 
-   fenceValues[currentFrame] = currentFenceValue + 1;
+   fenceValue = currentFenceValue + 1;
 }
 
 void rnd_Dx12::ExecuteCommandList()
@@ -399,15 +405,18 @@ void rnd_Dx12::ExecuteCommandList()
 void rnd_Dx12::WaitForGpu()
 {
    if (commandQueue && fence && fenceEvent.IsValid()) {
-      UINT64 fenceValue = fenceValues[currentFrame];
-      if (SUCCEEDED(commandQueue->Signal(fence.Get(), fenceValue))) {
+      UINT64 fenceValueV = this->fenceValue;
+      if (SUCCEEDED(commandQueue->Signal(fence.Get(), fenceValueV))) {
          // Wait until the Signal has been processed.
-         if (SUCCEEDED(fence->SetEventOnCompletion(fenceValue, fenceEvent.Get()))) {
+         if (SUCCEEDED(fence->SetEventOnCompletion(fenceValueV, fenceEvent.Get()))) {
             WaitForSingleObjectEx(fenceEvent.Get(), INFINITE, FALSE);
 
-            fenceValues[currentFrame]++;
+            fenceValue++;
          }
       }
+
+      ThrowIfFailed(CommandAllocator()->Reset());
+      ThrowIfFailed(CommandList()->Reset(CommandAllocator(), nullptr));
    }
 }
 
@@ -430,6 +439,9 @@ void rnd_Dx12::WaitForGpuCopy()
             fenceValueCopy++;
          }
       }
+
+      ThrowIfFailed(CommandAllocatorCopy()->Reset());
+      ThrowIfFailed(CommandListCopy()->Reset(CommandAllocatorCopy(), nullptr));
    }
 }
 
@@ -447,7 +459,7 @@ void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<rnd_Buffer&, D3D
    }
 }
 
-void rnd_Dx12::AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, rnd_Buffer* rndBuffer)
+void rnd_Dx12::AddUploadBuffer(ID3D12Resource* uploadBuffer, rnd_UploadableBuffer* rndBuffer)
 {
    uploadBuffers.push_back({uploadBuffer, rndBuffer}); 
 }
@@ -464,10 +476,10 @@ void rnd_Dx12::ResolveUploadBuffer()
       {
          SetBarrier({ {*rndBuffer.second, rndBuffer.second->state} });
          rndBuffer.second->CleanUploadData();
+         rndBuffer.first->Release();
       }
       uploadBuffers.clear();
 
-      CommandListCopy()->Reset(CommandAllocatorCopy(), nullptr);
    }
 }
 
@@ -483,9 +495,7 @@ void rnd_Dx12::AllocateUAVBuffer(UINT64 bufferSize, ID3D12Resource** ppResource,
       initialResourceState,
       nullptr,
       IID_PPV_ARGS(ppResource)));
-   if (resourceName) {
-      (*ppResource)->SetName(resourceName);
-   }
+   (*ppResource)->SetName(resourceName);
 }
 
 #pragma region Descriptor heap
