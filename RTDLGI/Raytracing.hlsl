@@ -173,7 +173,7 @@ FUNCTION_NAME(CLOSEST_HIT_SHADER) (inout RayPayload payload, in MyAttributes att
     float4 diffuseColor = CalculateDiffuseLighting(hitPosition, triangleNormal);
     float4 color = g_sceneCB.lightAmbientColor + diffuseColor;
 
-    payload.color = color;
+    payload.color = float4(1, 1, 1, 1);
 }
 
 [shader("miss")]

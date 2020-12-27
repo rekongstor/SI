@@ -246,16 +246,17 @@ void rnd_Dx12::OnInit()
    }
 #pragma endregion
 
-   camPos = { 0, 0, 3, 0 };
-   camDir = { 0, 0 };
+   camPos = { 2, 2, 6, 0 };
+   camDir = { -0.25, -0.3 };
    lightPosition = { 0, 1, -1, 0 };
    lightAmbientColor = { 0.5, 0.0, 0.5, 0 };
    lightDiffuseColor = { 0.0, 0.5, 0.5, 0 };
-   lightDirection = { 0, -1, 1, 0 };
+   lightDirection = { 1, 1, 0.5, 0 };
    fovAngleY = 60.f;
 
    constantBufferMgr.InitConstBuffers();
    scene.OnInit("data/scenes/rtdlgi.fbx");
+   ResolveUploadBuffer();
 
    forwardPass.OnInit();
 
@@ -476,7 +477,6 @@ void rnd_Dx12::OnUpdate()
    if (imgui)
       imgui->OnUpdate();
 
-   ResolveUploadBuffer();
    constantBufferMgr.UpdateConstBuffers();
 
    PopulateGraphicsCommandList();

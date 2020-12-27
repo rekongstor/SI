@@ -97,10 +97,12 @@ void PassForward::Execute()
    auto& depthBuffer = renderer->textureMgr.depthBuffer.dsvHandle;
    renderer->CommandList()->OMSetRenderTargets(1, &backBuffer.first, false, &depthBuffer.first);
 
-   for (auto& i : renderer->scene.instances)
+   //for (auto& i : renderer->scene.instances)
+   for (int inst = 0; inst < renderer->scene.meshes.size(); ++inst)
    {
-      renderer->CommandList()->IASetVertexBuffers(0, 1, &i.first->vertexBuffer.vertexBufferView);
-      renderer->CommandList()->IASetIndexBuffer(&i.first->indexBuffer.indexBufferView);
-      renderer->CommandList()->DrawIndexedInstanced(i.first->indexBuffer.indexBufferView.SizeInBytes / sizeof(Index), 1, 0, 0, 0);
+      auto& i = renderer->scene.meshes[inst];
+      renderer->CommandList()->IASetVertexBuffers(0, 1, &i.vertexBuffer.vertexBufferView);
+      renderer->CommandList()->IASetIndexBuffer(&i.indexBuffer.indexBufferView);
+      renderer->CommandList()->DrawIndexedInstanced(i.indexBuffer.indexBufferView.SizeInBytes / sizeof(Index), 1, 0, 0, 0);
    }
 }
