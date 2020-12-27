@@ -7,6 +7,10 @@ void rnd_Mesh::OnInit(std::vector<char>& vertices, std::vector<char>& indices, L
    indexBuffer.OnInit(indices, sizeof(Index), name);
    vertexBuffer.OnInit(vertices, sizeof(Vertex), name);
 
+   renderer->ResolveUploadBuffer();
+
+   bottomLas.OnInit(indexBuffer, vertexBuffer);
+
    indexBuffer.CreateSrv();
    vertexBuffer.CreateSrv();
 }

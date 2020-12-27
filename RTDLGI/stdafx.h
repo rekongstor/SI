@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <string>
+#include <iosfwd>
 #include <corecrt_math_defines.h>
 
 #include <initguid.h>
@@ -14,6 +14,8 @@
 #include "../Core/d3dx12.h"
 #include <wrl.h>
 
+#include <string>
+#include <vector>
 #include <map>
 #include <unordered_map>
 #include <queue>

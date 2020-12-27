@@ -164,6 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PassForward.cpp" />
+    <ClCompile Include="rnd_BottomLAS.cpp" />
     <ClCompile Include="rnd_ConstantBufferMgr.cpp" />
     <ClCompile Include="rnd_ConstantBuffer.cpp" />
     <ClCompile Include="CubeConstBuf.cpp" />
@@ -173,7 +174,7 @@
     <ClCompile Include="rnd_Dx12.cpp" />
     <ClCompile Include="core_Window.cpp" />
     <ClCompile Include="rnd_IndexBuffer.cpp" />
-    <ClCompile Include="rnd_Inst.cpp" />
+    <ClCompile Include="rnd_Instance.cpp" />
     <ClCompile Include="rnd_Mesh.cpp" />
     <ClCompile Include="rnd_PipelineStateMgr.cpp" />
     <ClCompile Include="rnd_RootSignatureMgr.cpp" />
@@ -181,11 +182,13 @@
     <ClCompile Include="rnd_Texture2D.cpp" />
     <ClCompile Include="rnd_Texture3D.cpp" />
     <ClCompile Include="rnd_TextureMgr.cpp" />
+    <ClCompile Include="rnd_TopLAS.cpp" />
     <ClCompile Include="rnd_UploadableBuffer.cpp" />
     <ClCompile Include="rnd_VertexBuffer.cpp" />
     <ClCompile Include="SceneConstBuf.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="rnd_BottomLAS.h" />
     <ClInclude Include="rnd_Buffer.h" />
     <ClInclude Include="PassForward.h" />
     <ClInclude Include="rnd_ConstantBufferMgr.h" />
@@ -198,7 +201,7 @@
     <ClInclude Include="rnd_Dx12.h" />
     <ClInclude Include="core_Window.h" />
     <ClInclude Include="rnd_IndexBuffer.h" />
-    <ClInclude Include="rnd_Inst.h" />
+    <ClInclude Include="rnd_Instance.h" />
     <ClInclude Include="rnd_Mesh.h" />
     <ClInclude Include="rnd_PipelineStateMgr.h" />
     <ClInclude Include="rnd_RootSignatureMgr.h" />
@@ -206,6 +209,7 @@
     <ClInclude Include="rnd_Texture2D.h" />
     <ClInclude Include="rnd_Texture3D.h" />
     <ClInclude Include="rnd_TextureMgr.h" />
+    <ClInclude Include="rnd_TopLAS.h" />
     <ClInclude Include="rnd_UploadableBuffer.h" />
     <ClInclude Include="rnd_VertexBuffer.h" />
     <ClInclude Include="SceneConstBuf.h" />

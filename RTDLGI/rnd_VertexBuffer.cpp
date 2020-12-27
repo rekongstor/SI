@@ -8,7 +8,7 @@ void rnd_VertexBuffer::OnInit(std::vector<char>& data, int sizeOfElement, LPCWST
    ID3D12Resource* uploadBuffer;
    auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
    auto bufferDesc(CD3DX12_RESOURCE_DESC::Buffer(cpuBuffer.size(), D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE));
-   ThrowIfFailed(renderer->device->CreateCommittedResource(
+   ThrowIfFailed(renderer->Device()->CreateCommittedResource(
       &heapProperties,
       D3D12_HEAP_FLAG_NONE,
       &bufferDesc,
@@ -19,7 +19,7 @@ void rnd_VertexBuffer::OnInit(std::vector<char>& data, int sizeOfElement, LPCWST
 
    heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
    bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(cpuBuffer.size());
-   ThrowIfFailed(renderer->device->CreateCommittedResource(
+   ThrowIfFailed(renderer->Device()->CreateCommittedResource(
       &heapProperties,
       D3D12_HEAP_FLAG_NONE,
       &bufferDesc,
@@ -28,7 +28,7 @@ void rnd_VertexBuffer::OnInit(std::vector<char>& data, int sizeOfElement, LPCWST
       IID_PPV_ARGS(&buffer)));
    buffer->SetName(FormatWStr(L"[VertexBuf] %s", name));
 
-   this->format = DXGI_FORMAT_UNKNOWN;
+   this->format =  DXGI_FORMAT_R32G32B32_FLOAT;
    this->state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
    D3D12_SUBRESOURCE_DATA subresourceData{ cpuBuffer.data(), cpuBuffer.size(), cpuBuffer.size()};
@@ -57,5 +57,5 @@ void rnd_VertexBuffer::CreateSrv()
    srvHandle.first = descHandle.first;
    srvHandle.second = descHandle.second;
 
-   renderer->device->CreateShaderResourceView(buffer.Get(), &srvDesc, descHandle.first);
+   renderer->Device()->CreateShaderResourceView(buffer.Get(), &srvDesc, descHandle.first);
 }

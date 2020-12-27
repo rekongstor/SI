@@ -18,7 +18,7 @@ void rnd_Scene::OnInit(LPCSTR filename)
    {
       auto mesh = scene->getMesh(m)->getGeometry();
       rnd_Mesh& dstMesh = meshes.emplace_back();
-      rnd_Inst& instData = instances[&dstMesh];
+      rnd_Instance& instData = instances[&dstMesh];
 
       ofbx::Matrix tr = scene->getMesh(m)->getGlobalTransform();
       for (int t = 0; t < 16; ++t)
@@ -49,4 +49,6 @@ void rnd_Scene::OnInit(LPCSTR filename)
       }
       dstMesh.OnInit(verticesData, indicesData, std::wstring(&mesh->name[0], &mesh->name[strlen(mesh->name)]).c_str());
    }
+
+   topLayerAS.OnInit(this);
 }

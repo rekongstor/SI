@@ -1,7 +1,7 @@
 #pragma once
 #include "HlslCompat.h"
 
-class rnd_Inst
+class rnd_Instance
 {
 public:
    Instance instanceData;

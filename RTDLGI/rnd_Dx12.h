@@ -3,8 +3,6 @@
 #include "PassRaytracing.h"
 #include "rnd_ConstantBufferMgr.h"
 #include "rnd_TextureMgr.h"
-#include "rnd_IndexBuffer.h"
-#include "rnd_VertexBuffer.h"
 #include "rnd_RootSignatureMgr.h"
 #include "rnd_Scene.h"
 
@@ -149,9 +147,13 @@ public:
    void MoveToNextFrame();
 
 #pragma region Core
+   ID3D12Device* Device() { return device.Get(); }
+
+private:
    ComPtr<IDXGIFactory6> factory;
    ComPtr<IDXGIAdapter1> adapter;
    ComPtr<ID3D12Device> device;
+public:
 #pragma endregion
 
 #pragma region Command List
@@ -253,10 +255,6 @@ public:
    // Root signatures
    ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
 
-   // Acceleration structure
-   ComPtr<ID3D12Resource> bottomLevelAccelerationStructure;
-   ComPtr<ID3D12Resource> topLevelAccelerationStructure;
-
    void BuildAccelerationStructures();
    void CreateRaytracingOutputResource();
 
@@ -285,5 +283,7 @@ public:
    void AddUploadBuffer(ComPtr<ID3D12Resource> uploadBuffer, rnd_Buffer* rndBuffer); // creating ComPtr for upload buffer to make sure it's present until data is loaded
    void ResolveUploadBuffer();
    std::vector<UploadPair> uploadBuffers;
+
+   void AllocateUAVBuffer(UINT64 bufferSize, ID3D12Resource** ppResource, D3D12_RESOURCE_STATES initialResourceState, LPCWSTR resourceName = L"");
 };
 

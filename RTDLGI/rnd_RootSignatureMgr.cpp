@@ -16,6 +16,6 @@ ID3D12RootSignature* rnd_RootSignatureMgr::CreateRootSignature(std::initializer_
    ComPtr<ID3DBlob> error;
 
    ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &blob, &error), error ? static_cast<wchar_t*>(error->GetBufferPointer()) : nullptr);
-   ThrowIfFailed(renderer->device->CreateRootSignature(1, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSig)));
+   ThrowIfFailed(renderer->Device()->CreateRootSignature(1, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSig)));
    return rootSig;
 }

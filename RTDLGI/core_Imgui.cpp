@@ -39,7 +39,7 @@ void core_Imgui::InitWindow()
 void core_Imgui::InitRender()
 {
    auto handle = renderer->GetCbvSrvUavHandle();
-   ImGui_ImplDX12_Init(renderer->device.Get(), FRAME_COUNT,
+   ImGui_ImplDX12_Init(renderer->Device(), FRAME_COUNT,
                        renderer->swapChainFormat, renderer->cbvSrvUavHeap.Get(),
                        handle.first,
                        handle.second);

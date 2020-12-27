@@ -74,7 +74,7 @@ void PassForward::OnInit()
    psoDesc.DepthStencilState = depthStencilDesc;
    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
-   ThrowIfFailed(renderer->device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject)));
+   ThrowIfFailed(renderer->Device()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject)));
    pipelineStateObject.Get()->SetName(L"Drawing PSO");
 }
 

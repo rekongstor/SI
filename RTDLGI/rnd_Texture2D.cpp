@@ -31,7 +31,7 @@ void rnd_Texture2D::OnInit(DXGI_FORMAT format, Buffer2D dim, D3D12_RESOURCE_FLAG
    clearVal.Format = format;
    memcpy(clearVal.Color, clearValue, sizeof(float) * 4);
       
-   ThrowIfFailed(renderer->device->CreateCommittedResource(
+   ThrowIfFailed(renderer->Device()->CreateCommittedResource(
       &heapProperties,
       D3D12_HEAP_FLAG_NONE,
       &bufferDesc,
@@ -46,16 +46,16 @@ void rnd_Texture2D::CreateDsv()
 {
    ThrowIfFalse(flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
    dsvHandle = renderer->GetDsvHandle();
-   renderer->device->CreateDepthStencilView(buffer.Get(), nullptr, dsvHandle.first);
-   ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
+   renderer->Device()->CreateDepthStencilView(buffer.Get(), nullptr, dsvHandle.first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }
 
 void rnd_Texture2D::CreateRtv()
 {
    ThrowIfFalse(flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
    rtvHandle = renderer->GetRtvHandle();
-   renderer->device->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
-   ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
+   renderer->Device()->CreateRenderTargetView(buffer.Get(), nullptr, rtvHandle.first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }
 
 void rnd_Texture2D::CreateSrv()
@@ -78,7 +78,7 @@ void rnd_Texture2D::CreateSrv()
       srvFormat = DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
       break;
    default:
-      renderer->device->CreateShaderResourceView(buffer.Get(), nullptr, srvHandle.first);
+      renderer->Device()->CreateShaderResourceView(buffer.Get(), nullptr, srvHandle.first);
       return;
    }
 
@@ -90,8 +90,8 @@ void rnd_Texture2D::CreateSrv()
    desc.Texture2D.MipLevels = mips;
    desc.Format = srvFormat;
 
-   renderer->device->CreateShaderResourceView(buffer.Get(), &desc, srvHandle.first);
-   ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
+   renderer->Device()->CreateShaderResourceView(buffer.Get(), &desc, srvHandle.first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }
 
 void rnd_Texture2D::CreateUav(int mipSlice)
@@ -104,6 +104,6 @@ void rnd_Texture2D::CreateUav(int mipSlice)
    desc.Format = format;
    desc.Texture2D.MipSlice = mipSlice;
 
-   renderer->device->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle[mipSlice].first);
-   ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
+   renderer->Device()->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle[mipSlice].first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }

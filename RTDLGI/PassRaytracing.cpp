@@ -168,7 +168,7 @@ void PassRaytracing::Execute()
    // Bind the heaps, acceleration structure and dispatch rays.
    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
    SetCommonPipelineState(renderer->CommandList());
-   renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->topLevelAccelerationStructure->GetGPUVirtualAddress());
+   renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->scene.topLayerAS.buffer->GetGPUVirtualAddress());
    DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc);
 }
 
@@ -284,7 +284,7 @@ void PassRaytracing::BuildShaderTables()
    {
       UINT numShaderRecords = 1;
       UINT shaderRecordSize = shaderIdentifierSize;
-      ShaderTable rayGenShaderTable(renderer->device.Get(), numShaderRecords, shaderRecordSize, L"RayGenShaderTable");
+      ShaderTable rayGenShaderTable(renderer->Device(), numShaderRecords, shaderRecordSize, L"RayGenShaderTable");
       rayGenShaderTable.push_back(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize));
       m_rayGenShaderTable = rayGenShaderTable.GetResource();
    }
@@ -293,7 +293,7 @@ void PassRaytracing::BuildShaderTables()
    {
       UINT numShaderRecords = 1;
       UINT shaderRecordSize = shaderIdentifierSize;
-      ShaderTable missShaderTable(renderer->device.Get(), numShaderRecords, shaderRecordSize, L"MissShaderTable");
+      ShaderTable missShaderTable(renderer->Device(), numShaderRecords, shaderRecordSize, L"MissShaderTable");
       missShaderTable.push_back(ShaderRecord(missShaderIdentifier, shaderIdentifierSize));
       m_missShaderTable = missShaderTable.GetResource();
    }
@@ -307,7 +307,7 @@ void PassRaytracing::BuildShaderTables()
 
       UINT numShaderRecords = 1;
       UINT shaderRecordSize = shaderIdentifierSize + sizeof(rootArguments);
-      ShaderTable hitGroupShaderTable(renderer->device.Get(), numShaderRecords, shaderRecordSize, L"HitGroupShaderTable");
+      ShaderTable hitGroupShaderTable(renderer->Device(), numShaderRecords, shaderRecordSize, L"HitGroupShaderTable");
       hitGroupShaderTable.push_back(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize, &rootArguments, sizeof(rootArguments)));
       m_hitGroupShaderTable = hitGroupShaderTable.GetResource();
    }

@@ -14,7 +14,7 @@ void rnd_Texture3D::OnInit(DXGI_FORMAT format, Buffer3D dim, D3D12_RESOURCE_FLAG
 
    auto bufferDesc(CD3DX12_RESOURCE_DESC::Tex3D(format, dim.width, dim.height, dim.depth, mips, flags));
 
-   ThrowIfFailed(renderer->device->CreateCommittedResource(
+   ThrowIfFailed(renderer->Device()->CreateCommittedResource(
       &heapProperties,
       D3D12_HEAP_FLAG_NONE,
       &bufferDesc,
@@ -49,7 +49,7 @@ void rnd_Texture3D::CreateSrv()
       srvFormat = DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
       break;
    default:
-      renderer->device->CreateShaderResourceView(buffer.Get(), nullptr, srvHandle.first);
+      renderer->Device()->CreateShaderResourceView(buffer.Get(), nullptr, srvHandle.first);
       return;
    }
 
@@ -61,8 +61,8 @@ void rnd_Texture3D::CreateSrv()
    desc.Texture3D.MostDetailedMip = 0;
    desc.Format = srvFormat;
 
-   renderer->device->CreateShaderResourceView(buffer.Get(), &desc, srvHandle.first);
-   ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
+   renderer->Device()->CreateShaderResourceView(buffer.Get(), &desc, srvHandle.first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }
 
 void rnd_Texture3D::CreateUav(int mipSlice)
@@ -77,6 +77,6 @@ void rnd_Texture3D::CreateUav(int mipSlice)
    desc.Texture3D.FirstWSlice = 0;
    desc.Texture3D.WSize = depth;
 
-   renderer->device->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle[mipSlice].first);
-   ThrowIfFailed(renderer->device->GetDeviceRemovedReason());
+   renderer->Device()->CreateUnorderedAccessView(buffer.Get(), nullptr, &desc, uavHandle[mipSlice].first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }

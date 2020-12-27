@@ -13,7 +13,7 @@ void SceneConstBuf::OnInit(LPCWSTR name)
    size_t cbSize = FRAME_COUNT * AlignConst(sizeof(SceneConstantBuffer), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
    D3D12_RESOURCE_DESC constantBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(cbSize);
 
-   ThrowIfFailed(renderer->device->CreateCommittedResource(
+   ThrowIfFailed(renderer->Device()->CreateCommittedResource(
       &uploadHeapProperties,
       D3D12_HEAP_FLAG_NONE,
       &constantBufferDesc,

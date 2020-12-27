@@ -123,8 +123,14 @@
     <ClCompile Include="rnd_Scene.cpp">
       <Filter>Source Files\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="rnd_Inst.cpp">
+    <ClCompile Include="rnd_BottomLAS.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_Instance.cpp">
       <Filter>Source Files\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_TopLAS.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -185,9 +191,6 @@
     <ClInclude Include="RayTracingHlslCompat.h">
       <Filter>Header Files\DX12\passes\PassRaytracing</Filter>
     </ClInclude>
-    <ClInclude Include="rnd_Inst.h">
-      <Filter>Header Files\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="rnd_Scene.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
@@ -199,6 +202,15 @@
     </ClInclude>
     <ClInclude Include="rnd_UploadableBuffer.h">
       <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_BottomLAS.h">
+      <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_Instance.h">
+      <Filter>Header Files\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_TopLAS.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
