@@ -1,7 +1,7 @@
 #pragma once
 #include "rnd_UploadableBuffer.h"
 
-class rnd_IndexBuffer : public rnd_UploadableBuffer
+class rnd_IndexBuffer : public rnd_UploadableBuffer, public Buffer1D
 {
 public:
    void OnInit(std::vector<char>& data, int sizeOfElement, LPCWSTR name = L"");

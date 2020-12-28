@@ -2,7 +2,7 @@
 #include <fstream>
 #include "../3rd_party/fbx/src/ofbx.h"
 
-void rnd_Scene::OnInit(LPCSTR filename)
+void rnd_Scene::OnInit(LPCWSTR filename)
 {
    std::ifstream fbx(filename, std::ios::binary);
    std::vector<char> bytes;
@@ -11,6 +11,7 @@ void rnd_Scene::OnInit(LPCSTR filename)
    fbx.seekg(0, std::ios::beg);
    fbx.read(bytes.data(), bytes.size());
 
+   int totalInstances = 0;
 
    auto scene = ofbx::load((ofbx::u8*)bytes.data(), bytes.size(), (ofbx::u64)ofbx::LoadFlags::TRIANGULATE);
    meshes.reserve(scene->getMeshCount());
@@ -20,10 +21,14 @@ void rnd_Scene::OnInit(LPCSTR filename)
       rnd_Mesh& dstMesh = meshes.emplace_back();
       rnd_Instance& instData = instances[&dstMesh];
 
+      ++totalInstances;
+
       ofbx::Matrix tr = scene->getMesh(m)->getGlobalTransform();
-      for (int t = 0; t < 16; ++t)
+      for (int t = 0; t < 12; ++t)
       {
-         instData.instanceData.worldMat.r[t % 4].m128_f32[t / 4] = tr.m[t];
+         int i = t % 4;
+         int j = t / 4;
+         instData.instanceData.worldMat[j].m128_f32[i] = tr.m[i * 4 + j];
       }
 
       const int* faceIndices = mesh->getFaceIndices();
@@ -50,5 +55,14 @@ void rnd_Scene::OnInit(LPCSTR filename)
       dstMesh.OnInit(verticesData, indicesData, std::wstring(&mesh->name[0], &mesh->name[strlen(mesh->name)]).c_str());
    }
 
-   topLayerAS.OnInit(this);
+   topLayerAS.OnInit(this, filename);
+   instancesDataBuffer[0].OnInit(totalInstances, sizeof(Instance), FormatWStr(L"Instance structured buffer [%s:%d]", filename, 0));
+   instancesDataBuffer[1].OnInit(totalInstances, sizeof(Instance), FormatWStr(L"Instance structured buffer [%s:%d]", filename, 1));
+
+   for (auto& inst : instances)
+   {
+      auto sbPair = instancesDataBuffer[0].AddBuffer(inst.second.instanceData);
+      instancesDataBuffer[1].AddBuffer(inst.second.instanceData);
+      inst.second.instIdx = sbPair;
+   }
 }

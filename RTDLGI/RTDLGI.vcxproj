@@ -179,6 +179,7 @@
     <ClCompile Include="rnd_PipelineStateMgr.cpp" />
     <ClCompile Include="rnd_RootSignatureMgr.cpp" />
     <ClCompile Include="rnd_Scene.cpp" />
+    <ClCompile Include="rnd_StructuredBuffer.cpp" />
     <ClCompile Include="rnd_Texture2D.cpp" />
     <ClCompile Include="rnd_Texture3D.cpp" />
     <ClCompile Include="rnd_TextureMgr.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="rnd_PipelineStateMgr.h" />
     <ClInclude Include="rnd_RootSignatureMgr.h" />
     <ClInclude Include="rnd_Scene.h" />
+    <ClInclude Include="rnd_StructuredBuffer.h" />
     <ClInclude Include="rnd_Texture2D.h" />
     <ClInclude Include="rnd_Texture3D.h" />
     <ClInclude Include="rnd_TextureMgr.h" />

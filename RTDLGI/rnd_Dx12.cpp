@@ -249,7 +249,7 @@ void rnd_Dx12::OnInit()
    fovAngleY = 60.f;
 
    constantBufferMgr.InitConstBuffers();
-   scene.OnInit("data/scenes/rtdlgi.fbx");
+   scene.OnInit(L"data/scenes/rtdlgi.fbx");
 
    forwardPass.OnInit();
 
@@ -280,7 +280,7 @@ void rnd_Dx12::PopulateGraphicsCommandList()
    commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &scissorRect);
 
    DoRaytracing();
-   CopyRaytracingOutputToBackbuffer();
+   //CopyRaytracingOutputToBackbuffer();
 
    forwardPass.Execute();
 
@@ -344,6 +344,7 @@ void rnd_Dx12::CreateRaytracingOutputResource()
 
    raytracingOutput.OnInit(backbufferFormat, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
    raytracingOutput.CreateUav();
+   raytracingOutput.CreateSrv();
 }
 
 void rnd_Dx12::SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig)

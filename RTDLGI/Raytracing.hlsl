@@ -179,7 +179,7 @@ FUNCTION_NAME(CLOSEST_HIT_SHADER) (inout RayPayload payload, in MyAttributes att
 [shader("miss")]
 FUNCTION_NAME(MISS_SHADER) (inout RayPayload payload)
 {
-    float4 background = float4(0.5f, 0.2f, 0.4f, 1.0f);
+    float4 background = float4(0.0f, 0.0f, 0.0f, 1.0f);
     payload.color = background;
 }
 

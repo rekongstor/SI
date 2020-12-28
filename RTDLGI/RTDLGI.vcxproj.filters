@@ -18,14 +18,8 @@
     <Filter Include="Header Files\DX12\buffers">
       <UniqueIdentifier>{a097a8a4-7d37-4797-b895-dfdae0890449}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\DX12\constantBuffers">
-      <UniqueIdentifier>{ac9c016e-80f1-44f5-b2a4-a0656fceb0d4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\DX12\passes">
       <UniqueIdentifier>{5a6df074-12f3-41cc-bec7-0cdfb8b8c8f5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\DX12\constantBuffers\CBs">
-      <UniqueIdentifier>{a834e247-9202-4d21-b795-37757ac5fc31}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\DX12\passes\PathForward">
       <UniqueIdentifier>{c313d13e-3922-4849-9856-910e04127bbe}</UniqueIdentifier>
@@ -46,12 +40,6 @@
     <Filter Include="Source Files\DX12\buffers">
       <UniqueIdentifier>{9e508d34-28ab-4310-81ab-f53393f8879b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DX12\constantBuffers">
-      <UniqueIdentifier>{fb391869-7631-4447-859a-dc073833c31e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\DX12\constantBuffers\CBs">
-      <UniqueIdentifier>{7351d7f3-2676-4879-813d-45e9e8b2007f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\DX12\passes">
       <UniqueIdentifier>{e06585ec-bb5c-450d-8232-bfc07cc2b963}</UniqueIdentifier>
     </Filter>
@@ -60,6 +48,12 @@
     </Filter>
     <Filter Include="Source Files\DX12\passes\PassRaytracing">
       <UniqueIdentifier>{dfc84343-b2f1-4bf0-9e95-1a4ecb36ca80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DX12\CBs">
+      <UniqueIdentifier>{a834e247-9202-4d21-b795-37757ac5fc31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DX12\CBs">
+      <UniqueIdentifier>{7351d7f3-2676-4879-813d-45e9e8b2007f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -87,17 +81,11 @@
     <ClCompile Include="rnd_VertexBuffer.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
-    <ClCompile Include="rnd_ConstantBufferMgr.cpp">
-      <Filter>Source Files\DX12\constantBuffers</Filter>
-    </ClCompile>
-    <ClCompile Include="rnd_ConstantBuffer.cpp">
-      <Filter>Source Files\DX12\constantBuffers</Filter>
-    </ClCompile>
     <ClCompile Include="SceneConstBuf.cpp">
-      <Filter>Source Files\DX12\constantBuffers\CBs</Filter>
+      <Filter>Source Files\DX12\CBs</Filter>
     </ClCompile>
     <ClCompile Include="CubeConstBuf.cpp">
-      <Filter>Source Files\DX12\constantBuffers\CBs</Filter>
+      <Filter>Source Files\DX12\CBs</Filter>
     </ClCompile>
     <ClCompile Include="rnd_Texture3D.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
@@ -132,6 +120,15 @@
     <ClCompile Include="rnd_TopLAS.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
+    <ClCompile Include="rnd_ConstantBuffer.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_ConstantBufferMgr.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_StructuredBuffer.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h">
@@ -155,17 +152,11 @@
     <ClInclude Include="rnd_VertexBuffer.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
-    <ClInclude Include="rnd_ConstantBufferMgr.h">
-      <Filter>Header Files\DX12\constantBuffers</Filter>
-    </ClInclude>
-    <ClInclude Include="rnd_ConstantBuffer.h">
-      <Filter>Header Files\DX12\constantBuffers</Filter>
-    </ClInclude>
     <ClInclude Include="CubeConstBuf.h">
-      <Filter>Header Files\DX12\constantBuffers\CBs</Filter>
+      <Filter>Header Files\DX12\CBs</Filter>
     </ClInclude>
     <ClInclude Include="SceneConstBuf.h">
-      <Filter>Header Files\DX12\constantBuffers\CBs</Filter>
+      <Filter>Header Files\DX12\CBs</Filter>
     </ClInclude>
     <ClInclude Include="rnd_Texture3D.h">
       <Filter>Header Files\DX12\buffers</Filter>
@@ -210,6 +201,15 @@
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
     <ClInclude Include="rnd_TopLAS.h">
+      <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_StructuredBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_ConstantBuffer.h">
+      <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_ConstantBufferMgr.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
   </ItemGroup>

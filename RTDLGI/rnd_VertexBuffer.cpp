@@ -39,6 +39,8 @@ void rnd_VertexBuffer::OnInit(std::vector<char>& data, int sizeOfElement, LPCWST
    vertexBufferView.SizeInBytes = cpuBuffer.size();
    vertexBufferView.BufferLocation = buffer->GetGPUVirtualAddress();
    vertexBufferView.StrideInBytes = sizeOfElement;
+
+   this->width = cpuBuffer.size() / sizeOfElement;
 }
 
 void rnd_VertexBuffer::CreateSrv()
@@ -58,4 +60,5 @@ void rnd_VertexBuffer::CreateSrv()
    srvHandle.second = descHandle.second;
 
    renderer->Device()->CreateShaderResourceView(buffer.Get(), &srvDesc, descHandle.first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }

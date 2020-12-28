@@ -21,7 +21,7 @@ inline void AllocateUploadBuffer(void* pData, UINT64 datasize, ID3D12Resource** 
    (*ppResource)->Unmap(0, nullptr);
 }
 
-void rnd_TopLAS::OnInit(rnd_Scene* scene)
+void rnd_TopLAS::OnInit(rnd_Scene* scene, LPCWSTR name)
 {
    int totalInstances = 0;
 
@@ -32,13 +32,13 @@ void rnd_TopLAS::OnInit(rnd_Scene* scene)
       D3D12_RAYTRACING_INSTANCE_DESC &instanceDesc = instanceDescData.emplace_back();
       for (int tr = 0; tr < 12; ++tr)
       {
-         instanceDesc.Transform[tr / 4][tr % 4] = inst.second.instanceData.worldMat.r[tr / 4].m128_f32[tr % 4];
+         instanceDesc.Transform[tr / 4][tr % 4] = inst.second.instanceData.worldMat[tr / 4].m128_f32[tr % 4];
       }
       instanceDesc.InstanceMask = 1;
       instanceDesc.InstanceID = totalInstances++;
       instanceDesc.AccelerationStructure = inst.first->bottomLas.buffer->GetGPUVirtualAddress();
    }
-   AllocateUploadBuffer(instanceDescData.data(), instanceDescData.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), &instanceData, L"InstanceDescs");
+   AllocateUploadBuffer(instanceDescData.data(), instanceDescData.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), &instanceData, FormatWStr(L"InstanceDescs %s", name));
 
    // Get required sizes for an acceleration structure.
    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;

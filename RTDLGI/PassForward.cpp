@@ -9,12 +9,13 @@
 void PassForward::OnInit()
 {
    // Create RS
-   forwardRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ CBV(0) }, {},
+   forwardRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ CBV(0), SRV(0, 0), DescTable({DescRange(RngType::SRV, 1, 1) }) },
+      { CD3DX12_STATIC_SAMPLER_DESC(0) },
       D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
       D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
       D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
       D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
-      );
+   );
 
    sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
 
@@ -89,6 +90,7 @@ void PassForward::Execute()
    renderer->CommandList()->SetGraphicsRootSignature(forwardRootSignature.Get());
    renderer->CommandList()->SetPipelineState(pipelineStateObject.Get());
    renderer->CommandList()->SetGraphicsRootConstantBufferView(0, sceneCb->buffer->GetGPUVirtualAddress());
+   renderer->CommandList()->SetGraphicsRootDescriptorTable(2, renderer->textureMgr.rayTracingOutput.srvHandle.second);
 
    renderer->CommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
    ID3D12DescriptorHeap* heap[] = { renderer->cbvSrvUavHeap.Get() };
@@ -96,13 +98,13 @@ void PassForward::Execute()
    auto& backBuffer = renderer->BackBuffer().rtvHandle;
    auto& depthBuffer = renderer->textureMgr.depthBuffer.dsvHandle;
    renderer->CommandList()->OMSetRenderTargets(1, &backBuffer.first, false, &depthBuffer.first);
+   auto& instBuffer = renderer->scene.instancesDataBuffer[renderer->currentFrame];
 
-   //for (auto& i : renderer->scene.instances)
-   for (int inst = 0; inst < renderer->scene.meshes.size(); ++inst)
+   for (auto& i : renderer->scene.instances)
    {
-      auto& i = renderer->scene.meshes[inst];
-      renderer->CommandList()->IASetVertexBuffers(0, 1, &i.vertexBuffer.vertexBufferView);
-      renderer->CommandList()->IASetIndexBuffer(&i.indexBuffer.indexBufferView);
-      renderer->CommandList()->DrawIndexedInstanced(i.indexBuffer.indexBufferView.SizeInBytes / sizeof(Index), 1, 0, 0, 0);
+      renderer->CommandList()->IASetVertexBuffers(0, 1, &i.first->vertexBuffer.vertexBufferView);
+      renderer->CommandList()->IASetIndexBuffer(&i.first->indexBuffer.indexBufferView);
+      renderer->CommandList()->SetGraphicsRootShaderResourceView(1, instBuffer.buffer->GetGPUVirtualAddress() + i.second.instIdx * instBuffer.sizeOfElement);
+      renderer->CommandList()->DrawIndexedInstanced(i.first->indexBuffer.width, 1, 0, 0, 0);
    }
 }

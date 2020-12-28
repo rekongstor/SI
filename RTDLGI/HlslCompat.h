@@ -39,7 +39,7 @@ struct Vertex
 
 struct Instance
 {
-   XMMATRIX worldMat;
+   float4 worldMat[3];
 };
 
 #endif // HLSLCOMPAT_H

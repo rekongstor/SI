@@ -35,7 +35,7 @@ void rnd_BottomLAS::OnInit(rnd_IndexBuffer& indexBuffer, rnd_VertexBuffer& verte
    ThrowIfFalse(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
 
    ComPtr<ID3D12Resource> scratchResource;
-   renderer->AllocateUAVBuffer(bottomLevelPrebuildInfo.ScratchDataSizeInBytes, &scratchResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"BlasScratchResource");
+   renderer->AllocateUAVBuffer(bottomLevelPrebuildInfo.ScratchDataSizeInBytes, &scratchResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, FormatWStr(L"BlasScratchResource [%s]", name));
 
    renderer->AllocateUAVBuffer(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, &buffer, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, FormatWStr(L"[BLAS] %s", name));
 
