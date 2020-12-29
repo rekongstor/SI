@@ -21,7 +21,7 @@ int main()
 
    imguiInst.OnInit();
 
-   if (!window->OnInit(640, 480, WS_POPUPWINDOW))
+   if (!window->OnInit(800, 450, WS_POPUPWINDOW))
       return 1;
 
    imguiInst.InitWindow();

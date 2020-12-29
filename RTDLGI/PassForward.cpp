@@ -90,7 +90,7 @@ void PassForward::Execute()
    renderer->CommandList()->SetGraphicsRootSignature(forwardRootSignature.Get());
    renderer->CommandList()->SetPipelineState(pipelineStateObject.Get());
    renderer->CommandList()->SetGraphicsRootConstantBufferView(0, sceneCb->buffer->GetGPUVirtualAddress());
-   renderer->CommandList()->SetGraphicsRootDescriptorTable(2, renderer->textureMgr.rayTracingOutput.srvHandle.second);
+   renderer->CommandList()->SetGraphicsRootDescriptorTable(2, renderer->textureMgr.giBuffer.srvHandle.second);
 
    renderer->CommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
    ID3D12DescriptorHeap* heap[] = { renderer->cbvSrvUavHeap.Get() };

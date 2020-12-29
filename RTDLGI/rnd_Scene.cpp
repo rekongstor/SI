@@ -24,12 +24,17 @@ void rnd_Scene::OnInit(LPCWSTR filename)
       ++totalInstances;
 
       ofbx::Matrix tr = scene->getMesh(m)->getGlobalTransform();
+      XMFLOAT3X4 wMatr;
       for (int t = 0; t < 12; ++t)
       {
          int i = t % 4;
          int j = t / 4;
          instData.instanceData.worldMat[j].m128_f32[i] = tr.m[i * 4 + j];
+         wMatr.m[j][i] = tr.m[i * 4 + j];
       }
+      XMMATRIX wmatrInv = XMMatrixInverse(nullptr, XMLoadFloat3x4(&wMatr));
+      XMStoreFloat3x4(&wMatr, wmatrInv);
+      memcpy(instData.instanceData.worldMatInv->m128_f32, wMatr.m, sizeof(float) * 12);
 
       const int* faceIndices = mesh->getFaceIndices();
       int indicesCount = mesh->getIndexCount();

@@ -9,8 +9,8 @@ public:
    CubeConstBuf* cubeCb;
    SceneConstBuf* sceneCb;
    ComPtr<ID3D12RootSignature> m_raytracingLocalRootSignature;
+   ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
    ComPtr<ID3D12StateObject> m_dxrStateObject;
-
 
    // Shader tables
    ComPtr<ID3D12Resource> m_missShaderTable;
@@ -24,8 +24,6 @@ public:
 
 
    void OnInit();
-
-   void CreateRootSignature();
 
    void Execute();
 

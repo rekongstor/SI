@@ -240,12 +240,12 @@ void rnd_Dx12::OnInit()
    ThrowIfFailed(commandList->QueryInterface(IID_PPV_ARGS(&dxrCommandList)), L"Couldn't get DirectX Raytracing interface for the command list.\n");
 #pragma endregion
 
-   camPos = { 2, 2, 6, 0 };
-   camDir = { -0.25, -0.3 };
-   lightPosition = { 0, 1, -1, 0 };
+   camPos = { -2, 2, -1, 0 };
+   camDir = { -0.752, 2.39 };
+   lightPosition = { 0.57, 0.84, -0.05, 0 };
    lightAmbientColor = { 0.5, 0.0, 0.5, 0 };
    lightDiffuseColor = { 0.0, 0.5, 0.5, 0 };
-   lightDirection = { 1, 1, 0.5, 0 };
+   lightDirection = { 0.57, 0.84, -0.05, 0 };
    fovAngleY = 60.f;
 
    constantBufferMgr.InitConstBuffers();
@@ -253,11 +253,18 @@ void rnd_Dx12::OnInit()
 
    forwardPass.OnInit();
 
+   textureMgr.rayTracingOutput.OnInit(swapChainFormat, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
+   textureMgr.rayTracingOutput.CreateUav();
+   textureMgr.rayTracingOutput.CreateSrv();
+
    rtxPass.OnInit();
-   InitRaytracing();
 
    textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_DEPTH_WRITE, L"DEPTH_BUFFER", 1, onesClearValue);
    textureMgr.depthBuffer.CreateDsv();
+
+   textureMgr.giBuffer.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION, GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"GI output");
+   textureMgr.giBuffer.CreateUav();
+   textureMgr.giBuffer.CreateSrv();
 
    if (imgui)
       imgui->InitRender();
@@ -279,8 +286,7 @@ void rnd_Dx12::PopulateGraphicsCommandList()
       
    commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &scissorRect);
 
-   DoRaytracing();
-   //CopyRaytracingOutputToBackbuffer();
+   rtxPass.Execute();
 
    forwardPass.Execute();
 
@@ -291,72 +297,6 @@ void rnd_Dx12::PopulateGraphicsCommandList()
    if (imgui)
       imgui->OnRender();
 }
-
-#pragma region RT
-void rnd_Dx12::InitRaytracing()
-{
-   m_raytracingGlobalRootSignature = rootSignatureMgr.CreateRootSignature({
-      DescTable({
-         DescRange(RngType::UAV, 1, 0)
-      }),
-      SRV(0),
-      CBV(0),
-      DescTable({
-         DescRange(RngType::SRV, 2, 1)
-      })
-      });
-
-   rtxPass.CreateRootSignature();
-
-   rtxPass.CreateRaytracingPipelineStateObject();
-
-   rtxPass.BuildShaderTables();
-   // Create an output 2D texture to store the raytracing result to.
-   CreateRaytracingOutputResource();
-}
-
-void rnd_Dx12::DoRaytracing()
-{
-   rtxPass.Execute();
-}
-
-void rnd_Dx12::CopyRaytracingOutputToBackbuffer()
-{
-   auto& renderTarget = textureMgr.backBuffer[currentFrame];
-   auto& rayTracingOutput = textureMgr.rayTracingOutput;
-
-   SetBarrier({ {renderTarget, D3D12_RESOURCE_STATE_COPY_DEST}, {rayTracingOutput, D3D12_RESOURCE_STATE_COPY_SOURCE} });
-
-   commandList->CopyResource(renderTarget.buffer.Get(), rayTracingOutput.buffer.Get());
-
-   SetBarrier({ {renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET}, {rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} }); // TODO: Do I need this?
-}
-
-void rnd_Dx12::BuildAccelerationStructures()
-{
-
-}
-
-void rnd_Dx12::CreateRaytracingOutputResource()
-{
-   auto backbufferFormat = swapChainFormat;
-   auto& raytracingOutput = textureMgr.rayTracingOutput;
-
-   raytracingOutput.OnInit(backbufferFormat, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
-   raytracingOutput.CreateUav();
-   raytracingOutput.CreateSrv();
-}
-
-void rnd_Dx12::SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig)
-{
-   ComPtr<ID3DBlob> blob;
-   ComPtr<ID3DBlob> error;
-
-   ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &blob, &error), error ? static_cast<wchar_t*>(error->GetBufferPointer()) : nullptr);
-   ThrowIfFailed(device->CreateRootSignature(1, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&(*rootSig))));
-}
-
-#pragma endregion 
 
 #pragma region Functional
 void rnd_Dx12::OnUpdate()

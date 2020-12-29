@@ -121,11 +121,24 @@ void PassRaytracing::OnInit()
 {
    cubeCb = dynamic_cast<CubeConstBuf*>(renderer->constantBufferMgr.Get(CUBE_CB));
    sceneCb = dynamic_cast<SceneConstBuf*>(renderer->constantBufferMgr.Get(SCENE_CB));
-}
 
-void PassRaytracing::CreateRootSignature()
-{
    m_raytracingLocalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ Const(SizeOfInUint32(CubeConstantBuffer), 1, 1) }, {}, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE);
+
+
+   m_raytracingGlobalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({
+      DescTable({
+         DescRange(RngType::UAV, 1, 0)
+      }),
+      SRV(0),
+      CBV(0),
+      DescTable({
+         DescRange(RngType::SRV, 2, 1)
+      })
+      });
+
+   CreateRaytracingPipelineStateObject();
+
+   BuildShaderTables();
 }
 
 void PassRaytracing::Execute()
@@ -143,9 +156,9 @@ void PassRaytracing::Execute()
       dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes;
       dispatchDesc->RayGenerationShaderRecord.StartAddress = m_rayGenShaderTable->GetGPUVirtualAddress();
       dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_rayGenShaderTable->GetDesc().Width;
-      dispatchDesc->Width = window->width;
-      dispatchDesc->Height = window->height;
-      dispatchDesc->Depth = 1;
+      dispatchDesc->Width = GI_RESOLUTION;
+      dispatchDesc->Height = GI_RESOLUTION;
+      dispatchDesc->Depth = GI_RESOLUTION;
       commandList->SetPipelineState1(stateObject);
       commandList->DispatchRays(dispatchDesc);
    };
@@ -155,10 +168,10 @@ void PassRaytracing::Execute()
       descriptorSetCommandList->SetDescriptorHeaps(1, renderer->cbvSrvUavHeap.GetAddressOf());
       // Set index and successive vertex buffer descriptor tables
       renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, renderer->scene.meshes[0].indexBuffer.srvHandle.second);
-      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.rayTracingOutput.uavHandle[0].second);
+      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.giBuffer.uavHandle[0].second);
    };
 
-   renderer->CommandList()->SetComputeRootSignature(renderer->m_raytracingGlobalRootSignature.Get());
+   renderer->CommandList()->SetComputeRootSignature(m_raytracingGlobalRootSignature.Get());
 
    // Copy the updated scene constant buffer to GPU.
    // This should be already updated from cbMgr->Update()
@@ -225,7 +238,7 @@ void PassRaytracing::CreateRaytracingPipelineStateObject()
    // Global root signature
    // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
    auto globalRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-   globalRootSignature->SetRootSignature(renderer->m_raytracingGlobalRootSignature.Get());
+   globalRootSignature->SetRootSignature(m_raytracingGlobalRootSignature.Get());
 
    // Pipeline config
    // Defines the maximum TraceRay() recursion depth.

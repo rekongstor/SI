@@ -12,6 +12,8 @@
 #ifndef HLSLCOMPAT_H
 #define HLSLCOMPAT_H
 
+#define GI_RESOLUTION 64
+
 #ifndef HLSL
 
 #define SEM(semantic)
@@ -40,6 +42,7 @@ struct Vertex
 struct Instance
 {
    float4 worldMat[3];
+   float4 worldMatInv[3];
 };
 
 #endif // HLSLCOMPAT_H

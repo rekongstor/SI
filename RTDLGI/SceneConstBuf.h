@@ -11,6 +11,7 @@ struct SceneConstantBuffer
    XMFLOAT4 lightAmbientColor;
    XMFLOAT4 lightDiffuseColor;
    XMFLOAT4 screenData;
+   XMFLOAT4 counter;
 };
 
 #ifndef HLSL

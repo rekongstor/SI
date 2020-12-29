@@ -50,5 +50,8 @@ void SceneConstBuf::Update()
    lightDiffuseColor = renderer->lightDiffuseColor;
    screenData = { (float)window->width, (float)window->height, 1.f / window->width, 1.f / window->height };
 
+   static int cntr = 0;
+   counter.x = float(cntr++);
+
    memcpy(&mappedData[renderer->currentFrame].buffer, buf, sizeof(SceneConstantBuffer));
 }

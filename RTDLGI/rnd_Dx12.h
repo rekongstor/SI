@@ -243,22 +243,9 @@ public:
 #pragma endregion 
 
 #pragma region Raytracing
-
-   void InitRaytracing();
-   void DoRaytracing();
-   void CopyRaytracingOutputToBackbuffer();
-
    // DirectX Raytracing (DXR) attributes
    ComPtr<ID3D12Device5> dxrDevice;
    ComPtr<ID3D12GraphicsCommandList5> dxrCommandList;
-
-   // Root signatures
-   ComPtr<ID3D12RootSignature> m_raytracingGlobalRootSignature;
-
-   void BuildAccelerationStructures();
-   void CreateRaytracingOutputResource();
-
-   void SerializeAndCreateRaytracingRootSignature(D3D12_ROOT_SIGNATURE_DESC& desc, ComPtr<ID3D12RootSignature>* rootSig);
 
    bool rtxSupported = false;
 #pragma endregion 

@@ -6,6 +6,7 @@ void rnd_Texture3D::OnInit(DXGI_FORMAT format, Buffer3D dim, D3D12_RESOURCE_FLAG
    this->format = format;
    this->width = dim.width;
    this->height = dim.height;
+   this->depth = dim.depth;
    this->mips = mips;
    this->state = initialState;
    this->flags = flags;
@@ -71,7 +72,7 @@ void rnd_Texture3D::CreateUav(int mipSlice)
    uavHandle[mipSlice] = renderer->GetCbvSrvUavHandle();
    D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
    ZeroMemory(&desc, sizeof(desc));
-   desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+   desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
    desc.Format = format;
    desc.Texture3D.MipSlice = mipSlice;
    desc.Texture3D.FirstWSlice = 0;
