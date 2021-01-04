@@ -5,30 +5,19 @@ import numpy
 from torch.autograd import Variable
 
 GI_RESOLUTION = 64
+TRAINING_SAMPLES = 8
 
 # training data
-# RenderTargetOut[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z)] = payload.color.x;
-imgOrgGI = cv2.imread("rtGI.png", cv2.IMREAD_COLOR)
-imgOrgDist = cv2.imread("rtDist.png", cv2.IMREAD_COLOR)
+inputs = torch.zeros(GI_RESOLUTION**3, TRAINING_SAMPLES)
+outputs = torch.zeros(GI_RESOLUTION**3, TRAINING_SAMPLES)
 
-imgGI0 = torch.from_numpy(imgOrgGI[0:64, :, 2])
-imgGI1 = torch.from_numpy(imgOrgGI[64:128, :, 2])
-imgGI2 = torch.from_numpy(imgOrgGI[128:192, :, 2])
-imgGI3 = torch.from_numpy(imgOrgGI[192:256, :, 2])
-imgGI4 = torch.from_numpy(imgOrgGI[256:320, :, 2])
-imgGI5 = torch.from_numpy(imgOrgGI[320:384, :, 2])
-imgGI6 = torch.from_numpy(imgOrgGI[384:448, :, 2])
-imgGI7 = torch.from_numpy(imgOrgGI[448:512, :, 2])
-
-imgDist0 = torch.from_numpy(imgOrgDist[0:64, :, 2])
-imgDist1 = torch.from_numpy(imgOrgDist[64:128, :, 2])
-imgDist2 = torch.from_numpy(imgOrgDist[128:192, :, 2])
-imgDist3 = torch.from_numpy(imgOrgDist[192:256, :, 2])
-imgDist4 = torch.from_numpy(imgOrgDist[256:320, :, 2])
-imgDist5 = torch.from_numpy(imgOrgDist[320:384, :, 2])
-imgDist6 = torch.from_numpy(imgOrgDist[384:448, :, 2])
-imgDist7 = torch.from_numpy(imgOrgDist[448:512, :, 2])
-
+for i in range(TRAINING_SAMPLES):
+    imgOrgDist = cv2.imread("rtOut\\Raytracing_output_Ray_Dist" + str(i) + ".png", cv2.IMREAD_COLOR)
+    imgOrgGI = cv2.imread("rtOut\\Raytracing_output" + str(i) + ".png", cv2.IMREAD_COLOR)
+    imgDist = torch.from_numpy(imgOrgDist[:, :, 2]).resize(GI_RESOLUTION**3) / 255.0 * 2.0 - 1.0
+    imgGI = torch.from_numpy(imgOrgGI[:, :, 2]).resize(GI_RESOLUTION**3) / 255.0 * 2.0 - 1.0
+    inputs[:, i] = imgDist
+    outputs[:, i] = imgGI
 
 def inpInit(i, j):
     xB = int(j % 3 == 0)
@@ -41,25 +30,7 @@ def inpInit(i, j):
     return res / GI_RESOLUTION * 2.0 - 1.0
 
 
-inputsDist0 = imgDist0.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-inputsDist1 = imgDist1.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-inputsDist2 = imgDist2.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-inputsDist3 = imgDist3.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-inputsDist4 = imgDist4.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-inputsDist5 = imgDist5.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-inputsDist6 = imgDist6.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-inputsDist7 = imgDist7.resize(GI_RESOLUTION ** 3, 1) / 255.0 * 2.0 - 1.0
-
-inputsGI = torch.FloatTensor([[inpInit(i, j) for i in range(GI_RESOLUTION ** 3)] for j in range(3)])
-
-outputsGI0 = imgGI0.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
-outputsGI1 = imgGI1.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
-outputsGI2 = imgGI2.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
-outputsGI3 = imgGI3.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
-outputsGI4 = imgGI4.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
-outputsGI5 = imgGI5.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
-outputsGI6 = imgGI6.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
-outputsGI7 = imgGI7.resize(1, GI_RESOLUTION ** 3) / 255.0 * 2.0 - 1.0
+inputsXYZ = torch.FloatTensor([[inpInit(i, j) for i in range(GI_RESOLUTION ** 3)] for j in range(3)])
 
 neuronsCount_Dist = 48
 neuronsCount_GI = 32
@@ -88,25 +59,9 @@ rng = 0.1
 steps = 10000
 pr = 10
 
-data_x_Dist0 = Variable(inputsDist0.cuda())
-data_x_Dist1 = Variable(inputsDist1.cuda())
-data_x_Dist2 = Variable(inputsDist2.cuda())
-data_x_Dist3 = Variable(inputsDist3.cuda())
-data_x_Dist4 = Variable(inputsDist4.cuda())
-data_x_Dist5 = Variable(inputsDist5.cuda())
-data_x_Dist6 = Variable(inputsDist6.cuda())
-data_x_Dist7 = Variable(inputsDist7.cuda())
-
-data_x_GI = Variable(inputsGI.cuda())
-
-data_y_GI0 = Variable(outputsGI0.cuda())
-data_y_GI1 = Variable(outputsGI1.cuda())
-data_y_GI2 = Variable(outputsGI2.cuda())
-data_y_GI3 = Variable(outputsGI3.cuda())
-data_y_GI4 = Variable(outputsGI4.cuda())
-data_y_GI5 = Variable(outputsGI5.cuda())
-data_y_GI6 = Variable(outputsGI6.cuda())
-data_y_GI7 = Variable(outputsGI7.cuda())
+data_x_Dist = Variable(inputs.cuda())
+data_x_XYZ = Variable(inputsXYZ.cuda())
+data_y_GI = Variable(outputs.cuda())
 
 torch.manual_seed(0)
 
@@ -186,38 +141,24 @@ def Forward_FCL(data_inp, w1, b1, w2, b2, w3, b3):
     return y
 
 def Forward_N2(dat_x):
-    w1_1 = Forward_FCL(dat_x, WEIGHTS1_w1, BIAS1_w1, WEIGHTS2_w1, BIAS2_w1, WEIGHTS3_w1, BIAS3_w1).resize(neuronsCount_GI, 3)
-    b1_1 = Forward_FCL(dat_x, WEIGHTS1_b1, BIAS1_b1, WEIGHTS2_b1, BIAS2_b1, WEIGHTS3_b1, BIAS3_b1).resize(neuronsCount_GI, 1)
-    w2_1 = Forward_FCL(dat_x, WEIGHTS1_w2, BIAS1_w2, WEIGHTS2_w2, BIAS2_w2, WEIGHTS3_w2, BIAS3_w2).resize(neuronsCount_GI, neuronsCount_GI)
-    b2_1 = Forward_FCL(dat_x, WEIGHTS1_b2, BIAS1_b2, WEIGHTS2_b2, BIAS2_b2, WEIGHTS3_b2, BIAS3_b2).resize(neuronsCount_GI, 1)
-    w3_1 = Forward_FCL(dat_x, WEIGHTS1_w3, BIAS1_w3, WEIGHTS2_w3, BIAS2_w3, WEIGHTS3_w3, BIAS3_w3).resize(1, neuronsCount_GI)
-    b3_1 = Forward_FCL(dat_x, WEIGHTS1_b3, BIAS1_b3, WEIGHTS2_b3, BIAS2_b3, WEIGHTS3_b3, BIAS3_b3).resize(1, 1)
+    w1_1 = Forward_FCL(dat_x.resize(GI_RESOLUTION**3, 1), WEIGHTS1_w1, BIAS1_w1, WEIGHTS2_w1, BIAS2_w1, WEIGHTS3_w1, BIAS3_w1).resize(neuronsCount_GI, 3)
+    b1_1 = Forward_FCL(dat_x.resize(GI_RESOLUTION**3, 1), WEIGHTS1_b1, BIAS1_b1, WEIGHTS2_b1, BIAS2_b1, WEIGHTS3_b1, BIAS3_b1).resize(neuronsCount_GI, 1)
+    w2_1 = Forward_FCL(dat_x.resize(GI_RESOLUTION**3, 1), WEIGHTS1_w2, BIAS1_w2, WEIGHTS2_w2, BIAS2_w2, WEIGHTS3_w2, BIAS3_w2).resize(neuronsCount_GI, neuronsCount_GI)
+    b2_1 = Forward_FCL(dat_x.resize(GI_RESOLUTION**3, 1), WEIGHTS1_b2, BIAS1_b2, WEIGHTS2_b2, BIAS2_b2, WEIGHTS3_b2, BIAS3_b2).resize(neuronsCount_GI, 1)
+    w3_1 = Forward_FCL(dat_x.resize(GI_RESOLUTION**3, 1), WEIGHTS1_w3, BIAS1_w3, WEIGHTS2_w3, BIAS2_w3, WEIGHTS3_w3, BIAS3_w3).resize(1, neuronsCount_GI)
+    b3_1 = Forward_FCL(dat_x.resize(GI_RESOLUTION**3, 1), WEIGHTS1_b3, BIAS1_b3, WEIGHTS2_b3, BIAS2_b3, WEIGHTS3_b3, BIAS3_b3).resize(1, 1)
 
-    y = Forward(data_x_GI, w1_1, b1_1, w2_1, b2_1, w3_1, b3_1)
+    y = Forward(data_x_XYZ, w1_1, b1_1, w2_1, b2_1, w3_1, b3_1)
 
     return y
 
-def Train(p):
-    m0 = Forward_N2(data_x_Dist0)
-    m1 = Forward_N2(data_x_Dist1)
-    m2 = Forward_N2(data_x_Dist2)
-    m3 = Forward_N2(data_x_Dist3)
-    m4 = Forward_N2(data_x_Dist4)
-    m5 = Forward_N2(data_x_Dist5)
-    m6 = Forward_N2(data_x_Dist6)
-    m7 = Forward_N2(data_x_Dist7)
+def Train(p, ts):
+    loss = 0
+    for i in range(ts):
+        Y = Forward_N2(data_x_Dist[:, i])
+        loss += torch.mean((Y - data_y_GI[:, i]) ** 2)
 
-    loss = torch.mean((m0 - data_y_GI0) ** 2) + \
-           torch.mean((m1 - data_y_GI1) ** 2) + \
-           torch.mean((m2 - data_y_GI2) ** 2) + \
-           torch.mean((m3 - data_y_GI3) ** 2) + \
-           torch.mean((m4 - data_y_GI4) ** 2) + \
-           torch.mean((m5 - data_y_GI5) ** 2) + \
-           torch.mean((m6 - data_y_GI6) ** 2) + \
-           torch.mean((m7 - data_y_GI7) ** 2)
-
-    F = loss
-    F.backward()
+    loss.backward()
     Grad(WEIGHTS1_w1)
     Grad(BIAS1_w1)
     Grad(WEIGHTS2_w1)
@@ -269,7 +210,7 @@ def lerp(x, y, alpha):
 
 for i in range(steps):
     ppr = i % pr == 0 or i == steps - 1
-    loss = Train(ppr)
+    loss = Train(ppr, TRAINING_SAMPLES)
 
     alpha = lerp(alpha, lerp(beta1, beta2, math.tanh(i / steps * tanhMul)), 1 - acc)
     if ppr:
@@ -290,22 +231,9 @@ def DrawRes(res, name):
     cv2.imwrite(name, t1.detach().cpu().numpy() * 255)
     cv2.imshow(name, t1.detach().cpu().numpy())
 
-m0 = torch.clamp(Forward_N2(data_x_Dist0), 0, 1)
-m1 = torch.clamp(Forward_N2(data_x_Dist1), 0, 1)
-m2 = torch.clamp(Forward_N2(data_x_Dist2), 0, 1)
-m3 = torch.clamp(Forward_N2(data_x_Dist3), 0, 1)
-m4 = torch.clamp(Forward_N2(data_x_Dist4), 0, 1)
-m5 = torch.clamp(Forward_N2(data_x_Dist5), 0, 1)
-m6 = torch.clamp(Forward_N2(data_x_Dist6), 0, 1)
-m7 = torch.clamp(Forward_N2(data_x_Dist7), 0, 1)
+for i in range(TRAINING_SAMPLES):
+    m = torch.clamp(Forward_N2(data_x_Dist[:,i]), 0, 1)
+    DrawRes(m, "m"+str(i)+".png")
 
-DrawRes(m0, "m0.png")
-DrawRes(m1, "m1.png")
-DrawRes(m2, "m2.png")
-DrawRes(m3, "m3.png")
-DrawRes(m4, "m4.png")
-DrawRes(m5, "m5.png")
-DrawRes(m6, "m6.png")
-DrawRes(m7, "m7.png")
 cv2.waitKey()
 
