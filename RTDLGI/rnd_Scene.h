@@ -14,5 +14,6 @@ public:
 
    // Loads scene from FBX
    void OnInit(LPCWSTR filename);
+   void OnUpdate();
 };
 

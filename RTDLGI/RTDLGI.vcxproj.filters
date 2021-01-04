@@ -185,9 +185,6 @@
     <ClInclude Include="rnd_Scene.h">
       <Filter>Header Files\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="HlslCompat.h">
-      <Filter>Header Files\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="rnd_Buffer.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
@@ -212,6 +209,9 @@
     <ClInclude Include="rnd_ConstantBufferMgr.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
+    <ClInclude Include="HlslCompat.h">
+      <Filter>Source Files\DX12\passes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Raytracing.hlsl">
@@ -223,5 +223,10 @@
     <FxCompile Include="PassForwardPS.hlsl">
       <Filter>Source Files\DX12\passes\PassForward</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Common.h">
+      <Filter>Source Files\DX12\passes</Filter>
+    </None>
   </ItemGroup>
 </Project>
