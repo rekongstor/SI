@@ -1,4 +1,6 @@
 #pragma once
+#define NOMINMAX
+
 #include <cstdint>
 #include <iostream>
 #include <sstream>
@@ -91,6 +93,11 @@ inline wchar_t* FormatWStr(LPCWSTR format, ...)
    __crt_va_end(_ArgList);
 
    return nameBuffer;
+}
+
+inline std::wstring WStrFromStr(const char* str)
+{
+   return std::wstring(&str[0], &str[strlen(str)]);
 }
 
 constexpr UINT AlignConst(UINT size, UINT alignment)

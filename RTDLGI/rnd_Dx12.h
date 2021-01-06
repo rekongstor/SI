@@ -1,10 +1,14 @@
 #pragma once
+#include "PassDLGI.h"
 #include "PassForward.h"
 #include "PassRaytracing.h"
 #include "rnd_ConstantBufferMgr.h"
 #include "rnd_TextureMgr.h"
 #include "rnd_RootSignatureMgr.h"
 #include "rnd_Scene.h"
+
+#define DML_TARGET_VERSION_USE_LATEST
+#include <DirectML.h>
 
 // TODO: Refactor
 #pragma region Raytracing helpers 
@@ -148,11 +152,14 @@ public:
 
 #pragma region Core
    ID3D12Device* Device() { return device.Get(); }
+   IDMLDevice* DmlDevice() { return  dmlDevice.Get(); }
 
 private:
    ComPtr<IDXGIFactory6> factory;
    ComPtr<IDXGIAdapter1> adapter;
    ComPtr<ID3D12Device> device;
+
+   ComPtr<IDMLDevice> dmlDevice;
 public:
 #pragma endregion
 
@@ -240,6 +247,7 @@ public:
 #pragma region Passes
    PassRaytracing rtxPass;
    PassForward forwardPass;
+   PassDLGI dlgiPass;
 
    int counter = -1;
 #pragma endregion 

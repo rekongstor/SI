@@ -135,8 +135,11 @@
     <ClCompile Include="rnd_StructuredBuffer.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
-    <ClCompile Include="PathDLGI.cpp">
+    <ClCompile Include="PassDLGI.cpp">
       <Filter>Source Files\DX12\passes\PassDLGI</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd_Tensor.cpp">
+      <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -218,11 +221,14 @@
     <ClInclude Include="HlslCompat.h">
       <Filter>Source Files\DX12\passes</Filter>
     </ClInclude>
-    <ClInclude Include="PathDLGI.h">
-      <Filter>Header Files\DX12\passes\PassDLGI</Filter>
-    </ClInclude>
     <ClInclude Include="rnd_StructuredBuffer.h">
       <Filter>Header Files\DX12\buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="PassDLGI.h">
+      <Filter>Header Files\DX12\passes\PassDLGI</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_Tensor.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -238,5 +244,8 @@
     <FxCompile Include="Common.hlsl">
       <Filter>Source Files\DX12\passes</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

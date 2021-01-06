@@ -3,6 +3,7 @@
 #include "core_Imgui.h"
 #include "HlslCompat.h"
 
+
 wchar_t nameBuffer[4096]{};
 
 #pragma region RT helpers
@@ -240,6 +241,17 @@ void rnd_Dx12::OnInit()
    ThrowIfFailed(commandList->QueryInterface(IID_PPV_ARGS(&dxrCommandList)), L"Couldn't get DirectX Raytracing interface for the command list.\n");
 #pragma endregion
 
+#pragma region DirectML
+   ThrowIfFailed(DMLCreateDevice(device.Get(),
+#ifdef GPU_VALIDATION
+      DML_CREATE_DEVICE_FLAG_DEBUG,
+#else
+      DML_CREATE_DEVICE_FLAG_NONE,
+#endif
+      IID_PPV_ARGS(&dmlDevice)
+   ));
+#pragma endregion 
+
    camPos = { -2, 2, -1, 0 };
    camDir = { -0.752, 2.39 };
    lightPosition = { 0.57, 0.84, -0.05, 0 };
@@ -254,6 +266,8 @@ void rnd_Dx12::OnInit()
    forwardPass.OnInit();
 
    rtxPass.OnInit();
+
+   dlgiPass.OnInit();
 
    textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_DEPTH_WRITE, L"DEPTH_BUFFER", 1, onesClearValue);
    textureMgr.depthBuffer.CreateDsv();
@@ -429,7 +443,6 @@ void rnd_Dx12::ResolveUploadBuffer()
 
    }
 }
-
 
 void rnd_Dx12::AllocateUAVBuffer(UINT64 bufferSize, ID3D12Resource** ppResource, D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON, LPCWSTR resourceName)
 {

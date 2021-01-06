@@ -68,7 +68,7 @@ void rnd_Scene::OnInit(LPCWSTR filename)
          vertices[v].normal = { (float)normal.x, (float)normal.y, (float)normal.z };
          vertices[v].uv = { (float)uv.x, (float)uv.y };
       }
-      dstMesh.OnInit(verticesData, indicesData, std::wstring(&mesh->name[0], &mesh->name[strlen(mesh->name)]).c_str());
+      dstMesh.OnInit(verticesData, indicesData, WStrFromStr(mesh->name).c_str());
    }
 
    topLayerAS.OnInit(this, filename);
