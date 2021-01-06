@@ -16,9 +16,12 @@
 #include "RaytracingHlslCompat.h"
 #include "SceneConstBuf.h"
 #include "CubeConstBuf.h"
+#include "Common.hlsl"
 
 // Global root signature
-RWTexture3D<float4> RenderTarget : register(u0);
+RWTexture3D<float> RenderTarget : register(u0);
+RWTexture2D<float> RenderTargetOut : register(u1);
+RWTexture2D<float> RenderTargetOutDist : register(u2);
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 
@@ -89,10 +92,17 @@ float3 HitAttribute(float3 vertexAttribute[3], MyAttributes attr)
         attr.barycentrics.y * (vertexAttribute[2] - vertexAttribute[0]);
 }
 
-// Generate a ray in world space for a camera pixel corresponding to an index from the dispatched 2D grid.
-inline void GenerateCameraRay(uint3 index, out float3 origin, out float3 direction)
+
+inline void GenerateGIRay(uint3 index, out float3 origin, out float3 direction)
 {
    direction = normalize(g_sceneCB.lightDirection.xyz);
+   origin = (index + 0.5f) / float(GI_RESOLUTION) * 2.f - 1.f;
+}
+
+
+inline void GenerateDistRay(uint3 index, out float3 origin, out float3 direction)
+{
+   direction = normalize(float3(rand_1_05(index.xy), rand_1_05(index.yz), rand_1_05(index.zx)));
    origin = (index + 0.5f) / float(GI_RESOLUTION) * 2.f - 1.f;
 }
 
@@ -100,62 +110,77 @@ inline void GenerateCameraRay(uint3 index, out float3 origin, out float3 directi
 [shader("raygeneration")]
 FUNCTION_NAME(RAYGEN_SHADER) (void)
 {
-    float3 rayDir;
-    float3 origin;
-    
-    // Generate a ray for a camera pixel corresponding to an index from the dispatched 2D grid.
-    GenerateCameraRay(DispatchRaysIndex().xyz, origin, rayDir);
+   uint3 dr = DispatchRaysIndex().xyz;
+   {
+      float3 rayDir;
+      float3 origin;
+      GenerateGIRay(dr, origin, rayDir);
 
-    // Trace the ray.
-    // Set the ray's extents.
-    RayDesc ray;
-    ray.Origin = origin;
-    ray.Direction = rayDir;
-    // Set TMin to a non-zero small value to avoid aliasing issues due to floating - point errors.
-    // TMin should be kept small to prevent missing geometry at close contact areas.
-    ray.TMin = 0.001;
-    ray.TMax = 10000.0;
-    RayPayload payload = { float4(0, 0, 0, 0) };
-    TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
+      RayDesc ray;
+      ray.Origin = origin;
+      ray.Direction = rayDir;
+      ray.TMin = 0.0001;
+      ray.TMax = 4.0;
+      RayPayload payload = { float4(0, 0, 0, 0) };
+      TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
 
-    // Write the raytraced color to the output texture.
-    RenderTarget[DispatchRaysIndex().xyz] = payload.color;
+      // Write the raytraced color to the output texture.
+      RenderTarget[dr.xyz] = payload.color.x;
+      RenderTargetOut[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z)] = payload.color.x;
+   }
+
+   {
+      float3 rayDir;
+      float3 origin;
+      GenerateDistRay(dr, origin, rayDir);
+
+      RayDesc ray;
+      ray.Origin = origin;
+      ray.Direction = rayDir;
+      ray.TMin = 0.0001;
+      ray.TMax = 4.0;
+      RayPayload payload = { float4(0, 0, 0, 0) };
+      TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
+
+      RenderTargetOutDist[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z)] = (ray.TMax - payload.color.w) / ray.TMax;
+   }
 }
 
 [shader("closesthit")]
 FUNCTION_NAME(CLOSEST_HIT_SHADER) (inout RayPayload payload, in MyAttributes attr)
 {
-    float3 hitPosition = HitWorldPosition();
+   float3 hitPosition = HitWorldPosition();
 
-    // Get the base index of the triangle's first 16 bit index.
-    uint indexSizeInBytes = 2;
-    uint indicesPerTriangle = 3;
-    uint triangleIndexStride = indicesPerTriangle * indexSizeInBytes;
-    uint baseIndex = PrimitiveIndex() * triangleIndexStride;
+   // Get the base index of the triangle's first 16 bit index.
+   uint indexSizeInBytes = 2;
+   uint indicesPerTriangle = 3;
+   uint triangleIndexStride = indicesPerTriangle * indexSizeInBytes;
+   uint baseIndex = PrimitiveIndex() * triangleIndexStride;
 
-    // Load up 3 16 bit indices for the triangle.
-    const uint3 indices = Load3x16BitIndices(baseIndex);
+   // Load up 3 16 bit indices for the triangle.
+   const uint3 indices = Load3x16BitIndices(baseIndex);
 
-    // Retrieve corresponding vertex normals for the triangle vertices.
-    float3 vertexNormals[3] = { 
-        Vertices[indices[0]].normal, 
-        Vertices[indices[1]].normal, 
-        Vertices[indices[2]].normal 
-    };
+   // Retrieve corresponding vertex normals for the triangle vertices.
+   float3 vertexNormals[3] = { 
+     Vertices[indices[0]].normal, 
+     Vertices[indices[1]].normal, 
+     Vertices[indices[2]].normal 
+   };
 
-    // Compute the triangle's normal.
-    // This is redundant and done for illustration purposes 
-    // as all the per-vertex normals are the same and match triangle's normal in this sample. 
-    float3 triangleNormal = HitAttribute(vertexNormals, attr);
+   // Compute the triangle's normal.
+   // This is redundant and done for illustration purposes 
+   // as all the per-vertex normals are the same and match triangle's normal in this sample. 
+   float3 triangleNormal = HitAttribute(vertexNormals, attr);
 
-    payload.color = float4(0, 0, 0, 1);
+   payload.color.xyz = float3(0, 0, 0);
+   payload.color.w = RayTCurrent();
 }
 
 [shader("miss")]
 FUNCTION_NAME(MISS_SHADER) (inout RayPayload payload)
 {
-    float4 background = float4(1, 1, 1, 1);
-    payload.color = background;
+   payload.color.xyz = float3(1, 1, 1);
+   payload.color.w = RayTCurrent();
 }
 
 #endif // RAYTRACING_HLSL

@@ -18,4 +18,11 @@ public:
       memcpy(el, &elem, sizeOfElement);
       return reservedElements++;
    }
+
+   template <class T>
+   void UpdateBuffer(T elem, int shift)
+   {
+      char* el = mappedData + (sizeOfElement * shift);
+      memcpy(el, &elem, sizeOfElement);
+   }
 };

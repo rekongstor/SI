@@ -54,6 +54,11 @@ void core_Imgui::OnUpdate()
    //ImGui::ShowDemoWindow();
 
 #pragma region "Debug window"
+   ImGui::Begin("Dist", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+   ImTextureID id = reinterpret_cast<ImTextureID>(renderer->textureMgr.rayTracingOutputDist.srvHandle.second.ptr);
+   ImGui::Image(id, { (float)window->width, (float)window->width / 64 });
+   ImGui::End();
+
    ImGui::Begin("Camera");
    ImGui::DragFloat3("Position", &renderer->camPos.x, 0.01);
    ImGui::DragFloat3("Light Direction", &renderer->lightDirection.x, 0.01);
@@ -61,6 +66,14 @@ void core_Imgui::OnUpdate()
    ImGui::DragFloat("Yaw", &renderer->camDir.y, 0.01);
    renderer->camDir.y = fmodf(renderer->camDir.y, 2 * M_PI);
    ImGui::SliderFloat("Fov", &renderer->fovAngleY, 1, 180);
+   ImGui::End();
+
+   auto& inst = renderer->scene.instances[&renderer->scene.meshes[4]];
+
+   ImGui::Begin("Inst");
+   ImGui::DragFloat4("Position1", inst.instanceData.worldMat[0].m128_f32, 0.01);
+   ImGui::DragFloat4("Position2", inst.instanceData.worldMat[1].m128_f32, 0.01);
+   ImGui::DragFloat4("Position3", inst.instanceData.worldMat[2].m128_f32, 0.01);
    ImGui::End();
 #pragma endregion
 }

@@ -245,7 +245,7 @@ void rnd_Dx12::OnInit()
    lightPosition = { 0.57, 0.84, -0.05, 0 };
    lightAmbientColor = { 0.5, 0.0, 0.5, 0 };
    lightDiffuseColor = { 0.0, 0.5, 0.5, 0 };
-   lightDirection = { 0.57, 0.84, -0.05, 0 };
+   lightDirection = { 0, 1, 0, 0 };
    fovAngleY = 60.f;
 
    constantBufferMgr.InitConstBuffers();
@@ -253,18 +253,21 @@ void rnd_Dx12::OnInit()
 
    forwardPass.OnInit();
 
-   textureMgr.rayTracingOutput.OnInit(swapChainFormat, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
-   textureMgr.rayTracingOutput.CreateUav();
-   textureMgr.rayTracingOutput.CreateSrv();
-
    rtxPass.OnInit();
 
    textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_DEPTH_WRITE, L"DEPTH_BUFFER", 1, onesClearValue);
    textureMgr.depthBuffer.CreateDsv();
 
    textureMgr.giBuffer.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION, GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"GI output");
+   textureMgr.rayTracingOutput.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION * GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
+   textureMgr.rayTracingOutputDist.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION * GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output Ray Dist");
+
    textureMgr.giBuffer.CreateUav();
+   textureMgr.rayTracingOutput.CreateUav();
+   textureMgr.rayTracingOutputDist.CreateUav();
    textureMgr.giBuffer.CreateSrv();
+   textureMgr.rayTracingOutputDist.CreateSrv();
+
 
    if (imgui)
       imgui->InitRender();
@@ -279,6 +282,8 @@ void rnd_Dx12::PopulateGraphicsCommandList()
    ThrowIfFailed(commandAllocators[currentFrame]->Reset());
    ThrowIfFailed(commandList->Reset(commandAllocators[currentFrame].Get(), nullptr)); // TODO: initial pipeline state!
 
+   scene.topLayerAS.OnUpdate(&renderer->scene);
+
    SetBarrier({ {textureMgr.backBuffer[currentFrame], D3D12_RESOURCE_STATE_RENDER_TARGET} });
 
    FLOAT color[]{ 0.1f, 0.2f, 0.3f, 0.4f };
@@ -286,7 +291,11 @@ void rnd_Dx12::PopulateGraphicsCommandList()
       
    commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &scissorRect);
 
+   SetBarrier({ {textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
+
    rtxPass.Execute();
+
+   SetBarrier({ {textureMgr.giBuffer, D3D12_RESOURCE_STATE_GENERIC_READ}, {textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_GENERIC_READ} });
 
    forwardPass.Execute();
 
@@ -305,6 +314,7 @@ void rnd_Dx12::OnUpdate()
       imgui->OnUpdate();
 
    constantBufferMgr.UpdateConstBuffers();
+   scene.OnUpdate();
 
    PopulateGraphicsCommandList();
 

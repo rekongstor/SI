@@ -127,7 +127,7 @@ void PassRaytracing::OnInit()
 
    m_raytracingGlobalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({
       DescTable({
-         DescRange(RngType::UAV, 1, 0)
+         DescRange(RngType::UAV, 3, 0)
       }),
       SRV(0),
       CBV(0),

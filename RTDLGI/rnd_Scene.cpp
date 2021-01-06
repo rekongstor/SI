@@ -32,6 +32,15 @@ void rnd_Scene::OnInit(LPCWSTR filename)
          instData.instanceData.worldMat[j].m128_f32[i] = tr.m[i * 4 + j];
          wMatr.m[j][i] = tr.m[i * 4 + j];
       }
+      if (m == 4)
+      {
+         float sh = -0.4 + 0.1 * 7;
+         wMatr.m[0][3] += sh;
+         //wMatr.m[1][3] += 0.0;
+         //wMatr.m[2][3] += 0.0;
+         instData.instanceData.worldMat[0].m128_f32[3] += sh;
+      }
+
       XMMATRIX wmatrInv = XMMatrixInverse(nullptr, XMLoadFloat3x4(&wMatr));
       XMStoreFloat3x4(&wMatr, wmatrInv);
       memcpy(instData.instanceData.worldMatInv->m128_f32, wMatr.m, sizeof(float) * 12);
@@ -69,5 +78,13 @@ void rnd_Scene::OnInit(LPCWSTR filename)
       auto sbPair = instancesDataBuffer[0].AddBuffer(inst.second.instanceData);
       instancesDataBuffer[1].AddBuffer(inst.second.instanceData);
       inst.second.instIdx = sbPair;
+   }
+}
+
+void rnd_Scene::OnUpdate()
+{
+   for (auto& inst : instances) {
+      instancesDataBuffer[0].UpdateBuffer(inst.second.instanceData, inst.second.instIdx);
+      instancesDataBuffer[1].UpdateBuffer(inst.second.instanceData, inst.second.instIdx);
    }
 }
