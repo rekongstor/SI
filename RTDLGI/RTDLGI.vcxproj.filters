@@ -55,6 +55,12 @@
     <Filter Include="Source Files\DX12\CBs">
       <UniqueIdentifier>{7351d7f3-2676-4879-813d-45e9e8b2007f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DX12\passes\PassDLGI">
+      <UniqueIdentifier>{aba6e4ea-b036-4eac-938e-049d373646f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DX12\passes\PassDLGI">
+      <UniqueIdentifier>{a24bc1ab-8a67-41ce-82a7-40814c0f79f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -129,6 +135,9 @@
     <ClCompile Include="rnd_StructuredBuffer.cpp">
       <Filter>Source Files\DX12\buffers</Filter>
     </ClCompile>
+    <ClCompile Include="PathDLGI.cpp">
+      <Filter>Source Files\DX12\passes\PassDLGI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core_Imgui.h">
@@ -200,9 +209,6 @@
     <ClInclude Include="rnd_TopLAS.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
-    <ClInclude Include="rnd_StructuredBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="rnd_ConstantBuffer.h">
       <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
@@ -211,6 +217,12 @@
     </ClInclude>
     <ClInclude Include="HlslCompat.h">
       <Filter>Source Files\DX12\passes</Filter>
+    </ClInclude>
+    <ClInclude Include="PathDLGI.h">
+      <Filter>Header Files\DX12\passes\PassDLGI</Filter>
+    </ClInclude>
+    <ClInclude Include="rnd_StructuredBuffer.h">
+      <Filter>Header Files\DX12\buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -223,10 +235,8 @@
     <FxCompile Include="PassForwardPS.hlsl">
       <Filter>Source Files\DX12\passes\PassForward</Filter>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Common.h">
+    <FxCompile Include="Common.hlsl">
       <Filter>Source Files\DX12\passes</Filter>
-    </None>
+    </FxCompile>
   </ItemGroup>
 </Project>

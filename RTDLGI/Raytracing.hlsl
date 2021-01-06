@@ -111,6 +111,7 @@ inline void GenerateDistRay(uint3 index, out float3 origin, out float3 direction
 FUNCTION_NAME(RAYGEN_SHADER) (void)
 {
    uint3 dr = DispatchRaysIndex().xyz;
+   if (DispatchRaysDimensions().x == GI_RESOLUTION)
    {
       float3 rayDir;
       float3 origin;
@@ -120,15 +121,15 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
       ray.Origin = origin;
       ray.Direction = rayDir;
       ray.TMin = 0.0001;
-      ray.TMax = 4.0;
+      ray.TMax = 2;
       RayPayload payload = { float4(0, 0, 0, 0) };
       TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
 
       // Write the raytraced color to the output texture.
       RenderTarget[dr.xyz] = payload.color.x;
-      RenderTargetOut[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z)] = payload.color.x;
+      RenderTargetOut[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * GI_RESOLUTION))] = payload.color.x;
    }
-
+   else
    {
       float3 rayDir;
       float3 origin;
@@ -138,11 +139,11 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
       ray.Origin = origin;
       ray.Direction = rayDir;
       ray.TMin = 0.0001;
-      ray.TMax = 4.0;
+      ray.TMax = 2;
       RayPayload payload = { float4(0, 0, 0, 0) };
       TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
 
-      RenderTargetOutDist[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z)] = (ray.TMax - payload.color.w) / ray.TMax;
+      RenderTargetOutDist[uint2(dr.x * RAYS_PER_AXIS + dr.y, dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * RAYS_PER_AXIS))] = (ray.TMax - payload.color.w) / ray.TMax;
    }
 }
 

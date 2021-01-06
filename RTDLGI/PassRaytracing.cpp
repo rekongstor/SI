@@ -143,9 +143,11 @@ void PassRaytracing::OnInit()
 
 void PassRaytracing::Execute()
 {
+   renderer->SetBarrier({ {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
+
    auto frameIndex = renderer->currentFrame;
 
-   auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
+   auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc, int resolution)
    {
       // Since each shader table has only one shader record, the stride is same as the size.
       dispatchDesc->HitGroupTable.StartAddress = m_hitGroupShaderTable->GetGPUVirtualAddress();
@@ -156,9 +158,9 @@ void PassRaytracing::Execute()
       dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes;
       dispatchDesc->RayGenerationShaderRecord.StartAddress = m_rayGenShaderTable->GetGPUVirtualAddress();
       dispatchDesc->RayGenerationShaderRecord.SizeInBytes = m_rayGenShaderTable->GetDesc().Width;
-      dispatchDesc->Width = GI_RESOLUTION;
-      dispatchDesc->Height = GI_RESOLUTION;
-      dispatchDesc->Depth = GI_RESOLUTION;
+      dispatchDesc->Width = resolution;
+      dispatchDesc->Height = resolution;
+      dispatchDesc->Depth = resolution;
       commandList->SetPipelineState1(stateObject);
       commandList->DispatchRays(dispatchDesc);
    };
@@ -182,7 +184,13 @@ void PassRaytracing::Execute()
    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
    SetCommonPipelineState(renderer->CommandList());
    renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->scene.topLayerAS.buffer->GetGPUVirtualAddress());
-   DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc);
+   DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc, GI_RESOLUTION);
+
+   if (renderer->counter >= 0)
+   {
+      DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc, RAYS_PER_AXIS);
+      renderer->counter--;
+   }
 }
 
 void PassRaytracing::CreateRaytracingPipelineStateObject()

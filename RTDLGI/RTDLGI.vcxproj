@@ -164,6 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PassForward.cpp" />
+    <ClCompile Include="PathDLGI.cpp" />
     <ClCompile Include="rnd_BottomLAS.cpp" />
     <ClCompile Include="rnd_ConstantBufferMgr.cpp" />
     <ClCompile Include="rnd_ConstantBuffer.cpp" />
@@ -189,6 +190,7 @@
     <ClCompile Include="SceneConstBuf.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="PathDLGI.h" />
     <ClInclude Include="rnd_BottomLAS.h" />
     <ClInclude Include="rnd_Buffer.h" />
     <ClInclude Include="PassForward.h" />

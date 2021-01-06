@@ -240,6 +240,8 @@ public:
 #pragma region Passes
    PassRaytracing rtxPass;
    PassForward forwardPass;
+
+   int counter = -1;
 #pragma endregion 
 
 #pragma region Raytracing

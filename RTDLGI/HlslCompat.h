@@ -12,7 +12,9 @@
 #ifndef HLSLCOMPAT_H
 #define HLSLCOMPAT_H
 
-#define GI_RESOLUTION 64
+#define GI_RESOLUTION 32
+#define RAYS_PER_AXIS 16
+#define TRAINING_SAMPLES 64
 
 #ifndef HLSL
 

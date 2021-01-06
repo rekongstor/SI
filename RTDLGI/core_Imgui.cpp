@@ -54,9 +54,9 @@ void core_Imgui::OnUpdate()
    //ImGui::ShowDemoWindow();
 
 #pragma region "Debug window"
-   ImGui::Begin("Dist", nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+   ImGui::Begin("Dist"); // , nullptr, ImGuiWindowFlags_::ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
    ImTextureID id = reinterpret_cast<ImTextureID>(renderer->textureMgr.rayTracingOutputDist.srvHandle.second.ptr);
-   ImGui::Image(id, { (float)window->width, (float)window->width / 64 });
+   ImGui::Image(id, { (float)(RAYS_PER_AXIS * RAYS_PER_AXIS), (float)(RAYS_PER_AXIS * TRAINING_SAMPLES)});
    ImGui::End();
 
    ImGui::Begin("Camera");
@@ -74,6 +74,10 @@ void core_Imgui::OnUpdate()
    ImGui::DragFloat4("Position1", inst.instanceData.worldMat[0].m128_f32, 0.01);
    ImGui::DragFloat4("Position2", inst.instanceData.worldMat[1].m128_f32, 0.01);
    ImGui::DragFloat4("Position3", inst.instanceData.worldMat[2].m128_f32, 0.01);
+   if (ImGui::Button("Generate training samples"))
+   {
+      renderer->counter = TRAINING_SAMPLES - 1;
+   }
    ImGui::End();
 #pragma endregion
 }

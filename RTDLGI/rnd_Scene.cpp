@@ -1,6 +1,8 @@
 #include "rnd_Scene.h"
+#include "rnd_Dx12.h"
 #include <fstream>
 #include "../3rd_party/fbx/src/ofbx.h"
+#include <random>
 
 void rnd_Scene::OnInit(LPCWSTR filename)
 {
@@ -81,9 +83,27 @@ void rnd_Scene::OnInit(LPCWSTR filename)
    }
 }
 
+float random()
+{
+   static std::mt19937 rng;
+   static std::uniform_real_distribution<> dist;
+
+   return dist(rng);
+}
+
 void rnd_Scene::OnUpdate()
 {
    for (auto& inst : instances) {
+      if (renderer->counter >= 0 && inst.first != &meshes[1]) {
+         XMVECTOR transl{ random() * 1.5 - 1, random() * 1.5 - 1, random() * 1.5 - 1};
+         float uS = random() * 0.3 + 0.3;
+         XMVECTOR scale{ uS,uS,uS };
+         XMVECTOR rot{ random() * 2 * M_PI, random() * M_PI, random() * M_PI };
+         XMMATRIX worldMat = XMMatrixRotationRollPitchYawFromVector(rot) * XMMatrixScalingFromVector(scale) * XMMatrixTranslationFromVector(transl);
+         XMStoreFloat3x4((XMFLOAT3X4*)(void*)inst.second.instanceData.worldMat, worldMat);
+         XMStoreFloat3x4((XMFLOAT3X4*)(void*)inst.second.instanceData.worldMatInv, XMMatrixInverse(nullptr, worldMat));
+      }
+
       instancesDataBuffer[0].UpdateBuffer(inst.second.instanceData, inst.second.instIdx);
       instancesDataBuffer[1].UpdateBuffer(inst.second.instanceData, inst.second.instIdx);
    }

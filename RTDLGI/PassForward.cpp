@@ -81,7 +81,9 @@ void PassForward::OnInit()
 
 void PassForward::Execute()
 {
-   renderer->SetBarrier({ { renderer->BackBuffer() , (D3D12_RESOURCE_STATE_RENDER_TARGET) } });
+   renderer->SetBarrier({ { renderer->BackBuffer() , (D3D12_RESOURCE_STATE_RENDER_TARGET) }, 
+      {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_GENERIC_READ},
+      {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_GENERIC_READ} });
 
    renderer->CommandList()->RSSetViewports(1, &renderer->viewport);
    renderer->CommandList()->RSSetScissorRects(1, &renderer->scissorRect);

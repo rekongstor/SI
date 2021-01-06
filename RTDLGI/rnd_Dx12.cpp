@@ -259,8 +259,8 @@ void rnd_Dx12::OnInit()
    textureMgr.depthBuffer.CreateDsv();
 
    textureMgr.giBuffer.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION, GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"GI output");
-   textureMgr.rayTracingOutput.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION * GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
-   textureMgr.rayTracingOutputDist.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION * GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output Ray Dist");
+   textureMgr.rayTracingOutput.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION * GI_RESOLUTION, GI_RESOLUTION * TRAINING_SAMPLES }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
+   textureMgr.rayTracingOutputDist.OnInit(DXGI_FORMAT_R32_FLOAT, { RAYS_PER_AXIS * RAYS_PER_AXIS, RAYS_PER_AXIS * TRAINING_SAMPLES }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output Ray Dist");
 
    textureMgr.giBuffer.CreateUav();
    textureMgr.rayTracingOutput.CreateUav();
@@ -291,11 +291,7 @@ void rnd_Dx12::PopulateGraphicsCommandList()
       
    commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &scissorRect);
 
-   SetBarrier({ {textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
-
    rtxPass.Execute();
-
-   SetBarrier({ {textureMgr.giBuffer, D3D12_RESOURCE_STATE_GENERIC_READ}, {textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_GENERIC_READ} });
 
    forwardPass.Execute();
 
