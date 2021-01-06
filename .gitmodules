@@ -22,3 +22,6 @@
 [submodule "3rd_party/tinyexr"]
 	path = 3rd_party/tinyexr
 	url = https://github.com/syoyo/tinyexr
+[submodule "3rd_party/DirectML"]
+	path = 3rd_party/DirectML
+	url = https://github.com/microsoft/DirectML
