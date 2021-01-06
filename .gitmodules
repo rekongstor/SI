@@ -19,3 +19,6 @@
 [submodule "3rd_party/fbx"]
 	path = 3rd_party/fbx
 	url = https://github.com/nem0/OpenFBX
+[submodule "3rd_party/tinyexr"]
+	path = 3rd_party/tinyexr
+	url = https://github.com/syoyo/tinyexr
