@@ -32,11 +32,13 @@ void rnd_InputTensor::OnInit(UINT64 size, LPCWSTR name)
 
 void rnd_DynamicTensor::OnInit(UINT64 size, LPCWSTR name)
 {
-   auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-   auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-   renderer->Device()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&buffer));
-   buffer->SetName(FormatWStr(L"[Tensor] %s", name));
+   if (!buffer.Get()) {
+      auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+      auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+      renderer->Device()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&buffer));
+      buffer->SetName(FormatWStr(L"[Tensor] %s", name));
 
+   }
    width = size;
    state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 }

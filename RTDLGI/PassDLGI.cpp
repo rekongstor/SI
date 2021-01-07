@@ -8,6 +8,8 @@ using namespace DirectX::PackedVector;
 #define DML_TARGET_VERSION_USE_LATEST
 #include "../3rd_party/DirectML/Libraries/DirectMLX.h"
 
+#define NEURONS_COUNT_GI 64
+
 #pragma region DLGI NAMES
 namespace dlgiFiles
 {
@@ -61,6 +63,13 @@ namespace dlgiOps
    const char* W2B2b3 = "W2B2b3";
    const char* N2b3 = "N2b3";
    const char* N3b3 = "N3b3";
+
+   const char* w1b1 = "w1b1";
+   const char* n1 = "n1";
+   const char* w2b2 = "w2b2";
+   const char* n2 = "n2";
+   const char* w3b3 = "w3b3";
+   const char* n3 = "n3";
 }
 #pragma endregion 
 
@@ -76,7 +85,7 @@ void PassDLGI::OnInit()
    float* out; // width * height * RGBA
    int width;
    int height;
-   const char* err = NULL; // or nullptr in C++11
+   const char* err = nullptr; // or nullptr in C++11
 
    for (auto& input : inputs)
    {
@@ -143,10 +152,11 @@ void PassDLGI::OnInit()
       tensor.AssignData(data);
    }
 
+   // Input RT data
    {
-      auto& tensor = inputData;
+      auto& tensor = inputRtData;
 
-      tensor.tensorSizes[2] = 1; // XYZ
+      tensor.tensorSizes[2] = 1; // Dist
       tensor.tensorSizes[3] = RAYS_PER_AXIS * RAYS_PER_AXIS * RAYS_PER_AXIS; // RA
 
       DML_BUFFER_TENSOR_DESC& dmlBufferTensorDesc = tensor.tensorDesc;
@@ -162,6 +172,27 @@ void PassDLGI::OnInit()
          dmlBufferTensorDesc.Strides);
 
       tensor.OnInit(dmlBufferTensorDesc.TotalTensorSizeInBytes, L"RT_Tensor");
+   }
+   // Input Pos data
+   {
+      auto& tensor = inputPosData;
+
+      tensor.tensorSizes[0] = GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION; // XYZ
+      tensor.tensorSizes[3] = 3;
+
+      DML_BUFFER_TENSOR_DESC& dmlBufferTensorDesc = tensor.tensorDesc;
+      dmlBufferTensorDesc.DataType = DML_TENSOR_DATA_TYPE_FLOAT16;
+      dmlBufferTensorDesc.Flags = DML_TENSOR_FLAG_NONE;
+      dmlBufferTensorDesc.DimensionCount = ARRAYSIZE(tensor.tensorSizes);
+      dmlBufferTensorDesc.Sizes = tensor.tensorSizes;
+      dmlBufferTensorDesc.Strides = nullptr;
+      dmlBufferTensorDesc.TotalTensorSizeInBytes = DMLCalcBufferTensorSize(
+         dmlBufferTensorDesc.DataType,
+         dmlBufferTensorDesc.DimensionCount,
+         dmlBufferTensorDesc.Sizes,
+         dmlBufferTensorDesc.Strides);
+
+      tensor.OnInit(dmlBufferTensorDesc.TotalTensorSizeInBytes, L"Pos_Tensor");
    }
 
    // Operators
@@ -194,7 +225,14 @@ void PassDLGI::OnInit()
       operators[N2b3];
       operators[N3b3];
 
-      operators[W1B1].InitMul(inputData, inputTensors[W1], inputTensors[B1], L"W1B1");
+      //operators[w1b1];
+      //operators[n1];
+      //operators[w2b2];
+      //operators[n2];
+      //operators[w3b3];
+      //operators[n3];
+
+      operators[W1B1].InitMul(inputRtData, inputTensors[W1], inputTensors[B1], L"W1B1");
       operators[N1].InitTanh(operators[W1B1].output, L"N1");
 
       operators[W2B2w1].InitMul(operators[N1].output, inputTensors[W2w1], inputTensors[B2w1], L"W2B2w1");
@@ -220,6 +258,64 @@ void PassDLGI::OnInit()
       operators[W2B2b3].InitMul(operators[N1].output, inputTensors[W2b3], inputTensors[B2b3], L"W2B2b3");
       operators[N2b3].InitTanh(operators[W2B2b3].output, L"N2b3");
       operators[N3b3].InitMul(operators[N2b3].output, inputTensors[W3b3], inputTensors[B3b3], L"N3b3");
+
+      //w1 = operators[N3w1].output;
+      //b1 = operators[N3b1].output;
+      //w2 = operators[N3w2].output;
+      //b2 = operators[N3b2].output;
+      //w3 = operators[N3w3].output;
+      //b3 = operators[N3b3].output;
+
+      //w1.tensorSizes[2] = 3;
+      //w1.tensorSizes[3] = NEURONS_COUNT_GI;
+      //b1.tensorSizes[2] = 1;
+      //b2.tensorSizes[3] = NEURONS_COUNT_GI;
+
+      //w2.tensorSizes[2] = NEURONS_COUNT_GI;
+      //w2.tensorSizes[3] = NEURONS_COUNT_GI;
+      //b2.tensorSizes[2] = 1;
+      //b2.tensorSizes[3] = NEURONS_COUNT_GI;
+
+      //w3.tensorSizes[2] = NEURONS_COUNT_GI;
+      //w3.tensorSizes[3] = 1;
+      //b3.tensorSizes[1] = 1;
+      //b3.tensorSizes[1] = 1;
+
+      //w1.tensorSizes[0] = GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION;
+      //b1.tensorSizes[0] = GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION;
+      //w2.tensorSizes[0] = GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION;
+      //b2.tensorSizes[0] = GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION;
+      //w3.tensorSizes[0] = GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION;
+      //b3.tensorSizes[0] = GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION;
+
+
+      //w1.tensorDesc.Sizes = w1.tensorSizes;
+      //b1.tensorDesc.Sizes = b1.tensorSizes;
+      //w2.tensorDesc.Sizes = w2.tensorSizes;
+      //b2.tensorDesc.Sizes = b2.tensorSizes;
+      //w3.tensorDesc.Sizes = w3.tensorSizes;
+      //b3.tensorDesc.Sizes = b3.tensorSizes;
+
+      //w1.RecalcSizes();
+      //b1.RecalcSizes();
+      //w2.RecalcSizes();
+      //b2.RecalcSizes();
+      //w3.RecalcSizes();
+      //b3.RecalcSizes();
+
+      //w1.OnInit(w1.tensorDesc.TotalTensorSizeInBytes);
+      //b1.OnInit(b1.tensorDesc.TotalTensorSizeInBytes);
+      //w2.OnInit(w2.tensorDesc.TotalTensorSizeInBytes);
+      //b2.OnInit(b2.tensorDesc.TotalTensorSizeInBytes);
+      //w3.OnInit(w3.tensorDesc.TotalTensorSizeInBytes);
+      //b3.OnInit(b3.tensorDesc.TotalTensorSizeInBytes);
+
+      //operators[w1b1].InitMul(inputPosData, w1, b1, L"w1b1");
+      //operators[n1].InitTanh(operators[w1b1].output, L"n1");
+      //operators[w2b2].InitMul(operators[n1].output, w2, b2, L"w2b2");
+      //operators[n2].InitTanh(operators[w2b2].output, L"n2");
+      //operators[w3b3].InitMul(operators[n2].output, w3, b3, L"w3b3");
+      //operators[n3].InitTanh(operators[w3b3].output, L"n3 - output GI");
    }
 
    std::vector<IDMLCompiledOperator*> compiledOperators;
@@ -358,6 +454,13 @@ void PassDLGI::Execute()
    execute(operators[dlgiOps::W2B2b3]);
    execute(operators[dlgiOps::N2b3]);
    execute(operators[dlgiOps::N3b3]);
+
+   //execute(operators[dlgiOps::w1b1]);
+   //execute(operators[dlgiOps::n1]);
+   //execute(operators[dlgiOps::w2b2]);
+   //execute(operators[dlgiOps::n2]);
+   //execute(operators[dlgiOps::w3b3]);
+   //execute(operators[dlgiOps::n3]);
 }
 
 void rnd_DmlOperator::InitMul(rnd_Tensor& A, rnd_Tensor& B, rnd_Tensor& C, LPCWSTR name)
@@ -366,6 +469,7 @@ void rnd_DmlOperator::InitMul(rnd_Tensor& A, rnd_Tensor& B, rnd_Tensor& C, LPCWS
    DML_TENSOR_DESC dmlTensorDescB{ DML_TENSOR_TYPE_BUFFER, &B.tensorDesc };
    DML_TENSOR_DESC dmlTensorDescC{ DML_TENSOR_TYPE_BUFFER, &C.tensorDesc };
 
+   output.tensorSizes[0] = A.tensorDesc.Sizes[0];
    output.tensorSizes[2] = A.tensorDesc.Sizes[2];
    output.tensorSizes[3] = B.tensorDesc.Sizes[3];
 
@@ -395,7 +499,6 @@ void rnd_DmlOperator::InitMul(rnd_Tensor& A, rnd_Tensor& B, rnd_Tensor& C, LPCWS
    operatorDesc.FusedActivation = nullptr;
 
    DML_OPERATOR_DESC dmlOperatorDesc{ DML_OPERATOR_GEMM, &operatorDesc };
-
    ThrowIfFailed(renderer->DmlDevice()->CreateOperator(&dmlOperatorDesc, IID_PPV_ARGS(&dmlOperator)));
    ThrowIfFailed(renderer->DmlDevice()->CompileOperator(dmlOperator.Get(), DML_EXECUTION_FLAG_ALLOW_HALF_PRECISION_COMPUTATION, IID_PPV_ARGS(&dmlCompiledOperator)));
 
@@ -413,6 +516,7 @@ void rnd_DmlOperator::InitTanh(rnd_Tensor& A, LPCWSTR name)
 {
    DML_TENSOR_DESC dmlTensorDescA{ DML_TENSOR_TYPE_BUFFER, &A.tensorDesc };
 
+   output.tensorSizes[0] = A.tensorDesc.Sizes[0];
    output.tensorSizes[2] = A.tensorDesc.Sizes[2];
    output.tensorSizes[3] = A.tensorDesc.Sizes[3];
 
@@ -462,4 +566,14 @@ void rnd_DmlOperator::OnInit()
 void rnd_DmlOperator::Execute()
 {
 
+}
+
+
+void rnd_DynamicTensor::RecalcSizes()
+{
+   tensorDesc.TotalTensorSizeInBytes = DMLCalcBufferTensorSize(
+      tensorDesc.DataType,
+      tensorDesc.DimensionCount,
+      tensorDesc.Sizes,
+      tensorDesc.Strides);
 }

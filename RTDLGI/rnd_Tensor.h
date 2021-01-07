@@ -16,7 +16,8 @@ struct rnd_Tensor : public Buffer1D
 class rnd_DynamicTensor : public rnd_Tensor, public rnd_Buffer
 {
 public:
-   void OnInit(UINT64 size, LPCWSTR name);
+   void OnInit(UINT64 size, LPCWSTR name = L"");
+   void RecalcSizes();
    rnd_Buffer* Buffer() override { return this; }
 };
 

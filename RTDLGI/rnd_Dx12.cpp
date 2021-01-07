@@ -279,7 +279,7 @@ void rnd_Dx12::OnInit()
    textureMgr.giBuffer.CreateUav();
    textureMgr.rayTracingOutput.CreateUav();
    textureMgr.rayTracingOutputDist.CreateUav();
-   dlgiPass.inputData.CreateUav();
+   dlgiPass.inputRtData.CreateUav();
    textureMgr.giBuffer.CreateSrv();
    textureMgr.rayTracingOutputDist.CreateSrv();
 

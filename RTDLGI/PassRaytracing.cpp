@@ -153,7 +153,7 @@ void PassRaytracing::Execute()
    renderer->CommandList()->SetComputeRootSignature(m_raytracingGlobalRootSignature.Get());
    SetCommonPipelineState(renderer->CommandList());
 
-   auto& dlgiBuf = *renderer->dlgiPass.inputData.Buffer();
+   auto& dlgiBuf = *renderer->dlgiPass.inputRtData.Buffer();
    renderer->SetBarrier({ {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {dlgiBuf, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
 
    auto frameIndex = renderer->currentFrame;

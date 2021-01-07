@@ -26,9 +26,16 @@ struct rnd_DmlOperator
 class PassDLGI
 {
 public:
-   rnd_DynamicTensor inputData;
+   rnd_DynamicTensor inputRtData;
+   rnd_DynamicTensor inputPosData;
    std::map<std::string, rnd_InputTensor> inputTensors;
    std::map<std::string, rnd_DmlOperator> operators;
+   rnd_DynamicTensor w1;
+   rnd_DynamicTensor b1;
+   rnd_DynamicTensor w2;
+   rnd_DynamicTensor b2;
+   rnd_DynamicTensor w3;
+   rnd_DynamicTensor b3;
 
    ComPtr<IDMLOperatorInitializer> dmlOperatorInitializer;
    DML_BINDING_PROPERTIES bindingProperties;
