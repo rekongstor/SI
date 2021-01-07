@@ -22,6 +22,7 @@
 RWTexture3D<float> RenderTarget : register(u0);
 RWTexture2D<float> RenderTargetOut : register(u1);
 RWTexture2D<float> RenderTargetOutDist : register(u2);
+RWBuffer<uint> DLGIinputs : register(u3);
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 
@@ -144,6 +145,8 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
       TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
 
       RenderTargetOutDist[uint2(dr.x * RAYS_PER_AXIS + dr.y, dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * RAYS_PER_AXIS))] = (ray.TMax - payload.color.w) / ray.TMax;
+      if ((int)round(g_sceneCB.counter.x) == 0)
+         DLGIinputs[dr.x * RAYS_PER_AXIS + dr.y + dr.z * RAYS_PER_AXIS * RAYS_PER_AXIS] = f32tof16((ray.TMax - payload.color.w) / ray.TMax * 2.f - 1.f);
    }
 }
 

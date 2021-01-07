@@ -127,7 +127,7 @@ void PassRaytracing::OnInit()
 
    m_raytracingGlobalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({
       DescTable({
-         DescRange(RngType::UAV, 3, 0)
+         DescRange(RngType::UAV, 4, 0)
       }),
       SRV(0),
       CBV(0),
@@ -143,7 +143,18 @@ void PassRaytracing::OnInit()
 
 void PassRaytracing::Execute()
 {
-   renderer->SetBarrier({ {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
+   auto SetCommonPipelineState = [&](ID3D12GraphicsCommandList* descriptorSetCommandList)
+   {
+      descriptorSetCommandList->SetDescriptorHeaps(1, renderer->cbvSrvUavHeap.GetAddressOf());
+      // Set index and successive vertex buffer descriptor tables
+      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, renderer->scene.meshes[0].indexBuffer.srvHandle.second);
+      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.giBuffer.uavHandle[0].second);
+   };
+   renderer->CommandList()->SetComputeRootSignature(m_raytracingGlobalRootSignature.Get());
+   SetCommonPipelineState(renderer->CommandList());
+
+   auto& dlgiBuf = *renderer->dlgiPass.inputData.Buffer();
+   renderer->SetBarrier({ {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {dlgiBuf, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
 
    auto frameIndex = renderer->currentFrame;
 
@@ -165,15 +176,6 @@ void PassRaytracing::Execute()
       commandList->DispatchRays(dispatchDesc);
    };
 
-   auto SetCommonPipelineState = [&](ID3D12GraphicsCommandList* descriptorSetCommandList)
-   {
-      descriptorSetCommandList->SetDescriptorHeaps(1, renderer->cbvSrvUavHeap.GetAddressOf());
-      // Set index and successive vertex buffer descriptor tables
-      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::VertexBuffersSlot, renderer->scene.meshes[0].indexBuffer.srvHandle.second);
-      renderer->CommandList()->SetComputeRootDescriptorTable(GlobalRootSignatureParams::OutputViewSlot, renderer->textureMgr.giBuffer.uavHandle[0].second);
-   };
-
-   renderer->CommandList()->SetComputeRootSignature(m_raytracingGlobalRootSignature.Get());
 
    // Copy the updated scene constant buffer to GPU.
    // This should be already updated from cbMgr->Update()
@@ -182,7 +184,6 @@ void PassRaytracing::Execute()
 
    // Bind the heaps, acceleration structure and dispatch rays.
    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
-   SetCommonPipelineState(renderer->CommandList());
    renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->scene.topLayerAS.buffer->GetGPUVirtualAddress());
    DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc, GI_RESOLUTION);
 

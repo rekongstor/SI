@@ -206,7 +206,7 @@ public:
 #pragma region Descriptor heaps
    DescHandlePair GetDsvHandle();
    DescHandlePair GetRtvHandle();
-   DescHandlePair GetCbvSrvUavHandle();
+   DescHandlePair GetCbvSrvUavHandle(int count = 1);
    DescHandlePair GetSamplerHandle();
 
    ComPtr<ID3D12DescriptorHeap> dsvHeap;

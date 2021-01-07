@@ -174,15 +174,15 @@ void rnd_Dx12::OnInit()
 
    heapInit(device.Get(), rtvHeap, rtvHandle.first, rtvHandle.second,
       D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, rtvCount);
-   dsvHeap.Get()->SetName(L"Descriptor heap RTV");
+   rtvHeap.Get()->SetName(L"Descriptor heap RTV");
 
    heapInit(device.Get(), cbvSrvUavHeap, cbvSrvUavHandle.first, cbvSrvUavHandle.second,
       D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, cbvSrvUavCount);
-   dsvHeap.Get()->SetName(L"Descriptor heap SrvUav");
+   cbvSrvUavHeap.Get()->SetName(L"Descriptor heap SrvUav");
 
    heapInit(device.Get(), svHeap, samplerHandle.first, samplerHandle.second,
       D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, svCount);
-   dsvHeap.Get()->SetName(L"Descriptor heap Sampler");
+   svHeap.Get()->SetName(L"Descriptor heap Sampler");
 
    dsvIncrSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
    rtvIncrSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -279,9 +279,9 @@ void rnd_Dx12::OnInit()
    textureMgr.giBuffer.CreateUav();
    textureMgr.rayTracingOutput.CreateUav();
    textureMgr.rayTracingOutputDist.CreateUav();
+   dlgiPass.inputData.CreateUav();
    textureMgr.giBuffer.CreateSrv();
    textureMgr.rayTracingOutputDist.CreateSrv();
-
 
    if (imgui)
       imgui->InitRender();
@@ -306,6 +306,8 @@ void rnd_Dx12::PopulateGraphicsCommandList()
    commandList->ClearDepthStencilView(textureMgr.depthBuffer.dsvHandle.first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &scissorRect);
 
    rtxPass.Execute();
+
+   dlgiPass.Execute();
 
    forwardPass.Execute();
 
@@ -479,13 +481,13 @@ std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_Dx12
    return ret;
 }
 
-std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_Dx12::GetCbvSrvUavHandle()
+std::pair<CD3DX12_CPU_DESCRIPTOR_HANDLE, CD3DX12_GPU_DESCRIPTOR_HANDLE> rnd_Dx12::GetCbvSrvUavHandle(int count)
 {
-   --cbvSrvUavCount;
+   cbvSrvUavCount -= count;
    assert(cbvSrvUavCount >= 0);
    auto ret = cbvSrvUavHandle;
-   cbvSrvUavHandle.first.Offset(1, cbvSrvUavIncrSize);
-   cbvSrvUavHandle.second.Offset(1, cbvSrvUavIncrSize);
+   cbvSrvUavHandle.first.Offset(count, cbvSrvUavIncrSize);
+   cbvSrvUavHandle.second.Offset(count, cbvSrvUavIncrSize);
    return ret;
 }
 

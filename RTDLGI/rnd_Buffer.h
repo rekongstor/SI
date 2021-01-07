@@ -2,20 +2,20 @@
 
 struct Buffer1D
 {
-   int width;
+   UINT64 width;
 };
 
 struct Buffer2D
 {
-   int width;
-   int height;
+   UINT64 width;
+   UINT64 height;
 };
 
 struct Buffer3D
 {
-   int width;
-   int height;
-   int depth;
+   UINT64 width;
+   UINT64 height;
+   UINT64 depth;
 };
 
 class rnd_Buffer

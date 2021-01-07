@@ -9,8 +9,8 @@ public:
    
 
    const WCHAR* name = L"RTDLGI";
-   int width;
-   int height;
+   UINT width;
+   UINT height;
    WNDCLASSEX wndClass = {};
    HWND window = nullptr;
    LONG winStyle;

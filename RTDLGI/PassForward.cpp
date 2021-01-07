@@ -81,6 +81,7 @@ void PassForward::OnInit()
 
 void PassForward::Execute()
 {
+   renderer->CommandList()->SetDescriptorHeaps(1, renderer->cbvSrvUavHeap.GetAddressOf());
    renderer->SetBarrier({ { renderer->BackBuffer() , (D3D12_RESOURCE_STATE_RENDER_TARGET) }, 
       {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_GENERIC_READ},
       {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_GENERIC_READ} });
@@ -95,8 +96,6 @@ void PassForward::Execute()
    renderer->CommandList()->SetGraphicsRootDescriptorTable(2, renderer->textureMgr.giBuffer.srvHandle.second);
 
    renderer->CommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-   ID3D12DescriptorHeap* heap[] = { renderer->cbvSrvUavHeap.Get() };
-   renderer->CommandList()->SetDescriptorHeaps(1, heap);
    auto& backBuffer = renderer->BackBuffer().rtvHandle;
    auto& depthBuffer = renderer->textureMgr.depthBuffer.dsvHandle;
    renderer->CommandList()->OMSetRenderTargets(1, &backBuffer.first, false, &depthBuffer.first);
