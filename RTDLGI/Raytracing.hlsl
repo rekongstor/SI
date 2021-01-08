@@ -23,6 +23,7 @@ RWTexture3D<float> RenderTarget : register(u0);
 RWTexture2D<float> RenderTargetOut : register(u1);
 RWTexture2D<float> RenderTargetOutDist : register(u2);
 RWBuffer<uint> DLGIinputs : register(u3);
+RWBuffer<uint> PosInputs : register(u4);
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 
@@ -129,6 +130,9 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
       // Write the raytraced color to the output texture.
       RenderTarget[dr.xyz] = payload.color.x;
       RenderTargetOut[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * GI_RESOLUTION))] = payload.color.x;
+      PosInputs[(dr.x * GI_RESOLUTION + dr.y + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 0] = f32tof16(float(dr.x) / float(GI_RESOLUTION) * 2.f - 1.f);
+      PosInputs[(dr.x * GI_RESOLUTION + dr.y + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 1] = f32tof16(float(dr.y) / float(GI_RESOLUTION) * 2.f - 1.f);
+      PosInputs[(dr.x * GI_RESOLUTION + dr.y + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 2] = f32tof16(float(dr.z) / float(GI_RESOLUTION) * 2.f - 1.f);
    }
    else
    {
@@ -145,7 +149,7 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
       TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
 
       RenderTargetOutDist[uint2(dr.x * RAYS_PER_AXIS + dr.y, dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * RAYS_PER_AXIS))] = (ray.TMax - payload.color.w) / ray.TMax;
-      if ((int)round(g_sceneCB.counter.x) == 0)
+      if ((int)max(round(g_sceneCB.counter.x), 0.f) == 0)
          DLGIinputs[dr.x * RAYS_PER_AXIS + dr.y + dr.z * RAYS_PER_AXIS * RAYS_PER_AXIS] = f32tof16((ray.TMax - payload.color.w) / ray.TMax * 2.f - 1.f);
    }
 }

@@ -10,7 +10,9 @@ struct rnd_Tensor : public Buffer1D
    virtual rnd_Buffer* Buffer() = 0;
 
    DescHandlePair uavHandle;
+   DescHandlePair srvHandle;
    void CreateUav();
+   void CreateSrv();
 };
 
 class rnd_DynamicTensor : public rnd_Tensor, public rnd_Buffer

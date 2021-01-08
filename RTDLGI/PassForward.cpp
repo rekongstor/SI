@@ -9,7 +9,7 @@
 void PassForward::OnInit()
 {
    // Create RS
-   forwardRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ CBV(0), SRV(0, 0), DescTable({DescRange(RngType::SRV, 1, 1) }) },
+   forwardRootSignature = renderer->rootSignatureMgr.CreateRootSignature({ CBV(0), SRV(0, 0), DescTable({DescRange(RngType::SRV, 2, 1) }) },
       { CD3DX12_STATIC_SAMPLER_DESC(0) },
       D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
       D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |

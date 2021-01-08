@@ -280,8 +280,10 @@ void rnd_Dx12::OnInit()
    textureMgr.rayTracingOutput.CreateUav();
    textureMgr.rayTracingOutputDist.CreateUav();
    dlgiPass.inputRtData.CreateUav();
+   dlgiPass.inputPosData.CreateUav();
    textureMgr.giBuffer.CreateSrv();
    textureMgr.rayTracingOutputDist.CreateSrv();
+   dlgiPass.operators["n3"].output.CreateSrv();
 
    if (imgui)
       imgui->InitRender();

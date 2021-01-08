@@ -60,3 +60,24 @@ void rnd_Tensor::CreateUav()
    ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
 }
 
+
+void rnd_Tensor::CreateSrv()
+{
+   // SRV
+   D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+   srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+   srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+   srvDesc.Buffer.NumElements = width / sizeof(UINT32);
+
+   srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+   srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
+   srvDesc.Buffer.StructureByteStride = 0;
+
+   auto descHandle = renderer->GetCbvSrvUavHandle();
+   srvHandle.first = descHandle.first;
+   srvHandle.second = descHandle.second;
+
+   renderer->Device()->CreateShaderResourceView(Buffer()->buffer.Get(), &srvDesc, descHandle.first);
+   ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
+}
+

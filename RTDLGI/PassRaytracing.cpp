@@ -127,7 +127,7 @@ void PassRaytracing::OnInit()
 
    m_raytracingGlobalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({
       DescTable({
-         DescRange(RngType::UAV, 4, 0)
+         DescRange(RngType::UAV, 5, 0)
       }),
       SRV(0),
       CBV(0),
@@ -187,11 +187,9 @@ void PassRaytracing::Execute()
    renderer->CommandList()->SetComputeRootShaderResourceView(GlobalRootSignatureParams::AccelerationStructureSlot, renderer->scene.topLayerAS.buffer->GetGPUVirtualAddress());
    DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc, GI_RESOLUTION);
 
+   DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc, RAYS_PER_AXIS);
    if (renderer->counter >= 0)
-   {
-      DispatchRays(renderer->dxrCommandList.Get(), m_dxrStateObject.Get(), &dispatchDesc, RAYS_PER_AXIS);
       renderer->counter--;
-   }
 }
 
 void PassRaytracing::CreateRaytracingPipelineStateObject()
