@@ -1,1 +1,3 @@
-training\*.dds
+*.dds
+*.pt
+*.exr
