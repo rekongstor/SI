@@ -9,22 +9,24 @@ GI_RESOLUTION = 64
 RAYS_PER_AXIS = 16
 TRAINING_SAMPLES = 32
 NN_RESOLUTION = 8
-TRAINING_BATCHES = 16
+TRAINING_BATCHES = 64
+BATCH_SIZE = 64
 
-TRAIN = 1
+TRAIN = 1984
 TEST = 0
 LOAD = 0
 
 neuronsCount_L1 = 2048
-neuronsCount_L2 = 1024
-neuronsCount_L3 = 512
+neuronsCount_L2 = 2048
+neuronsCount_L3 = 2048
+neuronsCount_L4 = 2048
 
 alpha = 0.04
 beta2 = 0.001
-tanhMul = 1.15
+tanhMul = 1.2
 rng = 0.09
-steps = 5000
-l2regMul = 0.002
+steps = 10000
+l2regMul = 1.0
 
 NN_BATCHES = GI_RESOLUTION // NN_RESOLUTION
 BATCHES = TRAIN * (1 - TEST) + (TRAINING_SAMPLES * TRAINING_BATCHES - TRAIN) * TEST
@@ -68,14 +70,12 @@ def inpInit(i):
     x = (i % NN_BATCHES) / (NN_BATCHES - 1)
     y = ((i // NN_BATCHES) % NN_BATCHES) / (NN_BATCHES - 1)
     z = (i // NN_BATCHES ** 2) / (NN_BATCHES - 1)
-    return [x, y, z, 1.0]
+    return [x*x, y*y, z*z, x, y, z, 1.0]
 
 
-inputsXYZ = torch.FloatTensor([[inpInit(i)] for i in range(NN_BATCHES**3)]).half().resize(1, NN_BATCHES**3, 1, 4) * 2 - 1
+inputsXYZ = torch.FloatTensor([[inpInit(i)] for i in range(NN_BATCHES**3)]).half().resize(1, NN_BATCHES**3, 1, 7) * 2 - 1
 
-data_x_Dist = Variable(inputs.float().cuda())
 data_x_XYZ = Variable(inputsXYZ.float().cuda())
-data_y_GI = Variable(outputs.float().resize(BATCHES, NN_BATCHES**3, NN_RESOLUTION**3).cuda())
 
 torch.manual_seed(4221)
 
@@ -88,11 +88,11 @@ BIAS2 = Variable(torch.FloatTensor(1, neuronsCount_L2).cuda().uniform_(-rng, rng
 WEIGHTS3 = Variable(torch.FloatTensor(neuronsCount_L2, neuronsCount_L3).cuda().uniform_(-rng, rng), requires_grad=True)
 BIAS3 = Variable(torch.FloatTensor(1, neuronsCount_L3).cuda().uniform_(-rng, rng), requires_grad=True)
 
-WEIGHTS4 = Variable(torch.FloatTensor(neuronsCount_L3, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS4 = Variable(torch.FloatTensor(1, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
+WEIGHTS4 = Variable(torch.FloatTensor(neuronsCount_L3, neuronsCount_L4).cuda().uniform_(-rng, rng), requires_grad=True)
+BIAS4 = Variable(torch.FloatTensor(1, neuronsCount_L4).cuda().uniform_(-rng, rng), requires_grad=True)
 
-#WEIGHTS3_2 = Variable(torch.FloatTensor(neuronsCount_L2, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
-#BIAS3_2 = Variable(torch.FloatTensor(1, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
+WEIGHTS5 = Variable(torch.FloatTensor(neuronsCount_L4, NN_RESOLUTION**3 * 7).cuda().uniform_(-rng, rng), requires_grad=True)
+BIAS5 = Variable(torch.FloatTensor(1, NN_RESOLUTION**3 * 7).cuda().uniform_(-rng, rng), requires_grad=True)
 
 
 if LOAD == 1 or TEST == 1:
@@ -104,8 +104,8 @@ if LOAD == 1 or TEST == 1:
     BIAS3 = Variable(torch.load("B3.pt").cuda(), requires_grad=True)
     WEIGHTS4 = Variable(torch.load("W4.pt").cuda(), requires_grad=True)
     BIAS4 = Variable(torch.load("B4.pt").cuda(), requires_grad=True)
-    #WEIGHTS3_2 = Variable(torch.load("W3_2.pt").cuda(), requires_grad=True)
-    #BIAS3_2 = Variable(torch.load("B3_2.pt").cuda(), requires_grad=True)
+    WEIGHTS5 = Variable(torch.load("W5.pt").cuda(), requires_grad=True)
+    BIAS5 = Variable(torch.load("B5.pt").cuda(), requires_grad=True)
 
 
 def fc_rrelu(inp, weights, bias):
@@ -137,31 +137,44 @@ def Grad(s):
     return ret
 
 
-def Forward(data_inp, w1, b1, w2, b2, w3, b3, w4, b4): #, w3_2, b3_2
-    n1 = fc_rrelu(data_inp, w1, b1)
-    n2 = fc_rrelu(n1, w2, b2)
-    n3 = fc_tanh(n2, w3, b3)
-    y = fc(n3, w4, b4)
-    #y2 = fc(n2, w3_2, b3_2)
-    return y #[y, y2]
+def Forward(data_inp, weights, biases): #, w3_2, b3_2
+    n1 = fc_tanh(data_inp, weights[0], biases[0])
+    n2 = fc_tanh(n1, weights[1], biases[1])
+    n3 = fc_tanh(n2, weights[2], biases[2])
+    n4 = fc_tanh(n3, weights[3], biases[3])
+    y = fc(n4, weights[4], biases[4])
+    return [y] #[y, y2]
 
 
 def Func(inputs, batches):
-    nn = Forward(inputs, WEIGHTS1, BIAS1, WEIGHTS2, BIAS2, WEIGHTS3, BIAS3, WEIGHTS4, BIAS4) #, WEIGHTS3_2, BIAS3_2
-    NN1 = nn.resize(batches, 1, NN_RESOLUTION**3, 4)
-    #NN2 = nn[1].resize(batches, 1, NN_RESOLUTION**3, 4)
-    y = NN1 * data_x_XYZ# + NN2 * (data_x_XYZ ** 2)
+    nn = Forward(inputs, [WEIGHTS1, WEIGHTS2, WEIGHTS3, WEIGHTS4, WEIGHTS5], [BIAS1, BIAS2, BIAS3, BIAS4, BIAS5]) #, WEIGHTS3_2, BIAS3_2
+    NN1 = nn[0].resize(batches, 1, NN_RESOLUTION**3, 7)
+    y = NN1 * data_x_XYZ
     Y = torch.tanh(torch.sum(y, 3))
 
     return Y
 
-def Train(ppr):
-    Y = Func(data_x_Dist, BATCHES)
+def Train(counter, ppr):
+    startIdx = (counter * BATCH_SIZE) % (BATCHES)
+    endIdx = ((counter + 1) * BATCH_SIZE) % (BATCHES)
+    if endIdx == 0:
+        endIdx = BATCHES
+    if TEST == 1:
+        startIdx = 0
+        endIdx = BATCHES
+    if (endIdx - startIdx < 0):
+        raise 1
+
+    data_x_Dist = Variable(inputs[startIdx:endIdx, :].float().cuda())
+    data_y_GI = Variable(outputs[startIdx:endIdx, :, :].float().cuda())
+    Y = Func(data_x_Dist, endIdx - startIdx)
     loss = torch.mean((Y - data_y_GI) ** 2)
-    l2reg = (torch.norm(WEIGHTS1) /  + torch.norm(BIAS1) +
-             torch.norm(WEIGHTS2) + torch.norm(BIAS2) +
-             torch.norm(WEIGHTS3) + torch.norm(BIAS3) +
-             torch.norm(WEIGHTS4) + torch.norm(BIAS4)) * l2regMul
+    l2reg = ((torch.norm(WEIGHTS1) + torch.norm(BIAS1)) / neuronsCount_L1 +
+             (torch.norm(WEIGHTS2) + torch.norm(BIAS2)) / neuronsCount_L1 +
+             (torch.norm(WEIGHTS3) + torch.norm(BIAS3)) / neuronsCount_L2 +
+             (torch.norm(WEIGHTS4) + torch.norm(BIAS4)) / neuronsCount_L3 +
+             (torch.norm(WEIGHTS5) + torch.norm(BIAS5)) / neuronsCount_L4
+             ) * l2regMul
     F = loss + l2reg
     F.backward()
 
@@ -173,6 +186,8 @@ def Train(ppr):
     gr += Grad(BIAS3)
     gr += Grad(WEIGHTS4)
     gr += Grad(BIAS4)
+    gr += Grad(WEIGHTS5)
+    gr += Grad(BIAS5)
     #gr += Grad(WEIGHTS3_2)
     #gr += Grad(BIAS3_2)
 
@@ -186,9 +201,11 @@ def lerp(x, y, alpha):
     return l
 
 
+counter = 0
 for i in range(steps * (1-TEST) + 1 * TEST):
     ppr = i % pr == 0 or i == steps - 1 or i < (pr / 10)
-    loss = Train(ppr)
+    loss = Train(counter, ppr)
+    counter += 1
 
     alpha = lerp(alpha, lerp(beta1, beta2, math.tanh(i / steps * tanhMul)), 1 - acc)
     if ppr:
@@ -197,11 +214,13 @@ for i in range(steps * (1-TEST) + 1 * TEST):
 
 
 def DrawRes(i, name):
+    data_x_Dist = Variable(inputs.float().cuda())
+    data_y_GI = Variable(outputs.float().cuda())
     res = data_x_Dist[i, :].resize(1, RAYS_PER_AXIS**3)
     y = Func(res, 1)
-    t1 = y.resize(NN_BATCHES ** 3, NN_RESOLUTION ** 3).detach().cpu().float().numpy()
+    #t1 = y.resize(NN_BATCHES ** 3, NN_RESOLUTION ** 3).detach().cpu().float().numpy()
+    #cv2.imwrite(name, t1 * 255, [cv2.IMWRITE_PAM_FORMAT_GRAYSCALE])
     t2 = torch.abs(data_y_GI[i, :, :] - y).resize(NN_BATCHES ** 3, NN_RESOLUTION ** 3).detach().cpu().float().numpy()
-    cv2.imwrite(name, t1 * 255, [cv2.IMWRITE_PAM_FORMAT_GRAYSCALE])
     cv2.imwrite("diff_" + name, t2 * 255, [cv2.IMWRITE_PAM_FORMAT_GRAYSCALE])
     #cv2.imshow(name, t1)
 
@@ -211,21 +230,23 @@ def Save(tens, name):
     mat = tens.detach().cpu().float().numpy()
     cv2.imwrite(name + ".exr", mat, [cv2.IMWRITE_EXR_TYPE, cv2.IMWRITE_EXR_TYPE_HALF])
 
-Save(WEIGHTS1, "W1")
-Save(BIAS1, "B1")
+if TEST == 0:
+    Save(WEIGHTS1, "W1")
+    Save(BIAS1, "B1")
 
-Save(WEIGHTS2, "W2")
-Save(BIAS2, "B2")
+    Save(WEIGHTS2, "W2")
+    Save(BIAS2, "B2")
 
-Save(WEIGHTS3, "W3")
-Save(BIAS3, "B3")
+    Save(WEIGHTS3, "W3")
+    Save(BIAS3, "B3")
 
-Save(WEIGHTS4, "W4")
-Save(BIAS4, "B4")
+    Save(WEIGHTS4, "W4")
+    Save(BIAS4, "B4")
 
-#Save(WEIGHTS3_2, "W3_2")
-#Save(BIAS3_2, "B3_2")
+    Save(WEIGHTS5, "W5")
+    Save(BIAS5, "B5")
 
-if TEST == TEST:
+
+if TEST == 1:
     for i in range(BATCHES):
         DrawRes(i, "Dist" + str(i + TEST * TRAIN) + ".png")
