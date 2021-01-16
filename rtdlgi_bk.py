@@ -2,195 +2,182 @@ import torch
 import cv2
 import math
 import numpy
+import imageio
 from torch.autograd import Variable
 
-
-GI_RESOLUTION = 32
+GI_RESOLUTION = 64
 RAYS_PER_AXIS = 16
-TRAINING_SAMPLES = 64 # 64
-TRAINING_BATCHES = 8 # 1
+TRAINING_SAMPLES = 32
+NN_RESOLUTION = 8
+TRAINING_BATCHES = 16
+
+TRAIN = 1
+TEST = 0
+LOAD = 0
+
+neuronsCount_L1 = 2048
+neuronsCount_L2 = 1024
+neuronsCount_L3 = 512
+
+alpha = 0.04
+beta2 = 0.001
+tanhMul = 1.15
+rng = 0.09
+steps = 5000
+l2regMul = 0.002
+
+NN_BATCHES = GI_RESOLUTION // NN_RESOLUTION
+BATCHES = TRAIN * (1 - TEST) + (TRAINING_SAMPLES * TRAINING_BATCHES - TRAIN) * TEST
+
+learn = 1 - TEST
+beta1 = alpha
+acc = 0.5
+pr = 100
+
 
 # training data
-inputs = torch.zeros(RAYS_PER_AXIS**3, TRAINING_SAMPLES*TRAINING_BATCHES).half()
-outputs = torch.zeros(GI_RESOLUTION**3, TRAINING_SAMPLES*TRAINING_BATCHES).half()
+inputs = torch.zeros(BATCHES, RAYS_PER_AXIS**3).half()
+outputs = torch.zeros(BATCHES, NN_BATCHES ** 3, NN_RESOLUTION ** 3).half()
 
-for i in range(TRAINING_BATCHES):
-    imgOrgDist = cv2.imread("rtOut\\Raytracing_output_Ray_Dist" + str(i) + ".png", cv2.IMREAD_COLOR)
-    imgOrgGI = cv2.imread("rtOut\\Raytracing_output" + str(i) + ".png", cv2.IMREAD_COLOR)
-    for j in range(TRAINING_SAMPLES):
-        gi0 = j * GI_RESOLUTION
-        dist0 = j * RAYS_PER_AXIS
-        gi1 = (j+1) * GI_RESOLUTION
-        dist1 = (j+1) * RAYS_PER_AXIS
-        imgGI = torch.from_numpy(imgOrgGI[gi0:gi1, :, 2]).resize(GI_RESOLUTION**3) / 255.0 * 2.0 - 1.0
-        imgDist = torch.from_numpy(imgOrgDist[dist0:dist1, :, 2]).resize(RAYS_PER_AXIS**3) / 255.0 * 2.0 - 1.0
-        inputs[:, i*TRAINING_SAMPLES + j] = imgDist.half()
-        outputs[:, i*TRAINING_SAMPLES + j] = imgGI.half()
+NN_RESOLUTION3 = NN_RESOLUTION**3
+def LoadData():
+    for i in range(TRAINING_BATCHES):
+        imgOrgDist = imageio.imread("training\\RT" + str(i) + ".dds")[:, :, 2]
+        imgOrgGI = imageio.imread("training\\GI" + str(i) + ".dds")[:, :, 2]
+        for j in range(TRAINING_SAMPLES):
+            localPos = i * TRAINING_SAMPLES + j
+            if (TEST == 1) and localPos < TRAIN:
+                continue
+            if (localPos == TRAIN) and (TEST == 0):
+                return
+            POS = localPos - TEST * TRAIN
 
-def inpInit(i, j):
-    xB = int(j % 3 == 0)
-    yB = int(j % 3 == 1)
-    zB = int(j % 3 == 2)
-    x = i // (GI_RESOLUTION ** 2)
-    y = (i // GI_RESOLUTION) % GI_RESOLUTION
-    z = i % GI_RESOLUTION
-    res = xB * x + yB * y + zB * z
-    return res / GI_RESOLUTION * 2.0 - 1.0
+            distBatch = j * RAYS_PER_AXIS
+            imgDist = torch.from_numpy(imgOrgDist[distBatch:distBatch+RAYS_PER_AXIS, :]) / 255.0
+            inputs[POS, :] = imgDist.resize(RAYS_PER_AXIS ** 3).half()
+
+            giBatch = j * NN_RESOLUTION3
+            imgGI = torch.from_numpy(imgOrgGI[giBatch:giBatch+NN_RESOLUTION3, :]) / 255.0 * 2.0 - 1.0
+            outputs[POS, :, :] = imgGI.resize(NN_BATCHES ** 3, NN_RESOLUTION3).half()
 
 
-inputsXYZ = torch.FloatTensor([[inpInit(i, j) for i in range(GI_RESOLUTION ** 3)] for j in range(3)]).half()
+LoadData()
 
-neuronsCount_Dist_L0 = 128
-neuronsCount_GI = 48
+# Should I normalize data from [0; 1] to [-1; 1] ?
+def inpInit(i):
+    x = (i % NN_BATCHES) / (NN_BATCHES - 1)
+    y = ((i // NN_BATCHES) % NN_BATCHES) / (NN_BATCHES - 1)
+    z = (i // NN_BATCHES ** 2) / (NN_BATCHES - 1)
+    return [x, y, z, 1.0]
 
-# Train NN weights
-# neuronsCount * 3
-# neuronsCount * 1
-# neuronsCount * neuronsCount
-# neuronsCount * 1
-# 1 * neuronsCount
-# 1 * 1
-reducer = 4
 
-neuronsCount_Dist_w1 = neuronsCount_GI // reducer * 3
-neuronsCount_Dist_b1 = neuronsCount_GI // reducer
-neuronsCount_Dist_w2 = neuronsCount_GI // reducer * neuronsCount_GI // reducer
-neuronsCount_Dist_b2 = neuronsCount_GI // reducer
-neuronsCount_Dist_w3 = neuronsCount_GI // reducer
-neuronsCount_Dist_b3 = 1
+inputsXYZ = torch.FloatTensor([[inpInit(i)] for i in range(NN_BATCHES**3)]).half().resize(1, NN_BATCHES**3, 1, 4) * 2 - 1
 
-alpha = 0.03
-beta1 = alpha
-beta2 = 0.001
-tanhMul = 1.05
-acc = 0.1
-rng = 1.0
-steps = 20000
-pr = 10
-
-data_x_Dist = Variable(torch.HalfTensor(inputs).cuda())
-data_x_XYZ = Variable(inputsXYZ.cuda())
-data_y_GI = Variable(outputs.cuda())
+data_x_Dist = Variable(inputs.float().cuda())
+data_x_XYZ = Variable(inputsXYZ.float().cuda())
+data_y_GI = Variable(outputs.float().resize(BATCHES, NN_BATCHES**3, NN_RESOLUTION**3).cuda())
 
 torch.manual_seed(4221)
 
-WEIGHTS1 = Variable(torch.HalfTensor(neuronsCount_Dist_L0, RAYS_PER_AXIS**3).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS1 = Variable(torch.HalfTensor(neuronsCount_Dist_L0, 1).cuda().uniform_(-rng, rng), requires_grad=True)
+WEIGHTS1 = Variable(torch.FloatTensor(RAYS_PER_AXIS**3, neuronsCount_L1).cuda().uniform_(-rng, rng), requires_grad=True)
+BIAS1 = Variable(torch.FloatTensor(1, neuronsCount_L1).cuda().uniform_(-rng, rng), requires_grad=True)
 
-WEIGHTS2_w1 = Variable(torch.HalfTensor(neuronsCount_Dist_w1, neuronsCount_Dist_L0).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS2_w1 = Variable(torch.HalfTensor(neuronsCount_Dist_w1, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-WEIGHTS3_w1 = Variable(torch.HalfTensor(neuronsCount_GI * 3, neuronsCount_Dist_w1).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS3_w1 = Variable(torch.HalfTensor(neuronsCount_GI * 3, 1).cuda().uniform_(-rng, rng), requires_grad=True)
+WEIGHTS2 = Variable(torch.FloatTensor(neuronsCount_L1, neuronsCount_L2).cuda().uniform_(-rng, rng), requires_grad=True)
+BIAS2 = Variable(torch.FloatTensor(1, neuronsCount_L2).cuda().uniform_(-rng, rng), requires_grad=True)
 
-WEIGHTS2_b1 = Variable(torch.HalfTensor(neuronsCount_Dist_b1, neuronsCount_Dist_L0).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS2_b1 = Variable(torch.HalfTensor(neuronsCount_Dist_b1, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-WEIGHTS3_b1 = Variable(torch.HalfTensor(neuronsCount_GI * 1, neuronsCount_Dist_b1).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS3_b1 = Variable(torch.HalfTensor(neuronsCount_GI * 1, 1).cuda().uniform_(-rng, rng), requires_grad=True)
+WEIGHTS3 = Variable(torch.FloatTensor(neuronsCount_L2, neuronsCount_L3).cuda().uniform_(-rng, rng), requires_grad=True)
+BIAS3 = Variable(torch.FloatTensor(1, neuronsCount_L3).cuda().uniform_(-rng, rng), requires_grad=True)
 
-WEIGHTS2_w2 = Variable(torch.HalfTensor(neuronsCount_Dist_w2, neuronsCount_Dist_L0).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS2_w2 = Variable(torch.HalfTensor(neuronsCount_Dist_w2, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-WEIGHTS3_w2 = Variable(torch.HalfTensor(neuronsCount_GI * neuronsCount_GI, neuronsCount_Dist_w2).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS3_w2 = Variable(torch.HalfTensor(neuronsCount_GI * neuronsCount_GI, 1).cuda().uniform_(-rng, rng), requires_grad=True)
+WEIGHTS4 = Variable(torch.FloatTensor(neuronsCount_L3, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
+BIAS4 = Variable(torch.FloatTensor(1, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
 
-WEIGHTS2_b2 = Variable(torch.HalfTensor(neuronsCount_Dist_b2, neuronsCount_Dist_L0).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS2_b2 = Variable(torch.HalfTensor(neuronsCount_Dist_b2, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-WEIGHTS3_b2 = Variable(torch.HalfTensor(neuronsCount_GI * 1, neuronsCount_Dist_b2).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS3_b2 = Variable(torch.HalfTensor(neuronsCount_GI * 1, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-
-WEIGHTS2_w3 = Variable(torch.HalfTensor(neuronsCount_Dist_w3, neuronsCount_Dist_L0).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS2_w3 = Variable(torch.HalfTensor(neuronsCount_Dist_w3, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-WEIGHTS3_w3 = Variable(torch.HalfTensor(1 * neuronsCount_GI, neuronsCount_Dist_w3).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS3_w3 = Variable(torch.HalfTensor(1 * neuronsCount_GI, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-
-WEIGHTS2_b3 = Variable(torch.HalfTensor(neuronsCount_Dist_b3, neuronsCount_Dist_L0).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS2_b3 = Variable(torch.HalfTensor(neuronsCount_Dist_b3, 1).cuda().uniform_(-rng, rng), requires_grad=True)
-WEIGHTS3_b3 = Variable(torch.HalfTensor(1, neuronsCount_Dist_b3).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS3_b3 = Variable(torch.HalfTensor(1, 1).cuda().uniform_(-rng, rng), requires_grad=True)
+#WEIGHTS3_2 = Variable(torch.FloatTensor(neuronsCount_L2, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
+#BIAS3_2 = Variable(torch.FloatTensor(1, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
 
 
-def fc(weights, bias, inp):
-    h1 = weights @ inp + bias
+if LOAD == 1 or TEST == 1:
+    WEIGHTS1 = Variable(torch.load("W1.pt").cuda(), requires_grad=True)
+    BIAS1 = Variable(torch.load("B1.pt").cuda(), requires_grad=True)
+    WEIGHTS2 = Variable(torch.load("W2.pt").cuda(), requires_grad=True)
+    BIAS2 = Variable(torch.load("B2.pt").cuda(), requires_grad=True)
+    WEIGHTS3 = Variable(torch.load("W3.pt").cuda(), requires_grad=True)
+    BIAS3 = Variable(torch.load("B3.pt").cuda(), requires_grad=True)
+    WEIGHTS4 = Variable(torch.load("W4.pt").cuda(), requires_grad=True)
+    BIAS4 = Variable(torch.load("B4.pt").cuda(), requires_grad=True)
+    #WEIGHTS3_2 = Variable(torch.load("W3_2.pt").cuda(), requires_grad=True)
+    #BIAS3_2 = Variable(torch.load("B3_2.pt").cuda(), requires_grad=True)
+
+
+def fc_rrelu(inp, weights, bias):
+    h1 = inp @ weights + bias
+    a1 = torch.rrelu(h1)
+
+    return a1
+
+def fc_tanh(inp, weights, bias):
+    h1 = inp @ weights + bias
     a1 = torch.tanh(h1)
 
     return a1
 
-def fcL(weights, bias, inp):
-    h1 = weights @ inp + bias
+def fc(inp, weights, bias):
+    h1 = inp @ weights + bias
 
     return h1
 
 
+
 def Grad(s):
-    s.data.add_(s.grad.data.mul(-alpha))
+    grad = s.grad.data
+    grad = grad / torch.sqrt(torch.sum(grad ** 2))
+    s.data.add_(grad.mul(-alpha*learn))
+    ret = torch.sum(torch.abs(s.grad.data))
     s.grad.data.zero_()
 
-
-def Forward(data_inp, w1, b1, w2, b2, w3, b3):
-    n1 = fc(w1, b1, data_inp)
-    n2 = fc(w2, b2, n1)
-    y = fc(w3, b3, n2)
-
-    return y
+    return ret
 
 
-def Forward_FCL(data_inp, w1, b1, w2, b2, w3, b3):
-    n1 = fc(w1, b1, data_inp)
-    n2 = fc(w2, b2, n1)
-    y = fcL(w3, b3, n2)
+def Forward(data_inp, w1, b1, w2, b2, w3, b3, w4, b4): #, w3_2, b3_2
+    n1 = fc_rrelu(data_inp, w1, b1)
+    n2 = fc_rrelu(n1, w2, b2)
+    n3 = fc_tanh(n2, w3, b3)
+    y = fc(n3, w4, b4)
+    #y2 = fc(n2, w3_2, b3_2)
+    return y #[y, y2]
 
-    return y
 
-def Forward_N2(dat_x):
-    w1_1 = Forward_FCL(dat_x.resize(RAYS_PER_AXIS**3, 1), WEIGHTS1, BIAS1, WEIGHTS2_w1, BIAS2_w1, WEIGHTS3_w1, BIAS3_w1).resize(neuronsCount_GI, 3)
-    b1_1 = Forward_FCL(dat_x.resize(RAYS_PER_AXIS**3, 1), WEIGHTS1, BIAS1, WEIGHTS2_b1, BIAS2_b1, WEIGHTS3_b1, BIAS3_b1).resize(neuronsCount_GI, 1)
-    w2_1 = Forward_FCL(dat_x.resize(RAYS_PER_AXIS**3, 1), WEIGHTS1, BIAS1, WEIGHTS2_w2, BIAS2_w2, WEIGHTS3_w2, BIAS3_w2).resize(neuronsCount_GI, neuronsCount_GI)
-    b2_1 = Forward_FCL(dat_x.resize(RAYS_PER_AXIS**3, 1), WEIGHTS1, BIAS1, WEIGHTS2_b2, BIAS2_b2, WEIGHTS3_b2, BIAS3_b2).resize(neuronsCount_GI, 1)
-    w3_1 = Forward_FCL(dat_x.resize(RAYS_PER_AXIS**3, 1), WEIGHTS1, BIAS1, WEIGHTS2_w3, BIAS2_w3, WEIGHTS3_w3, BIAS3_w3).resize(1, neuronsCount_GI)
-    b3_1 = Forward_FCL(dat_x.resize(RAYS_PER_AXIS**3, 1), WEIGHTS1, BIAS1, WEIGHTS2_b3, BIAS2_b3, WEIGHTS3_b3, BIAS3_b3).resize(1, 1)
+def Func(inputs, batches):
+    nn = Forward(inputs, WEIGHTS1, BIAS1, WEIGHTS2, BIAS2, WEIGHTS3, BIAS3, WEIGHTS4, BIAS4) #, WEIGHTS3_2, BIAS3_2
+    NN1 = nn.resize(batches, 1, NN_RESOLUTION**3, 4)
+    #NN2 = nn[1].resize(batches, 1, NN_RESOLUTION**3, 4)
+    y = NN1 * data_x_XYZ# + NN2 * (data_x_XYZ ** 2)
+    Y = torch.tanh(torch.sum(y, 3))
 
-    y = Forward(data_x_XYZ, w1_1, b1_1, w2_1, b2_1, w3_1, b3_1)
+    return Y
 
-    return y
+def Train(ppr):
+    Y = Func(data_x_Dist, BATCHES)
+    loss = torch.mean((Y - data_y_GI) ** 2)
+    l2reg = (torch.norm(WEIGHTS1) /  + torch.norm(BIAS1) +
+             torch.norm(WEIGHTS2) + torch.norm(BIAS2) +
+             torch.norm(WEIGHTS3) + torch.norm(BIAS3) +
+             torch.norm(WEIGHTS4) + torch.norm(BIAS4)) * l2regMul
+    F = loss + l2reg
+    F.backward()
 
-def Train(p, ts):
-    loss = 0
-    for i in range(ts):
-        Y = Forward_N2(data_x_Dist[:, i])
-        loss += torch.mean((Y - data_y_GI[:, i]) ** 2)
+    gr = Grad(WEIGHTS1)
+    gr += Grad(BIAS1)
+    gr += Grad(WEIGHTS2)
+    gr += Grad(BIAS2)
+    gr += Grad(WEIGHTS3)
+    gr += Grad(BIAS3)
+    gr += Grad(WEIGHTS4)
+    gr += Grad(BIAS4)
+    #gr += Grad(WEIGHTS3_2)
+    #gr += Grad(BIAS3_2)
 
-    loss.backward()
-    Grad(WEIGHTS1)
-    Grad(BIAS1)
-
-    Grad(WEIGHTS2_w1)
-    Grad(BIAS2_w1)
-    Grad(WEIGHTS3_w1)
-    Grad(BIAS3_w1)
-
-    Grad(WEIGHTS2_b1)
-    Grad(BIAS2_b1)
-    Grad(WEIGHTS3_b1)
-    Grad(BIAS3_b1)
-
-    Grad(WEIGHTS2_w2)
-    Grad(BIAS2_w2)
-    Grad(WEIGHTS3_w2)
-    Grad(BIAS3_w2)
-
-    Grad(WEIGHTS2_b2)
-    Grad(BIAS2_b2)
-    Grad(WEIGHTS3_b2)
-    Grad(BIAS3_b2)
-
-    Grad(WEIGHTS2_w3)
-    Grad(BIAS2_w3)
-    Grad(WEIGHTS3_w3)
-    Grad(BIAS3_w3)
-
-    Grad(WEIGHTS2_b3)
-    Grad(BIAS2_b3)
-    Grad(WEIGHTS3_b3)
-    Grad(BIAS3_b3)
+    if ppr:
+        print("Grad: " + str(gr))
     return loss
 
 
@@ -199,73 +186,46 @@ def lerp(x, y, alpha):
     return l
 
 
-for i in range(steps):
-    ppr = i % pr == 0 or i == steps - 1
-    loss = Train(ppr, TRAINING_SAMPLES*TRAINING_BATCHES)
+for i in range(steps * (1-TEST) + 1 * TEST):
+    ppr = i % pr == 0 or i == steps - 1 or i < (pr / 10)
+    loss = Train(ppr)
 
     alpha = lerp(alpha, lerp(beta1, beta2, math.tanh(i / steps * tanhMul)), 1 - acc)
     if ppr:
-        print(loss / (TRAINING_SAMPLES*TRAINING_BATCHES))
-        print(str(i) + " " + str(alpha))
+        print("Loss : " + str(loss))
+        print("LR : " + str(alpha) + "; Gen : " + str(i))
 
 
-# Train NN weights
-# neuronsCount * 3
-# neuronsCount * 1
-# neuronsCount * neuronsCount
-# neuronsCount * 1
-# 1 * neuronsCount
-# 1 * 1
-
-def DrawRes(res, name):
-    t1 = res.resize(GI_RESOLUTION, GI_RESOLUTION ** 2).detach().cpu().float().numpy()
+def DrawRes(i, name):
+    res = data_x_Dist[i, :].resize(1, RAYS_PER_AXIS**3)
+    y = Func(res, 1)
+    t1 = y.resize(NN_BATCHES ** 3, NN_RESOLUTION ** 3).detach().cpu().float().numpy()
+    t2 = torch.abs(data_y_GI[i, :, :] - y).resize(NN_BATCHES ** 3, NN_RESOLUTION ** 3).detach().cpu().float().numpy()
     cv2.imwrite(name, t1 * 255, [cv2.IMWRITE_PAM_FORMAT_GRAYSCALE])
+    cv2.imwrite("diff_" + name, t2 * 255, [cv2.IMWRITE_PAM_FORMAT_GRAYSCALE])
     #cv2.imshow(name, t1)
 
 
 def Save(tens, name):
     torch.save(tens, name + ".pt")
     mat = tens.detach().cpu().float().numpy()
-    cv2.imwrite(name + ".exr", mat, [cv2.IMWRITE_EXR_TYPE, cv2.IMWRITE_EXR_TYPE_FLOAT])
+    cv2.imwrite(name + ".exr", mat, [cv2.IMWRITE_EXR_TYPE, cv2.IMWRITE_EXR_TYPE_HALF])
 
-Save(WEIGHTS1, "W1.pt")
-Save(BIAS1, "B1.pt")
+Save(WEIGHTS1, "W1")
+Save(BIAS1, "B1")
 
-Save(WEIGHTS2_w1, "W2w1.pt")
-Save(BIAS2_w1, "B2w1.pt")
-Save(WEIGHTS3_w1, "W3w1.pt")
-Save(BIAS3_w1, "B3w1.pt")
+Save(WEIGHTS2, "W2")
+Save(BIAS2, "B2")
 
-Save(WEIGHTS2_b1, "W2b1.pt")
-Save(BIAS2_b1, "B2b1.pt")
-Save(WEIGHTS3_b1, "W3b1.pt")
-Save(BIAS3_b1, "B3b1.pt")
+Save(WEIGHTS3, "W3")
+Save(BIAS3, "B3")
 
-Save(WEIGHTS2_w2, "W2w2.pt")
-Save(BIAS2_w2, "B2w2.pt")
-Save(WEIGHTS3_w2, "W3w2.pt")
-Save(BIAS3_w2, "B3w2.pt")
+Save(WEIGHTS4, "W4")
+Save(BIAS4, "B4")
 
-Save(WEIGHTS2_b2, "W2b2.pt")
-Save(BIAS2_b2, "B2b2.pt")
-Save(WEIGHTS3_b2, "W3b2.pt")
-Save(BIAS3_b2, "B3b2.pt")
+#Save(WEIGHTS3_2, "W3_2")
+#Save(BIAS3_2, "B3_2")
 
-Save(WEIGHTS2_w3, "W2w3.pt")
-Save(BIAS2_w3, "B2w3.pt")
-Save(WEIGHTS3_w3, "W3w3.pt")
-Save(BIAS3_w3, "B3w3.pt")
-
-Save(WEIGHTS2_b3, "W2b3.pt")
-Save(BIAS2_b3, "B2b3.pt")
-Save(WEIGHTS3_b3, "W3b3.pt")
-Save(BIAS3_b3, "B3b3.pt")
-
-for i in range(TRAINING_SAMPLES*TRAINING_BATCHES):
-    m = torch.clamp(Forward_N2(data_x_Dist[:,i]) * 1024, -1, 1) * 0.5 + 0.5
-    DrawRes(m, "m"+str(i)+".png")
-
-
-
-
-
+if TEST == TEST:
+    for i in range(BATCHES):
+        DrawRes(i, "Dist" + str(i + TEST * TRAIN) + ".png")
