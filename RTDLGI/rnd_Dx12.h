@@ -250,6 +250,8 @@ public:
    PassDLGI dlgiPass;
 
    int counter = -1;
+   bool saveToFile = false;
+   void SaveTrainingData();
 #pragma endregion 
 
 #pragma region Raytracing

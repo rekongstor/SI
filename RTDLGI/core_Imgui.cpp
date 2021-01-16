@@ -80,7 +80,7 @@ void core_Imgui::OnUpdate()
    }
    if (ImGui::Button("Save2File"))
    {
-      //SaveD
+      renderer->saveToFile = true;
    }
    ImGui::End();
 #pragma endregion

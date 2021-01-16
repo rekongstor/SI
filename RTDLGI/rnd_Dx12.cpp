@@ -2,6 +2,7 @@
 #include "core_Window.h"
 #include "core_Imgui.h"
 #include "HlslCompat.h"
+#include <DirectXTex.h>
 
 
 wchar_t nameBuffer[4096]{};
@@ -279,6 +280,9 @@ void rnd_Dx12::OnInit()
    }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
    textureMgr.rayTracingOutputDist.OnInit(DXGI_FORMAT_R32G32B32A32_FLOAT, { RAYS_PER_AXIS * RAYS_PER_AXIS, RAYS_PER_AXIS * TRAINING_SAMPLES }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output Ray Dist");
 
+   //textureMgr.rayTracingOutputUpl.OnInitReadback(textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_COPY_DEST, L"Raytracing output [upload]");
+   //textureMgr.rayTracingOutputDistUpl.OnInitReadback(textureMgr.rayTracingOutputDist, D3D12_RESOURCE_STATE_COPY_DEST, L"Raytracing output Ray Dist [upload]");
+
    textureMgr.giBuffer.CreateUav();
    textureMgr.rayTracingOutput.CreateUav();
    textureMgr.rayTracingOutputDist.CreateUav();
@@ -311,6 +315,10 @@ void rnd_Dx12::PopulateGraphicsCommandList()
    rtxPass.Execute();
 
    //dlgiPass.Execute();
+   if (saveToFile) {
+      saveToFile = false;
+      SaveTrainingData();
+   }
 
    forwardPass.Execute();
 
@@ -409,6 +417,16 @@ void rnd_Dx12::WaitForGpuCopy()
       ThrowIfFailed(CommandAllocatorCopy()->Reset());
       ThrowIfFailed(CommandListCopy()->Reset(CommandAllocatorCopy(), nullptr));
    }
+}
+
+void rnd_Dx12::SaveTrainingData()
+{
+   static int i = 0;
+   ScratchImage imageRT, imageGI;
+   ThrowIfFailed(CaptureTexture(commandQueue.Get(), textureMgr.rayTracingOutputDist.buffer.Get(), false, imageRT, textureMgr.rayTracingOutputDist.state, textureMgr.rayTracingOutputDist.state));
+   ThrowIfFailed(CaptureTexture(commandQueue.Get(), textureMgr.rayTracingOutput.buffer.Get(), false, imageGI, textureMgr.rayTracingOutput.state, textureMgr.rayTracingOutput.state));
+   ThrowIfFailed(SaveToDDSFile(imageRT.GetImages(), imageRT.GetImageCount(), imageRT.GetMetadata(), DDS_FLAGS_NONE, FormatWStr(L"trainingData\\%s%d.dds", L"RT", i)));
+   ThrowIfFailed(SaveToDDSFile(imageGI.GetImages(), imageGI.GetImageCount(), imageGI.GetMetadata(), DDS_FLAGS_NONE, FormatWStr(L"trainingData\\%s%d.dds", L"GI", i++)));
 }
 
 void rnd_Dx12::SetBarrier(const std::initializer_list<std::pair<rnd_Buffer&, D3D12_RESOURCE_STATES>>& texturesStates)

@@ -11,6 +11,9 @@ public:
    rnd_Texture2D rayTracingOutputDist;
    rnd_Texture3D giBuffer;
 
+   rnd_Texture2D rayTracingOutputUpl;
+   rnd_Texture2D rayTracingOutputDistUpl;
+
    rnd_Texture2D depthBuffer;
 };
 

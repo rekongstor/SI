@@ -25,6 +25,3 @@
 [submodule "3rd_party/DirectML"]
 	path = 3rd_party/DirectML
 	url = https://github.com/microsoft/DirectML
-[submodule "3rd_party/DirectXTex"]
-	path = 3rd_party/DirectXTex
-	url = https://github.com/microsoft/DirectXTex
