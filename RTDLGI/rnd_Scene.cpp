@@ -85,7 +85,7 @@ void rnd_Scene::OnInit(LPCWSTR filename)
 
 float random()
 {
-   static std::mt19937 rng;
+   static std::mt19937 rng(4221);
    static std::uniform_real_distribution<> dist;
 
    return dist(rng);
@@ -94,7 +94,7 @@ float random()
 void rnd_Scene::OnUpdate()
 {
    for (auto& inst : instances) {
-      if (renderer->counter >= 0 && inst.first != &meshes[1]) {
+      if (renderer->counter >= 0 ) {
          XMVECTOR transl{ random() * 1.5 - 1, random() * 1.5 - 1, random() * 1.5 - 1};
          float uS = random() * 0.3 + 0.3;
          XMVECTOR scale{ uS,uS,uS };

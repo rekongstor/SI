@@ -23,7 +23,6 @@ RWTexture3D<float> RenderTarget : register(u0);
 RWTexture2D<float> RenderTargetOut : register(u1);
 RWTexture2D<float> RenderTargetOutDist : register(u2);
 RWBuffer<uint> DLGIinputs : register(u3);
-RWBuffer<uint> PosInputs : register(u4);
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 
@@ -98,14 +97,17 @@ float3 HitAttribute(float3 vertexAttribute[3], MyAttributes attr)
 inline void GenerateGIRay(uint3 index, out float3 origin, out float3 direction)
 {
    direction = normalize(g_sceneCB.lightDirection.xyz);
-   origin = (index + 0.5f) / float(GI_RESOLUTION) * 2.f - 1.f;
+   origin = (index + 0.5f) / float3(DispatchRaysDimensions()) * 2.f - 1.f;
 }
 
 
 inline void GenerateDistRay(uint3 index, out float3 origin, out float3 direction)
 {
-   direction = normalize(float3(rand_1_05(index.xy), rand_1_05(index.yz), rand_1_05(index.zx)));
-   origin = (index + 0.5f) / float(GI_RESOLUTION) * 2.f - 1.f;
+   float3 dirSin = (float3)index / DispatchRaysDimensions() * 3.14f;
+   direction = normalize(float3( sin(index.x) + 0.01, sin(index.y) + 0.01, sin(index.z) + 0.01 ));
+   //direction =  normalize(float3(rand_1_05(index.xy), rand_1_05(index.yz), rand_1_05(index.zx)));
+   origin = (index + 0.5f) / float3(DispatchRaysDimensions()) * 2.f - 1.f;
+   //direction = normalize(origin);
 }
 
 
@@ -123,16 +125,23 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
       ray.Origin = origin;
       ray.Direction = rayDir;
       ray.TMin = 0.0001;
-      ray.TMax = 2;
+      ray.TMax = 255.;
       RayPayload payload = { float4(0, 0, 0, 0) };
       TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
-
+      //TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
+      
       // Write the raytraced color to the output texture.
-      RenderTarget[dr.xyz] = payload.color.x;
-      RenderTargetOut[uint2(dr.x * GI_RESOLUTION + dr.y, dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * GI_RESOLUTION))] = payload.color.x;
-      PosInputs[(dr.x * GI_RESOLUTION + dr.y + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 0] = f32tof16(float(dr.x) / float(GI_RESOLUTION) * 2.f - 1.f);
-      PosInputs[(dr.x * GI_RESOLUTION + dr.y + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 1] = f32tof16(float(dr.y) / float(GI_RESOLUTION) * 2.f - 1.f);
-      PosInputs[(dr.x * GI_RESOLUTION + dr.y + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 2] = f32tof16(float(dr.z) / float(GI_RESOLUTION) * 2.f - 1.f);
+      RenderTarget[dr.xyz] = payload.color.x; // f16tof32(DLGIOutput[(dr.x * GI_RESOLUTION + dr.y + dr.z * GI_RESOLUTION * GI_RESOLUTION)]) * 0.5 + 0.5; //
+
+      uint3 gid = dr.xyz / NN_RESOLUTION;
+      uint3 lid = dr.xyz % NN_RESOLUTION;
+      RenderTargetOut[uint2(
+         gid.x + gid.y * NN_BATCHES + gid.z * NN_BATCHES * NN_BATCHES,
+         lid.x + lid.y * NN_RESOLUTION + lid.z * NN_RESOLUTION * NN_RESOLUTION + (int)round(max(g_sceneCB.counter.x, 0.f) * NN_RESOLUTION * NN_RESOLUTION * NN_RESOLUTION)
+         )] = payload.color.x;
+      //PosInputs[(dr.x + dr.y * GI_RESOLUTION + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 0] = f32tof16(float(dr.x) / float(GI_RESOLUTION) * 2.f - 1.f);
+      //PosInputs[(dr.x + dr.y * GI_RESOLUTION + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 1] = f32tof16(float(dr.y) / float(GI_RESOLUTION) * 2.f - 1.f);
+      //PosInputs[(dr.x + dr.y * GI_RESOLUTION + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 2] = f32tof16(float(dr.z) / float(GI_RESOLUTION) * 2.f - 1.f);
    }
    else
    {
@@ -144,13 +153,15 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
       ray.Origin = origin;
       ray.Direction = rayDir;
       ray.TMin = 0.0001;
-      ray.TMax = 2;
+      ray.TMax = 255.;
       RayPayload payload = { float4(0, 0, 0, 0) };
       TraceRay(Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, ~0, 0, 1, 0, ray, payload);
 
-      RenderTargetOutDist[uint2(dr.x * RAYS_PER_AXIS + dr.y, dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * RAYS_PER_AXIS))] = (ray.TMax - payload.color.w) / ray.TMax;
+      RenderTargetOutDist[uint2(
+         dr.x + dr.y * RAYS_PER_AXIS, 
+         dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * RAYS_PER_AXIS))] = (ray.TMax - payload.color.w) / ray.TMax;
       if ((int)max(round(g_sceneCB.counter.x), 0.f) == 0)
-         DLGIinputs[dr.x * RAYS_PER_AXIS + dr.y + dr.z * RAYS_PER_AXIS * RAYS_PER_AXIS] = f32tof16((ray.TMax - payload.color.w) / ray.TMax * 2.f - 1.f);
+         DLGIinputs[dr.x + dr.y * RAYS_PER_AXIS + dr.z * RAYS_PER_AXIS * RAYS_PER_AXIS] = f32tof16((ray.TMax - payload.color.w) / ray.TMax * 2.f - 1.f);
    }
 }
 

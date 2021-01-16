@@ -267,23 +267,24 @@ void rnd_Dx12::OnInit()
 
    rtxPass.OnInit();
 
-   dlgiPass.OnInit();
+   //dlgiPass.OnInit();
 
    textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_DEPTH_WRITE, L"DEPTH_BUFFER", 1, onesClearValue);
    textureMgr.depthBuffer.CreateDsv();
 
    textureMgr.giBuffer.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION, GI_RESOLUTION, GI_RESOLUTION }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"GI output");
-   textureMgr.rayTracingOutput.OnInit(DXGI_FORMAT_R32_FLOAT, { GI_RESOLUTION * GI_RESOLUTION, GI_RESOLUTION * TRAINING_SAMPLES }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
-   textureMgr.rayTracingOutputDist.OnInit(DXGI_FORMAT_R32_FLOAT, { RAYS_PER_AXIS * RAYS_PER_AXIS, RAYS_PER_AXIS * TRAINING_SAMPLES }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output Ray Dist");
+   textureMgr.rayTracingOutput.OnInit(DXGI_FORMAT_R32G32B32A32_FLOAT, {
+      GI_RESOLUTION * GI_RESOLUTION * GI_RESOLUTION / (NN_RESOLUTION * NN_RESOLUTION * NN_RESOLUTION),
+      NN_RESOLUTION * NN_RESOLUTION * NN_RESOLUTION * TRAINING_SAMPLES
+   }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
+   textureMgr.rayTracingOutputDist.OnInit(DXGI_FORMAT_R32G32B32A32_FLOAT, { RAYS_PER_AXIS * RAYS_PER_AXIS, RAYS_PER_AXIS * TRAINING_SAMPLES }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output Ray Dist");
 
    textureMgr.giBuffer.CreateUav();
    textureMgr.rayTracingOutput.CreateUav();
    textureMgr.rayTracingOutputDist.CreateUav();
    dlgiPass.inputRtData.CreateUav();
-   dlgiPass.inputPosData.CreateUav();
    textureMgr.giBuffer.CreateSrv();
    textureMgr.rayTracingOutputDist.CreateSrv();
-   dlgiPass.operators["n3"].output.CreateSrv();
 
    if (imgui)
       imgui->InitRender();
@@ -309,7 +310,7 @@ void rnd_Dx12::PopulateGraphicsCommandList()
 
    rtxPass.Execute();
 
-   dlgiPass.Execute();
+   //dlgiPass.Execute();
 
    forwardPass.Execute();
 

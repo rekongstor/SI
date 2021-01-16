@@ -127,7 +127,7 @@ void PassRaytracing::OnInit()
 
    m_raytracingGlobalRootSignature = renderer->rootSignatureMgr.CreateRootSignature({
       DescTable({
-         DescRange(RngType::UAV, 5, 0)
+         DescRange(RngType::UAV, 4, 0)
       }),
       SRV(0),
       CBV(0),
@@ -153,8 +153,7 @@ void PassRaytracing::Execute()
    renderer->CommandList()->SetComputeRootSignature(m_raytracingGlobalRootSignature.Get());
    SetCommonPipelineState(renderer->CommandList());
 
-   auto& dlgiBuf = *renderer->dlgiPass.inputRtData.Buffer();
-   renderer->SetBarrier({ {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {dlgiBuf, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
+   renderer->SetBarrier({ {renderer->textureMgr.giBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {renderer->textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_UNORDERED_ACCESS} });
 
    auto frameIndex = renderer->currentFrame;
 

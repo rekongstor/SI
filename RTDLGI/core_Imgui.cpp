@@ -78,6 +78,10 @@ void core_Imgui::OnUpdate()
    {
       renderer->counter = TRAINING_SAMPLES - 1;
    }
+   if (ImGui::Button("Save2File"))
+   {
+      //SaveD
+   }
    ImGui::End();
 #pragma endregion
 }

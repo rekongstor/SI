@@ -27,7 +27,6 @@ class PassDLGI
 {
 public:
    rnd_DynamicTensor inputRtData;
-   rnd_DynamicTensor inputPosData;
    std::map<std::string, rnd_InputTensor> inputTensors;
    std::map<std::string, rnd_DmlOperator> operators;
    rnd_DynamicTensor w1;
