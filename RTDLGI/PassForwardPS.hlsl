@@ -33,7 +33,7 @@ float4 main(VS_OUT input) : SV_TARGET
    //float3 outOufRange = uint3(abs(input.posV.xyz) < 1.f);
    //float4 rtColor = (1.f - rtOutput.SampleLevel(linearSampler, (input.posV.xyz) * 0.5f + 0.5f, 0)) * outOufRange.x * outOufRange.y * outOufRange.z;
    //uint3 sbPos = uint3((input.posV.xyz * 0.5 + 0.5) * (float)GI_RESOLUTION);
-   float3 normalizedPos = ((input.posV.xyz) * 0.5 + 0.5) * float(NN_RESOLUTION);
+   float3 normalizedPos = ((input.posV.xyz + 0.1 * normalize(input.normal)) * 0.5 + 0.5) * float(NN_RESOLUTION);
    float3 sbPos = frac(normalizedPos) * 2 - 1;
 
    uint3 dlgiPos = uint3(normalizedPos);
