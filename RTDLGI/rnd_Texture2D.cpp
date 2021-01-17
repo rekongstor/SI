@@ -41,29 +41,6 @@ void rnd_Texture2D::OnInit(DXGI_FORMAT format, Buffer2D dim, D3D12_RESOURCE_FLAG
    buffer->SetName(name);
 }
 
-void rnd_Texture2D::OnInitReadback(rnd_Texture2D defaultTex, D3D12_RESOURCE_STATES initialState, LPCWSTR name)
-{
-   this->format = defaultTex.format;
-   this->width = defaultTex.width;
-   this->height = defaultTex.height;
-   this->mips = defaultTex.mips;
-   this->state = initialState;
-   this->flags = defaultTex.flags;
-
-   auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-
-   auto bufferDesc(CD3DX12_RESOURCE_DESC::Buffer(defaultTex.buffer->GetDesc().Width, flags));
-
-   ThrowIfFailed(renderer->Device()->CreateCommittedResource(
-      &heapProperties,
-      D3D12_HEAP_FLAG_NONE,
-      &bufferDesc,
-      initialState,
-      nullptr,
-      IID_PPV_ARGS(&buffer)));
-   buffer->SetName(name);
-}
-
 
 void rnd_Texture2D::CreateDsv()
 {

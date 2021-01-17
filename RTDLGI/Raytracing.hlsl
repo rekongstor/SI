@@ -22,7 +22,7 @@
 RWTexture3D<float> RenderTarget : register(u0);
 RWTexture2D<float> RenderTargetOut : register(u1);
 RWTexture2D<float> RenderTargetOutDist : register(u2);
-RWBuffer<uint> DLGIinputs : register(u3);
+RWBuffer<float> DLGIinputs : register(u3);
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 
@@ -139,9 +139,6 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
          gid.x + gid.y * NN_BATCHES + gid.z * NN_BATCHES * NN_BATCHES,
          lid.x + lid.y * NN_RESOLUTION + lid.z * NN_RESOLUTION * NN_RESOLUTION + (int)round(max(g_sceneCB.counter.x, 0.f) * NN_RESOLUTION * NN_RESOLUTION * NN_RESOLUTION)
          )] = payload.color.x;
-      //PosInputs[(dr.x + dr.y * GI_RESOLUTION + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 0] = f32tof16(float(dr.x) / float(GI_RESOLUTION) * 2.f - 1.f);
-      //PosInputs[(dr.x + dr.y * GI_RESOLUTION + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 1] = f32tof16(float(dr.y) / float(GI_RESOLUTION) * 2.f - 1.f);
-      //PosInputs[(dr.x + dr.y * GI_RESOLUTION + dr.z * GI_RESOLUTION * GI_RESOLUTION) * 3 + 2] = f32tof16(float(dr.z) / float(GI_RESOLUTION) * 2.f - 1.f);
    }
    else
    {
@@ -161,7 +158,7 @@ FUNCTION_NAME(RAYGEN_SHADER) (void)
          dr.x + dr.y * RAYS_PER_AXIS, 
          dr.z + (int)round(max(g_sceneCB.counter.x, 0.f) * RAYS_PER_AXIS))] = (ray.TMax - payload.color.w) / ray.TMax;
       if ((int)max(round(g_sceneCB.counter.x), 0.f) == 0)
-         DLGIinputs[dr.x + dr.y * RAYS_PER_AXIS + dr.z * RAYS_PER_AXIS * RAYS_PER_AXIS] = f32tof16((ray.TMax - payload.color.w) / ray.TMax * 2.f - 1.f);
+         DLGIinputs[dr.x + dr.y * RAYS_PER_AXIS + dr.z * RAYS_PER_AXIS * RAYS_PER_AXIS] = ((ray.TMax - payload.color.w) / ray.TMax);
    }
 }
 
@@ -192,14 +189,14 @@ FUNCTION_NAME(CLOSEST_HIT_SHADER) (inout RayPayload payload, in MyAttributes att
    float3 triangleNormal = HitAttribute(vertexNormals, attr);
 
    payload.color.xyz = float3(0, 0, 0);
-   payload.color.w = RayTCurrent();
+   payload.color.w = 0;
 }
 
 [shader("miss")]
 FUNCTION_NAME(MISS_SHADER) (inout RayPayload payload)
 {
    payload.color.xyz = float3(1, 1, 1);
-   payload.color.w = RayTCurrent();
+   payload.color.w = 255;
 }
 
 #endif // RAYTRACING_HLSL

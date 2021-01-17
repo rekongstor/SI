@@ -268,7 +268,7 @@ void rnd_Dx12::OnInit()
 
    rtxPass.OnInit();
 
-   //dlgiPass.OnInit();
+   dlgiPass.OnInit();
 
    textureMgr.depthBuffer.OnInit(DXGI_FORMAT_D32_FLOAT, { window->width, window->height }, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_DEPTH_WRITE, L"DEPTH_BUFFER", 1, onesClearValue);
    textureMgr.depthBuffer.CreateDsv();
@@ -280,14 +280,13 @@ void rnd_Dx12::OnInit()
    }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output");
    textureMgr.rayTracingOutputDist.OnInit(DXGI_FORMAT_R32G32B32A32_FLOAT, { RAYS_PER_AXIS * RAYS_PER_AXIS, RAYS_PER_AXIS * TRAINING_SAMPLES }, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, L"Raytracing output Ray Dist");
 
-   //textureMgr.rayTracingOutputUpl.OnInitReadback(textureMgr.rayTracingOutput, D3D12_RESOURCE_STATE_COPY_DEST, L"Raytracing output [upload]");
-   //textureMgr.rayTracingOutputDistUpl.OnInitReadback(textureMgr.rayTracingOutputDist, D3D12_RESOURCE_STATE_COPY_DEST, L"Raytracing output Ray Dist [upload]");
-
    textureMgr.giBuffer.CreateUav();
    textureMgr.rayTracingOutput.CreateUav();
    textureMgr.rayTracingOutputDist.CreateUav();
    dlgiPass.inputRtData.CreateUav();
    textureMgr.giBuffer.CreateSrv();
+   dlgiPass.operators["N5"].output.CreateSrv();
+
    textureMgr.rayTracingOutputDist.CreateSrv();
 
    if (imgui)
@@ -314,7 +313,7 @@ void rnd_Dx12::PopulateGraphicsCommandList()
 
    rtxPass.Execute();
 
-   //dlgiPass.Execute();
+   dlgiPass.Execute();
    if (saveToFile) {
       saveToFile = false;
       SaveTrainingData();

@@ -53,8 +53,8 @@ void rnd_Tensor::CreateUav()
    desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
    desc.Buffer.CounterOffsetInBytes = 0;
    desc.Buffer.FirstElement = 0;
-   desc.Buffer.NumElements = width / 2;
-   desc.Buffer.StructureByteStride = 2;
+   desc.Buffer.NumElements = width / 4;
+   desc.Buffer.StructureByteStride = 4;
 
    renderer->Device()->CreateUnorderedAccessView(Buffer()->buffer.Get(), nullptr, &desc, uavHandle.first);
    ThrowIfFailed(renderer->Device()->GetDeviceRemovedReason());
