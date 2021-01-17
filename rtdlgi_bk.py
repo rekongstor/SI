@@ -1,7 +1,6 @@
 import torch
 import cv2
 import math
-import numpy
 import imageio
 from torch.autograd import Variable
 
@@ -9,11 +8,11 @@ GI_RESOLUTION = 64
 RAYS_PER_AXIS = 16
 TRAINING_SAMPLES = 32
 NN_RESOLUTION = 8
-TRAINING_BATCHES = 64
-BATCH_SIZE = 64
+TRAINING_BATCHES = 256
+BATCH_SIZE = 256
 
-TRAIN = 1984
-TEST = 0
+TRAIN = 7936
+TEST = 1
 LOAD = 0
 
 neuronsCount_L1 = 2048
@@ -26,7 +25,7 @@ beta2 = 0.001
 tanhMul = 1.2
 rng = 0.09
 steps = 10000
-l2regMul = 1.0
+l2regMul = 10.0
 
 NN_BATCHES = GI_RESOLUTION // NN_RESOLUTION
 BATCHES = TRAIN * (1 - TEST) + (TRAINING_SAMPLES * TRAINING_BATCHES - TRAIN) * TEST
@@ -37,6 +36,7 @@ acc = 0.5
 pr = 100
 
 
+pr = pr * (1 - TEST) + 1 * TEST
 # training data
 inputs = torch.zeros(BATCHES, RAYS_PER_AXIS**3).half()
 outputs = torch.zeros(BATCHES, NN_BATCHES ** 3, NN_RESOLUTION ** 3).half()
@@ -70,10 +70,10 @@ def inpInit(i):
     x = (i % NN_BATCHES) / (NN_BATCHES - 1)
     y = ((i // NN_BATCHES) % NN_BATCHES) / (NN_BATCHES - 1)
     z = (i // NN_BATCHES ** 2) / (NN_BATCHES - 1)
-    return [x*x, y*y, z*z, x, y, z, 1.0]
+    return [x, y, z, 1.0]
 
 
-inputsXYZ = torch.FloatTensor([[inpInit(i)] for i in range(NN_BATCHES**3)]).half().resize(1, NN_BATCHES**3, 1, 7) * 2 - 1
+inputsXYZ = torch.FloatTensor([[inpInit(i)] for i in range(NN_BATCHES**3)]).half().resize(1, NN_BATCHES**3, 1, 4) * 2 - 1
 
 data_x_XYZ = Variable(inputsXYZ.float().cuda())
 
@@ -91,8 +91,8 @@ BIAS3 = Variable(torch.FloatTensor(1, neuronsCount_L3).cuda().uniform_(-rng, rng
 WEIGHTS4 = Variable(torch.FloatTensor(neuronsCount_L3, neuronsCount_L4).cuda().uniform_(-rng, rng), requires_grad=True)
 BIAS4 = Variable(torch.FloatTensor(1, neuronsCount_L4).cuda().uniform_(-rng, rng), requires_grad=True)
 
-WEIGHTS5 = Variable(torch.FloatTensor(neuronsCount_L4, NN_RESOLUTION**3 * 7).cuda().uniform_(-rng, rng), requires_grad=True)
-BIAS5 = Variable(torch.FloatTensor(1, NN_RESOLUTION**3 * 7).cuda().uniform_(-rng, rng), requires_grad=True)
+WEIGHTS5 = Variable(torch.FloatTensor(neuronsCount_L4, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
+BIAS5 = Variable(torch.FloatTensor(1, NN_RESOLUTION**3 * 4).cuda().uniform_(-rng, rng), requires_grad=True)
 
 
 if LOAD == 1 or TEST == 1:
@@ -148,7 +148,7 @@ def Forward(data_inp, weights, biases): #, w3_2, b3_2
 
 def Func(inputs, batches):
     nn = Forward(inputs, [WEIGHTS1, WEIGHTS2, WEIGHTS3, WEIGHTS4, WEIGHTS5], [BIAS1, BIAS2, BIAS3, BIAS4, BIAS5]) #, WEIGHTS3_2, BIAS3_2
-    NN1 = nn[0].resize(batches, 1, NN_RESOLUTION**3, 7)
+    NN1 = nn[0].resize(batches, 1, NN_RESOLUTION**3, 4)
     y = NN1 * data_x_XYZ
     Y = torch.tanh(torch.sum(y, 3))
 
@@ -158,9 +158,6 @@ def Train(counter, ppr):
     startIdx = (counter * BATCH_SIZE) % (BATCHES)
     endIdx = ((counter + 1) * BATCH_SIZE) % (BATCHES)
     if endIdx == 0:
-        endIdx = BATCHES
-    if TEST == 1:
-        startIdx = 0
         endIdx = BATCHES
     if (endIdx - startIdx < 0):
         raise 1
@@ -202,14 +199,17 @@ def lerp(x, y, alpha):
 
 
 counter = 0
-for i in range(steps * (1-TEST) + 1 * TEST):
-    ppr = i % pr == 0 or i == steps - 1 or i < (pr / 10)
+rangeBatch = steps * (1-TEST)
+if (TEST == 1):
+    rangeBatch = BATCHES // BATCH_SIZE
+for i in range(rangeBatch):
+    ppr = i % pr == 0 or i == steps - 1 or i < (pr / 10) or TEST == 1
     loss = Train(counter, ppr)
     counter += 1
 
     alpha = lerp(alpha, lerp(beta1, beta2, math.tanh(i / steps * tanhMul)), 1 - acc)
     if ppr:
-        print("Loss : " + str(loss))
+        print("StdDev : " + str(loss / 2)) # Due to [-1;+1] to retail [0;+1] renormalization
         print("LR : " + str(alpha) + "; Gen : " + str(i))
 
 
@@ -228,7 +228,7 @@ def DrawRes(i, name):
 def Save(tens, name):
     torch.save(tens, name + ".pt")
     mat = tens.detach().cpu().float().numpy()
-    cv2.imwrite(name + ".exr", mat, [cv2.IMWRITE_EXR_TYPE, cv2.IMWRITE_EXR_TYPE_HALF])
+    cv2.imwrite(name + ".exr", mat, [cv2.IMWRITE_EXR_TYPE, cv2.IMWRITE_EXR_TYPE_FLOAT])
 
 if TEST == 0:
     Save(WEIGHTS1, "W1")
@@ -247,6 +247,6 @@ if TEST == 0:
     Save(BIAS5, "B5")
 
 
-if TEST == 1:
+if TEST == 2:
     for i in range(BATCHES):
         DrawRes(i, "Dist" + str(i + TEST * TRAIN) + ".png")
