@@ -103,11 +103,11 @@ inline void GenerateGIRay(uint3 index, out float3 origin, out float3 direction)
 
 inline void GenerateDistRay(uint3 index, out float3 origin, out float3 direction)
 {
-   float3 dirSin = (float3)index / DispatchRaysDimensions() * 3.14f;
-   direction = normalize(float3( sin(index.x) + 0.01, sin(index.y) + 0.01, sin(index.z) + 0.01 ));
+   //float3 dirSin = (float3)index / DispatchRaysDimensions() * 2 - 1;
+   //direction = normalize(float3( (dirSin.x), (dirSin.y), (index.z) ));
    //direction =  normalize(float3(rand_1_05(index.xy), rand_1_05(index.yz), rand_1_05(index.zx)));
    origin = (index + 0.5f) / float3(DispatchRaysDimensions()) * 2.f - 1.f;
-   //direction = normalize(origin);
+   direction = float3(0,1,0);
 }
 
 

@@ -251,6 +251,8 @@ public:
 
    int counter = -1;
    bool saveToFile = false;
+   int samples = 1;
+   bool saveBatch = false;
    void SaveTrainingData();
 #pragma endregion 
 

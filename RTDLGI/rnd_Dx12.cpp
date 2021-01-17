@@ -314,9 +314,19 @@ void rnd_Dx12::PopulateGraphicsCommandList()
    rtxPass.Execute();
 
    dlgiPass.Execute();
-   if (saveToFile) {
-      saveToFile = false;
+
+   static int timeout = -1;
+   if (timeout == 0)
+   {
       SaveTrainingData();
+      timeout--;
+   } else if (timeout > 0)
+   {
+      timeout--;
+   }
+   if (!saveBatch && saveToFile || saveBatch && counter == -1) {
+      saveToFile = false;
+      timeout = 1;
    }
 
    forwardPass.Execute();
@@ -334,6 +344,19 @@ void rnd_Dx12::OnUpdate()
 {
    if (imgui)
       imgui->OnUpdate();
+
+   if (saveBatch)
+   {
+      if (samples == 0 && counter == -1)
+         saveBatch = false;
+      else
+      if (samples > 0 && !saveToFile)
+      {
+         samples--;
+         counter = TRAINING_SAMPLES - 1;
+         saveToFile = true;
+      } 
+   }
 
    constantBufferMgr.UpdateConstBuffers();
    scene.OnUpdate();

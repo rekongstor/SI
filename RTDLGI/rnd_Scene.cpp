@@ -95,7 +95,7 @@ void rnd_Scene::OnUpdate()
 {
    for (auto& inst : instances) {
       if (renderer->counter >= 0 ) {
-         XMVECTOR transl{ random() * 1.5 - 1, random() * 1.5 - 1, random() * 1.5 - 1};
+         XMVECTOR transl{ random() * 2.0 - 1, random() * 2.0 - 1, random() * 2.0 - 1};
          float uS = random() * 0.3 + 0.3;
          XMVECTOR scale{ uS,uS,uS };
          XMVECTOR rot{ random() * 2 * M_PI, random() * M_PI, random() * M_PI };

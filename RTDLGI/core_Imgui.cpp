@@ -82,6 +82,10 @@ void core_Imgui::OnUpdate()
    {
       renderer->saveToFile = true;
    }
+   ImGui::InputInt("Samples", &renderer->samples, 1, 1);
+   if (ImGui::Button("Gen&Save")) {
+      renderer->saveBatch = true;
+   }
    ImGui::End();
 #pragma endregion
 }
