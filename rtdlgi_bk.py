@@ -16,19 +16,19 @@ PICTURES_IN_RAM = 32 # Max = 64?
 PICTURES_IN_RAM_REUSE = 1
 
 TRAIN = (TRAINING_PICTURES - 1) * TRAINING_SAMPLES
-TEST = 0
-LOAD = 0
+TEST = 1
+LOAD = 1
 
-neuronsCount_L1 = 1024
+neuronsCount_L1 = 256
 
-conv1Size = 4
+conv1Size = 11
 conv2Size = 4
-conv1Kernels = 8
-conv2Kernels = 4
+conv1Kernels = 4 # x4
+conv2Kernels = 4 # x4
 
-alpha = 0.02
+alpha = 0.05
 beta2 = 0.001
-tanhMul = 1.2
+tanhMul = 1.1
 rng = 0.005
 steps = 4096
 l2regMul = 0.001
@@ -42,7 +42,7 @@ acc = 0.5
 pr = 16
 
 if TEST == 0 and LOAD == 1:
-    alpha = 0.004
+    alpha = 0.01
     beta2 = 0.0001
 
 beta1 = alpha
@@ -145,8 +145,8 @@ def fc(inp, weights, bias):
     return h1
 
 
-def convTr(inp, weights, bias, stride):
-    c1 = torch.conv_transpose3d(inp, weights, bias, stride=stride)
+def convTr(inp, weights, bias, stride, pad):
+    c1 = torch.conv_transpose3d(inp, weights, bias, padding=pad, stride=stride)
     c1Pull = (torch.max((c1),dim=1, keepdim=True)[0])
 
     return c1Pull
@@ -176,9 +176,9 @@ def Forward(data_inp, weights, biases, batches): #, w3_2, b3_2
     n1 = fc_tanh(data_inp, weights[0], biases[0])
     y = fc_tanh(n1, weights[1], biases[1])
     y = y.resize(batches, 1, FC_RESOLUTION, FC_RESOLUTION, FC_RESOLUTION)
-    c1 = torch.tanh(convTr(y, weights[2], biases[2], conv1Size))
-    c2 = convTr(c1, weights[3], biases[3], conv2Size)
-    return torch.tanh(c2)
+    c1 = torch.tanh(convTr(y, weights[2], biases[2], 3, 0))
+    c2 = torch.tanh(convTr(c1, weights[3], biases[3], 4, 0))
+    return (c2)
 
 
 def Func(inputs, batches):
