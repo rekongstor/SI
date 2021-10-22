@@ -23,9 +23,22 @@ Texture2D normalMap : register(t2, space1);
 
 SamplerState s1 : register(s0);
 
+
+#if defined(DEPTH_ONLY) 
+void main(PSInput input)
+#else
 PSOutput main(PSInput input) : SV_TARGET
+#endif
 {
    float4 diffuseColor = diffuseMap.Sample(s1, input.uv);
+#if defined(DEPTH_ONLY) 
+     clip(diffuseColor.w - 0.5);
+     return;
+#else
+
+#if defined(NO_DP)
+   //clip(diffuseColor.w - 0.5);
+#endif
    float2 material = materialMap.Sample(s1, input.uv).zy;
    float3 normalTex = normalMap.Sample(s1, input.uv).xyz;
    normalTex.xy = normalTex.xy * 2.f - 1.f;
@@ -49,7 +62,11 @@ PSOutput main(PSInput input) : SV_TARGET
    PSOutput output;
    output.color = float4(diffuseColor.xyz, roughness);
    output.normals = float4((normal + 1.f) / 2.f, metalness);
-   if (diffuseColor.w < 0.1f)
-      discard;
+   while (output.normals.x < 1) {
+      output.normals.xyz += 0.01;
+   }
+   //if (diffuseColor.w < 0.5f)
+   //   discard;
    return output;
+#endif
 }

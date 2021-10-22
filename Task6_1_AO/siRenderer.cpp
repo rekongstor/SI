@@ -14,13 +14,13 @@ siRenderer::siRenderer(siWindow* window, uint32_t bufferCount):
    commandAllocator(bufferCount),
    descriptorMgr(10, 10, 300, 10),
    viewportScissor(window->getWidth(), window->getHeight()),
-   camera({5.16772985, 1.89779234, -1.41415465f, 1.f}, {0.703276634f, 1.02280307f, 0.218072295f, 1.f}, 45.f,
+   camera({0.76772985, -12.99779234, 3.41415465f, 1.f}, {0.203276634f, 1.62280307f, 0.018072295f, 1.f}, 45.f,
           static_cast<float>(window->getWidth()) / static_cast<float>(window->getHeight()), 0.1f, 250000.0f)
 {
-   targetOutput = 4;
+   targetOutput = 0;
    targetArray = 0;
    targetMip = 0;
-   cacaoSsao = 1;
+   cacaoSsao = 0;
 }
 
 static void updateConstants(FfxCacaoConstants* consts, FfxCacaoSettings* settings, BufferSizeInfo* bufferSizeInfo,
@@ -310,6 +310,22 @@ void siRenderer::onInit(siImgui* imgui)
                        }
                     }
       );
+
+      auto& psoD = pipelineStates["depth-only"];
+      psoD.createPso(device.get(), rootSignatures["default"].get(), L"defRenderVS.hlsl", L"defRenderPS.hlsl",
+         nullptr, 0,
+         sampleDesc, {
+            {
+               "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0
+            },
+            {
+               "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
+            },
+            {
+               "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0,D3D12_APPEND_ALIGNED_ELEMENT
+            }
+         }
+      );
    }
 
    // Cacao initialization
@@ -597,7 +613,7 @@ void siRenderer::onInit(siImgui* imgui)
                             defRenderConstBuffer.getGpuVirtualAddress());
    }
 
-   siSceneLoader::loadScene("sponza.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
+   siSceneLoader::loadScene("imgO.obj", meshes, textures, device.get(), commandList, &descriptorMgr);
 
    // creating instances
    for (int i = 0; i < meshes.size(); ++i)
@@ -722,8 +738,7 @@ void siRenderer::updatePipeline()
    assert(hr == S_OK);
 
 
-   hr = commandList->Reset(commandAllocator.getAllocator(currentFrame),
-                           pipelineStates["default"].getPipelineState().Get());
+   hr = commandList->Reset(commandAllocator.getAllocator(currentFrame), nullptr);
    assert(hr == S_OK);
 
    const float clearColor[] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -739,22 +754,15 @@ void siRenderer::updatePipeline()
    gpuTimerStartFrame(&timer);
    {
       GET_TIMESTAMP(&timer, commandList.get(), "Begin frame");
-      diffuseRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-      normalsRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+#if defined(DEPTH_PREPASS)
+      commandList->SetPipelineState(pipelineStates["depth-only"].getPipelineState().Get());
+      commandList->OMSetRenderTargets(0,
+         nullptr,
+         FALSE,
+         &depthStencil.getDsvHandle().first);
+#endif
+
       depthStencil.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-      D3D12_CPU_DESCRIPTOR_HANDLE rts[] = {
-         diffuseRenderTarget.getRtvHandle().first,
-         normalsRenderTarget.getRtvHandle().first
-      };
-      commandList->OMSetRenderTargets(_countof(rts),
-                                      rts,
-                                      FALSE,
-                                      &depthStencil.getDsvHandle().first);
-
-
-      commandList->ClearRenderTargetView(diffuseRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
-      commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
       commandList->ClearDepthStencilView(depthStencil.getDsvHandle().first, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
       commandList->RSSetViewports(1, &viewportScissor.getViewport());
@@ -768,6 +776,7 @@ void siRenderer::updatePipeline()
       ID3D12DescriptorHeap* heap[] = {descriptorMgr.getCbvSrvUavHeap().Get()};
       commandList->SetDescriptorHeaps(1, heap);
 
+#if defined(DEPTH_PREPASS)
       for (auto& instance : instances)
       {
          auto it = meshes.find(instance.first);
@@ -782,8 +791,43 @@ void siRenderer::updatePipeline()
          commandList->DrawIndexedInstanced(mesh.getIndexCount(), static_cast<UINT>(instance.second.get().size()), 0, 0,
                                            0);
       }
+      GET_TIMESTAMP(&timer, commandList.get(), "Depth Prepass");
+#endif
+      commandList->SetPipelineState(pipelineStates["default"].getPipelineState().Get());
+      diffuseRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+      normalsRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+      depthStencil.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_DEPTH_READ);
+
+      D3D12_CPU_DESCRIPTOR_HANDLE rts[] = {
+         diffuseRenderTarget.getRtvHandle().first,
+         normalsRenderTarget.getRtvHandle().first
+      };
+      commandList->OMSetRenderTargets(_countof(rts),
+         rts,
+         FALSE,
+         &depthStencil.getDsvHandle().first);
+
+
+      commandList->ClearRenderTargetView(diffuseRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
+      commandList->ClearRenderTargetView(normalsRenderTarget.getRtvHandle().first, clearColor, 0, nullptr);
+
       diffuseRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COMMON);
       normalsRenderTarget.resourceBarrier(commandList.get(), D3D12_RESOURCE_STATE_COMMON);
+
+
+      for (auto& instance : instances) {
+         auto it = meshes.find(instance.first);
+         if (it == meshes.end())
+            continue;
+
+         auto& mesh = it->second;
+         commandList->IASetVertexBuffers(0, 1, &mesh.getVertexBufferView());
+         commandList->IASetIndexBuffer(&mesh.getIndexBufferView());
+         commandList->SetGraphicsRootShaderResourceView(1, instance.second.getGpuVirtualAddress(currentFrame));
+         commandList->SetGraphicsRootDescriptorTable(2, mesh.getDiffuseMap().getSrvHandle().second);
+         commandList->DrawIndexedInstanced(mesh.getIndexCount(), static_cast<UINT>(instance.second.get().size()), 0, 0,
+            0);
+      }
       GET_TIMESTAMP(&timer, commandList.get(), "Drawing");
    }
 

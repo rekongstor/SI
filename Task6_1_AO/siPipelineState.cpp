@@ -56,9 +56,15 @@ void siPipelineState::createPso(
                            nullptr);
    assert(hr == S_OK);
 
+   D3D_SHADER_MACRO Shader_Macros[] = { "DEPTH_ONLY", "", NULL, NULL };
+   D3D_SHADER_MACRO Shader_Macros_NoDp[] = { "NO_DP", "", NULL, NULL };
    ComPtr<ID3DBlob> pixelShader;
    hr = D3DCompileFromFile(psFileName,
-                           nullptr,
+#ifdef DEPTH_PREPASS
+      (renderTargetsCount > 0) ? nullptr : Shader_Macros,
+#else 
+      Shader_Macros_NoDp,
+#endif // DEPTH_PREPASS
                            nullptr,
                            "main",
                            "ps_5_1",
@@ -91,6 +97,13 @@ void siPipelineState::createPso(
    psoDesc.NumRenderTargets = renderTargetsCount;
    psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
+#if defined(DEPTH_PREPASS)
+   if (renderTargetsCount > 0) {
+      psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_EQUAL;
+      psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+   }
+#endif
 
    hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
    assert(hr == S_OK);
